@@ -8,7 +8,7 @@ import App from "@/App.vue"
 // css
 import "normalize.css"
 import "nprogress/nprogress.css"
-import "element-plus/theme-chalk/dark/css-vars.css"
+import "element-plus/theme-chalk/dark/css-vars.css" // 引入Element Plus的CSS变量
 import "vxe-table/lib/style.css"
 import "@@/assets/styles/index.scss"
 import "virtual:uno.css"

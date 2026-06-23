@@ -60,7 +60,7 @@ function removeHtmlClass(value: ThemeName) {
 
 /** 初始化 */
 function initTheme() {
-  // watchEffect 来收集副作用
+  // watchEffect 会自动收集回调内部访问过的所有响应式变量
   watchEffect(() => {
     const value = activeThemeName.value
     removeHtmlClass(value)

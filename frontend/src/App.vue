@@ -15,6 +15,8 @@ initGreyAndColorWeakness()
 </script>
 
 <template>
+  <!-- el-config-provider是 Element Plus 的全局配置组件
+    locale="zhCn" → 所有 Element Plus 组件的默认文案变中文 -->
   <el-config-provider :locale="zhCn">
     <router-view />
   </el-config-provider>

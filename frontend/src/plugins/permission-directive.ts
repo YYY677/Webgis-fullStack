@@ -11,14 +11,19 @@ const permission: Directive = {
     const { value: permissionRoles } = binding
     const { roles } = useUserStore()
     if (isArray(permissionRoles) && permissionRoles.length > 0) {
-      const hasPermission = roles.some(role => permissionRoles.includes(role))
+      const hasPermission = roles.some(role =>
+        permissionRoles.includes(role)
+      )
       hasPermission || el.parentNode?.removeChild(el)
     } else {
-      throw new Error(`参数必须是一个数组且长度大于 0，参考：v-permission="['admin', 'editor']"`)
+      throw new Error(
+        `参数必须是一个数组且长度大于 0，参考：v-permission="['admin', 'editor']"`
+      )
     }
   }
 }
 
+// 自定义指令 v-permission，v-permission="['admin']" 控制按钮/元素显隐
 export function installPermissionDirective(app: App) {
   app.directive("permission", permission)
 }
