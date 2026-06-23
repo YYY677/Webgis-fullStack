@@ -9,6 +9,7 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers"
 import Components from "unplugin-vue-components/vite"
 import { defineConfig, loadEnv } from "vite"
 import type { Plugin } from "vite"
+import vitePluginCesium from "vite-plugin-cesium"
 import { ViteMcp } from "vite-plugin-mcp"
 import svgLoader from "vite-svg-loader"
 
@@ -165,6 +166,7 @@ export default defineConfig(({ mode }) => {
     },
     // 插件配置
     plugins: [
+      vitePluginCesium(),
       mockPlugin(),
       vue(),
       // 支持将 SVG 文件导入为 Vue 组件

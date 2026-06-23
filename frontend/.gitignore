@@ -16,6 +16,9 @@ vite.config.*.timestamp*
 
 yarn.lock
 
+# Cesium 静态资源（改用 vite-plugin-cesium，不再手工复制）
+public/Cesium/
+
 # Agent data
 .omc
 .agents/skills/*
