@@ -1,16 +1,21 @@
-<template>
-  <div id="app">
-    <!-- <clickEvent></clickEvent> -->
-    <loadTiandiMap></loadTiandiMap>
-    <!-- <Cesium1 /> -->
-  </div>
-</template>
+<script lang="ts" setup>
+import { useGreyAndColorWeakness } from "@@/composables/useGreyAndColorWeakness"
+import { useTheme } from "@@/composables/useTheme"
+import zhCn from "element-plus/es/locale/lang/zh-cn" // Element Plus 中文包
 
-<script setup lang="ts">
-import clickEvent from '@/views/OpenLayer/clickEvent.vue';
-import loadTiandiMap from '@/views/OpenLayer/LoadTiandiMap.vue';
-import Cesium1 from '@/views/Cesium1.vue';
+const { initTheme } = useTheme()
 
+const { initGreyAndColorWeakness } = useGreyAndColorWeakness()
+
+// 初始化主题
+initTheme()
+
+// 初始化灰色模式和色弱模式
+initGreyAndColorWeakness()
 </script>
 
-<style></style>
+<template>
+  <el-config-provider :locale="zhCn">
+    <router-view />
+  </el-config-provider>
+</template>

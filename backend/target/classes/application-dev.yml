@@ -1,5 +1,0 @@
-logging:
-  level:
-    com.webgis: DEBUG
-    com.webgis.system.mapper: DEBUG
-    org.springframework.security: DEBUG

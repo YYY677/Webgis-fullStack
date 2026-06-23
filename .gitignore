@@ -1,4 +1,40 @@
-# Logs
+# ── Java / Maven ──
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+*.tmp
+.mvn/timing.log
+.mvn/wrapper/maven-wrapper.jar
+
+# ── Node / Vite ──
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+.eslintcache
+*.timestamp-*-*.mjs
+
+# ── macOS ──
+.DS_Store
+
+# ── Editor ──
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Env ──
+*.local
+*.local.json
+
+# ── Logs ──
 logs
 *.log
 npm-debug.log*
@@ -7,33 +43,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-.DS_Store
-dist
-dist-ssr
+# ── Testing ──
 coverage
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-*.tsbuildinfo
-
-.eslintcache
-
-# Cypress
 /cypress/videos/
 /cypress/screenshots/
-
-# Vitest
 __screenshots__/
 
-# Vite
-*.timestamp-*-*.mjs
+# ── Project specific ──
+# Cesium 静态文件体积大，已提交不需要忽略（若后续改用 CDN 可取消注释）
+# frontend/public/Cesium/

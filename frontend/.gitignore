@@ -1,0 +1,22 @@
+# Common
+dist
+node_modules
+.eslintcache
+vite.config.*.timestamp*
+
+# MacOS
+.DS_Store
+
+# Local env files
+*.local
+*.local.json
+
+# Logs
+*.log
+
+yarn.lock
+
+# Agent data
+.omc
+.agents/skills/*
+!.agents/skills/v3-*/

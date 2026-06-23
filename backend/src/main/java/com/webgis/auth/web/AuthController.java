@@ -1,6 +1,7 @@
 package com.webgis.auth.web;
 
 import com.webgis.auth.JwtTokenProvider;
+import com.webgis.auth.LoginUser;
 import com.webgis.auth.dto.LoginRequest;
 import com.webgis.auth.dto.LoginResponse;
 import com.webgis.auth.dto.RegisterRequest;
@@ -10,7 +11,10 @@ import com.webgis.system.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -45,5 +49,15 @@ public class AuthController {
     public Result<Void> register(@Valid @RequestBody RegisterRequest request) {
         userService.createUser(request.getUsername(), request.getPassword(), request.getDisplayName());
         return Result.success();
+    }
+
+    @GetMapping("/me")
+    public Result<Map<String, Object>> me(@AuthenticationPrincipal LoginUser loginUser) {
+        return Result.success(Map.of(
+                "username", loginUser.getUsername(),
+                "roles", loginUser.getAuthorities().stream()
+                        .map(a -> a.getAuthority().replace("ROLE_", "").toLowerCase())
+                        .toList()
+        ));
     }
 }

@@ -1,0 +1,37 @@
+# AI 不需要读取的文件
+
+# 依赖包
+node_modules/
+
+# 编译输出
+dist/
+target/
+
+# 日志
+*.log
+
+# 锁文件（AI 不需要分析依赖版本锁定细节）
+package-lock.json
+pnpm-lock.yaml
+
+# 自动生成的类型声明
+**/types/auto/
+
+# 二进制 / 大文件
+*.jar
+*.png
+*.jpg
+*.ico
+*.woff
+*.woff2
+*.eot
+*.ttf
+*.svgz
+*.gif
+*.mp4
+*.webm
+
+# 编辑器 / IDE 配置
+.idea/
+*.suo
+*.sw?
