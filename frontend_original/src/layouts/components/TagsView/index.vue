@@ -79,8 +79,8 @@ function initTags() {
 /** 添加标签页 */
 function addTags(route: RouteLocationNormalizedGeneric) {
   if (route.name) {
-    tagsViewStore.addVisitedView(route)
-    tagsViewStore.addCachedView(route)
+    tagsViewStore.addVisitedView(route) // → 顶部标签栏多一个标签
+    tagsViewStore.addCachedView(route) // → 缓存池加 name
   }
 }
 
@@ -162,7 +162,7 @@ initTags()
 
 // 监听路由变化
 listenerRouteChange((route) => {
-  addTags(route)
+  addTags(route) // ← 路由一变，这里被调用
 }, true)
 </script>
 

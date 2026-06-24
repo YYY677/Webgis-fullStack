@@ -32,10 +32,10 @@ export const useTagsViewStore = defineStore("tags-view", () => {
   }
 
   const addCachedView = (view: TagView) => {
-    if (typeof view.name !== "string") return
-    if (cachedViews.value.includes(view.name)) return
-    if (view.meta?.keepAlive) {
-      cachedViews.value.push(view.name)
+    if (typeof view.name !== "string") return // 没 name 不缓存
+    if (cachedViews.value.includes(view.name)) return // 已有不重复加
+    if (view.meta?.keepAlive) { // ← 关键！必须页面的路由有 keepAlive
+      cachedViews.value.push(view.name) // → ["Cesium"] 存进去了
     }
   }
   // #endregion

@@ -52,7 +52,7 @@ export function registerNavigationGuard(router: Router) {
 
   // 全局后置钩子
   router.afterEach((to) => {
-    setRouteChange(to)
+    setRouteChange(to) // 通知"路由变了"，后续用于keep-alive缓存等。
     setTitle(to.meta.title)
     NProgress.done()
   })

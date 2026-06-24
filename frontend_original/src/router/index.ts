@@ -48,11 +48,13 @@ export const constantRoutes: RouteRecordRaw[] = [
   },
   {
     path: "/",
+    // Layouts 组件是整个应用的布局组件，里面包含了导航栏、侧边栏等公共部分
     component: Layouts,
     redirect: "/dashboard",
     children: [
       {
         path: "dashboard",
+        // 当用户访问 /dashboard 路径时加载 dashboard 页面组件到 Layouts 组件的 <router-view> 中
         component: () => import("@/pages/dashboard/index.vue"),
         name: "Dashboard",
         meta: {
