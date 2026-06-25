@@ -1,0 +1,34 @@
+@import "./variables.css";
+@import "./transition.scss";
+@import "./view-transition.scss";
+@import "./element-plus.scss";
+@import "./mixins.scss";
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  color: var(--v3-body-text-color);
+  background-color: var(--v3-body-bg-color);
+  font-family: Inter, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  @extend %scrollbar;
+}
+
+#app {
+  height: 100%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.app-container {
+  padding: 20px;
+}

@@ -1,0 +1,31 @@
+{
+  "name": "webgis-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "axios": "^1.13.2",
+    "cesium": "^1.142.0",
+    "element-plus": "^2.13.1",
+    "normalize.css": "^8.0.1",
+    "ol": "^10.9.0",
+    "pinia": "^3.0.4",
+    "proj4": "^2.20.9",
+    "vite-plugin-cesium": "^1.2.23",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.6",
+    "sass-embedded": "^1.78.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vue-tsc": "^3.2.2"
+  }
+}
