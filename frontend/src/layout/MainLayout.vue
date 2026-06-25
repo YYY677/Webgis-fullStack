@@ -1,13 +1,9 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { routes } from "@/router"
 import { useAppStore } from "@/stores/app"
 import { useUserStore } from "@/stores/user"
-import {
-  Expand, Fold, Search, FullScreen, Moon, Sunny, UserFilled,
-  HomeFilled, Grid, MapLocation
-} from "@element-plus/icons-vue"
-
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
@@ -15,24 +11,26 @@ const userStore = useUserStore()
 
 const sidebarWidth = computed(() => appStore.sidebarOpened ? "200px" : "64px")
 
-// 侧边栏菜单（icon 直接传组件引用，不传字符串）
-const menuList = [
-  { path: "/dashboard", title: "首页", icon: HomeFilled },
-  {
-    title: "组件示例", icon: Grid,
-    children: [
-      { path: "/demo/element-plus", title: "Element Plus" }
-    ]
-  },
-  {
-    title: "Map Demo", icon: MapLocation,
-    children: [
-      { path: "/map-demo/tianditu", title: "天地图" },
-      { path: "/map-demo/wfs", title: "WFS 查询" },
-      { path: "/map-demo/cesium", title: "Cesium 3D" }
-    ]
-  }
-]
+// 菜单 = 路由表 / 的子路由中 meta.hidden 不为 true 的那些
+const menuList = computed(() => {
+  const root = routes.find(r => r.path === "/")
+  const items = root?.children?.filter(r => !r.meta?.hidden) ?? []
+  return items.map(r => {
+    if (!r.children) {
+      // 叶子菜单（无子路由）
+      return { path: "/" + r.path, title: r.meta?.title as string, icon: r.meta?.icon as string }
+    }
+    // 父级菜单（有子路由）
+    return {
+      title: r.meta?.title as string,
+      icon: r.meta?.icon as string,
+      children: r.children.map(c => ({
+        path: "/" + r.path + "/" + c.path,
+        title: c.meta?.title as string
+      }))
+    }
+  })
+})
 
 // 搜索弹窗
 const searchVisible = ref(false)
@@ -42,7 +40,7 @@ const searchResults = computed(() => {
   if (!searchKeyword.value) return []
   const kw = searchKeyword.value.toLowerCase()
   const all: { title: string; path: string }[] = []
-  for (const item of menuList) {
+  for (const item of menuList.value) {
     if (item.children) {
       for (const child of item.children) {
         if (child.title.toLowerCase().includes(kw)) all.push(child)
@@ -100,8 +98,11 @@ if (savedTheme === "dark") {
     <!-- 侧边栏 -->
     <el-aside :width="sidebarWidth" class="sidebar">
       <div class="sidebar-logo">
+        <!-- <svg> — 画布，坐标系 0~24，宽高 24 个单位，不填充，跟随当前文本颜色，线条粗细 2 个单位 -->
         <svg class="logo-img" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <!-- 圆心在画布正中央 (12, 12)，半径 10 个单位 → 地球的外轮廓。 -->
           <circle cx="12" cy="12" r="10" />
+          <!-- d 属性是一串绘图指令，每个字母代表一个动作 -->
           <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z" />
         </svg>
         <span v-show="appStore.sidebarOpened" class="logo-text">WebGIS</span>
@@ -203,7 +204,7 @@ if (savedTheme === "dark") {
 <style lang="scss" scoped>
 .app-wrapper {
   height: 100vh;
-  overflow: hidden;
+  overflow: hidden; // 防止滚动条出现
 }
 
 .sidebar {
