@@ -8,6 +8,8 @@ export const useUserStore = defineStore("user", () => {
   const username = ref("")
   const roles = ref<string[]>([])
 
+  // “!!token.value” 将 token.value 转换为布尔值，
+  // 如果 token.value 是空字符串，则返回 false；否则返回 true。
   const isLoggedIn = computed(() => !!token.value)
 
   async function login(cred: { username: string; password: string }) {

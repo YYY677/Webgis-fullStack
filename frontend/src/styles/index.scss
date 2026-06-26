@@ -1,8 +1,16 @@
-@import "./variables.css";
-@import "./transition.scss";
-@import "./view-transition.scss";
-@import "./element-plus.scss";
-@import "./mixins.scss";
+// 旧写法 (弃用)
+// @import "./variables.css";
+// @import "./transition.scss";
+// @import "./view-transition.scss";
+// @import "./element-plus.scss";
+// @import "./mixins.scss";
+
+// 新写法 (推荐)
+@use "./variables.css"; // 调色盘 & 尺寸规划，定义了全局 CSS 变量（颜色、高度）。
+@use "./transition.scss"; // 室内门的开关方式，路由切换时的淡入淡出、滑动过渡动画。
+@use "./view-transition.scss"; // 特效开关（水波纹），那个炫酷的水波纹扩散动画。
+@use "./element-plus.scss"; // Element Plus 组件库的样式，包含了移动端响应式适配的降级隐藏。
+@use "./mixins.scss"; // 通用样式混入，包含了清除浮动、滚动条美化、文本溢出省略号等常用样式。
 
 html {
   height: 100%;
@@ -10,11 +18,13 @@ html {
 
 body {
   height: 100%;
-  margin: 0;
-  color: var(--v3-body-text-color);
-  background-color: var(--v3-body-bg-color);
-  font-family: Inter, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  @extend %scrollbar;
+  margin: 0; /* 清除浏览器默认的 8px 外间距 */
+  color: var(--v3-body-text-color); /* 文字颜色统一深灰 */
+  background-color: var(--v3-body-bg-color); /* 背景统一浅灰 */
+  font-family: /* 设置优雅的跨平台字体栈 */
+    Inter, "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  @extend %scrollbar; /* 应用全局漂亮滚动条 */
 }
 
 #app {
@@ -24,10 +34,14 @@ body {
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+  box-sizing: border-box; /* 核心重置！让 padding 和 border 不撑大盒子尺寸 */
 }
 
-a { color: inherit; text-decoration: none; }
+/* 链接继承父级颜色，去掉下划线 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
 .app-container {
   padding: 20px;

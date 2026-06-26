@@ -1,3 +1,13 @@
+/*
+作用：解决父元素因子元素浮动（float）导致的高度塌陷问题。
+
+原理：在父元素的末尾生成一个不可见的伪元素（::after），将其设置为块级表格（display: table）
+并清除两侧浮动（clear: both），从而将父容器的高度撑开。
+
+历史地位：这是 CSS 布局中经典的“万能清除浮动”大法。需要注意的是：
+在现代 Flexbox/Grid 布局普及的今天，除非你维护老项目或必须使用 float 做文字环绕，
+否则很少需要手动清除浮动了。但在遗留代码中依然常见。
+*/
 %clearfix {
   &::after {
     content: "";
@@ -6,11 +16,14 @@
   }
 }
 
+// 作用：美化页面滚动条，去除浏览器默认的灰色粗条，改成更细、更圆润的半透明深灰色滑块。
 %scrollbar {
+  // ::-webkit-scrollbar：控制滚动条的整体轨道（宽高）。
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
+  // ::-webkit-scrollbar-thumb：控制滚动条中可拖动的滑块。
   &::-webkit-scrollbar-thumb {
     border-radius: 4px;
     background-color: #90939955;
@@ -23,8 +36,11 @@
   }
 }
 
+// 为什么要用 %（占位符）而不是写一个普通类（.class）？
+// 若.clearfix { ... }，那么就算你一次都没在 HTML 里使用它，它的样式依然会被编译进最终的 CSS 文件里
+// %作用：只有当你在某个选择器里写了 @extend %clearfix; 时，SCSS 才会把这个样式塞进去。
 %ellipsis {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  overflow: hidden; // 1. 溢出部分裁剪
+  white-space: nowrap; // 2. 强制文本不换行
+  text-overflow: ellipsis; // 3. 溢出部分显示为 "..."
 }

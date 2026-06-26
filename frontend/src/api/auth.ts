@@ -17,6 +17,8 @@ interface UserInfo {
   roles: string[]
 }
 
+// 你调用时，T 变成了 { data: LoginResult }
+// 但 config 依然是 { url: '/login', method: 'post', data: ... }
 export function loginApi(data: LoginData) {
   return request<{ data: LoginResult }>({
     url: "/auth/login",

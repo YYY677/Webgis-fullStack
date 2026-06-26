@@ -1,13 +1,23 @@
+/* 视图过渡旧元素的样式 */
 ::view-transition-old(root) {
-  animation: none;
-  mix-blend-mode: normal;
+  animation: none; // 立即消失。不做任何动画，瞬间隐去。
+  mix-blend-mode: normal; /* 设置混合模式为正常 */
 }
+/* 视图过渡新元素的样式 */
 ::view-transition-new(root) {
-  animation: 0.5s ease-in clip-animation;
-  mix-blend-mode: normal;
+  animation: 0.5s ease-in clip-animation; /* 应用0.5秒缓入动画，使用clip-animation关键帧 */
+  mix-blend-mode: normal; /* 设置混合模式为正常 */
 }
 
+/* 定义clip-animation关键帧动画 */
+// 连起来看：新页面在 0.5 秒内，从一个看不见的“奇点”膨胀成一个覆盖全屏的“大圆”，这就是水波纹效果的原理。
 @keyframes clip-animation {
-  from { clip-path: circle(0px at var(--v3-theme-x) var(--v3-theme-y)); }
-  to { clip-path: circle(var(--v3-theme-r) at var(--v3-theme-x) var(--v3-theme-y)); }
+  // 起点：半径是 0px。此时新页面被裁剪成一个无限小的点，肉眼完全看不见。
+  from {
+    clip-path: circle(0px at var(--v3-theme-x) var(--v3-theme-y));
+  }
+  // 终点：半径是 var(--v3-theme-r)。这是一个巨大的半径值（足以覆盖整个屏幕）。此时新页面完全铺满屏幕。
+  to {
+    clip-path: circle(var(--v3-theme-r) at var(--v3-theme-x) var(--v3-theme-y));
+  }
 }

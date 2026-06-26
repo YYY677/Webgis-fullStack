@@ -1,4 +1,7 @@
+// 这段代码是一段移动端响应式适配样式，专门针对 Element Plus 的分页组件（el-pagination）做的降级隐藏。
 .el-pagination {
+  // @media screen：指定样式只对屏幕设备生效
+  // max-width: 768px：这是业界经典的 “平板/手机”断点
   @media screen and (max-width: 768px) {
     .el-pagination__total,
     .el-pagination__sizes,

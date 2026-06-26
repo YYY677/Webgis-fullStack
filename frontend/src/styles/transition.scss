@@ -1,12 +1,19 @@
+/* 
+  这是一个Vue.js的过渡效果样式，用于实现元素进入和离开时的淡入淡出和位移动画
+  包含三个主要部分：过渡效果激活状态、元素进入状态和元素离开状态
+*/
+/* 过渡效果激活状态，应用于元素进入和离开时的过渡动画 */
 .fade-transform-leave-active,
 .fade-transform-enter-active {
-  transition: all 0.5s;
+  transition: all 0.5s; /* 设置过渡效果持续时间为0.5秒，应用于所有属性 */
 }
+/* 元素进入状态，定义元素进入时的初始样式 */
 .fade-transform-enter {
-  opacity: 0;
-  transform: translateX(-30px);
+  opacity: 0; /* 初始透明度为0，完全透明 */
+  transform: translateX(-30px); /* 初始位置向左偏移30像素 */
 }
+/* 元素离开状态，定义元素离开时的最终样式 */
 .fade-transform-leave-to {
-  opacity: 0;
-  transform: translateX(30px);
+  opacity: 0; /* 最终透明度为0，完全透明 */
+  transform: translateX(30px); /* 最终位置向右偏移30像素 */
 }
