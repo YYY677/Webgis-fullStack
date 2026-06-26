@@ -1,6 +1,27 @@
+/* 
+:root 是什么？
+它是 CSS 的根元素选择器（在 HTML 中就是 <html> 标签）。
+所有写在 :root 里的变量，在整个项目的任何 CSS 文件中都能用。
+
+- 统一维护，修改一处全项目生效：如果你想把主题色从灰色改成蓝色，只需要在 :root 里把 #f5f7fa 
+改成 #ecf5ff，全站 100 个页面的背景色会自动统一变化，不用去挨个改 CSS 文件。
+
+- 语义化命名，方便记忆：你写 height: var(--v3-header-height); 比直接写死 height: 50px; 
+更清晰。别人一看就知道“哦，这是顶部导航的固定高度”。
+
+- 给“深色模式/主题切换”预留接口：这是最核心的用途！如果想实现一键切换暗黑模式，
+你只需要在 .dark 选择器下重新覆盖这些变量的值
+*/
+
 :root {
   --v3-body-bg-color: #f5f7fa;
   --v3-body-text-color: #303133;
   --v3-header-height: 50px;
   --v3-tagsview-height: 34px;
+}
+
+/* body 背景也会跟着暗黑模式切换 */
+html.dark {
+  --v3-body-bg-color: #0a0a0a;
+  --v3-body-text-color: #e5eaf3;
 }

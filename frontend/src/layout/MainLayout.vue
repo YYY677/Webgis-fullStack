@@ -1,12 +1,14 @@
 <script lang="ts" setup>
 import { ref, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { setCssVar } from "@/utils/css"
 import { routes } from "@/router"
+// 把 Store 的定义（蓝图/构造函数） 拉进来，此时内存里什么都没有。
 import { useAppStore } from "@/stores/app"
 import { useUserStore } from "@/stores/user"
 const route = useRoute()
 const router = useRouter()
-const appStore = useAppStore()
+const appStore = useAppStore() // “运行”这个工厂函数。如果只导入不调用，组件根本无法获得状态数据。
 const userStore = useUserStore()
 
 const sidebarWidth = computed(() => appStore.sidebarOpened ? "200px" : "64px")
@@ -61,10 +63,25 @@ function goToMenu(path: string) {
 // 主题
 const isDark = ref(false)
 
-function toggleTheme() {
+function toggleTheme(event: MouseEvent) {
   isDark.value = !isDark.value
+  // 把用户偏好存进 localStorage，这样用户刷新页面后，主题不会重置
   localStorage.setItem("theme", isDark.value ? "dark" : "light")
-  document.documentElement.classList.toggle("dark", isDark.value)
+
+  // 圆形扩散动画（View Transition API，Chrome 111+）
+  const x = event.clientX
+  const y = event.clientY
+  // Math.hypot 计算了从点击点到屏幕最远角落的距离。这样算出来的半径，
+  // 无论你在哪里点击，生成的圆都能恰好覆盖整个屏幕。
+  const maxRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
+  // “JS 操控 CSS 变量”，让 CSS 动画里的 clip-path 知道了“圆要从哪里开始画，画多大”。
+  setCssVar("--v3-theme-x", `${x}px`)
+  setCssVar("--v3-theme-y", `${y}px`)
+  setCssVar("--v3-theme-r", `${maxRadius}px`)
+  // documentElement.classList为所有 HTML 元素的根节点 <html> 的 class 列表。切换 dark 类，触发暗黑模式。
+  const toggle = () => document.documentElement.classList.toggle("dark", isDark.value)
+  // 如果浏览器支持 View Transition API，就用它来做圆形扩散动画；否则直接切换主题。
+  document.startViewTransition ? document.startViewTransition(toggle) : toggle()
 }
 
 // 全屏
@@ -107,6 +124,11 @@ if (savedTheme === "dark") {
         </svg>
         <span v-show="appStore.sidebarOpened" class="logo-text">WebGIS</span>
       </div>
+      <!-- 
+        default-active用于高亮当前激活的菜单项 
+        collapse控制菜单是否折叠（只显示图标）
+        router启用 Vue Router 模式，点击菜单项时会自动调用 router.push()，根据 index 属性进行路由跳转
+      -->
       <el-menu
         :default-active="route.path"
         :collapse="!appStore.sidebarOpened"
@@ -114,11 +136,19 @@ if (savedTheme === "dark") {
         class="sidebar-menu"
       >
         <template v-for="item in menuList" :key="item.path || item.title">
+          <!-- sub-menu的index作为子菜单展开/折叠的唯一标识，不参与路由跳转 -->
           <el-sub-menu v-if="item.children" :index="item.title">
+            <!-- #title插槽	自定义子菜单标题区域，内部包含图标和文本。 -->
             <template #title>
+              <!-- <component> 是一个Vue核心框架内置的动态渲染的“占位符”。
+                它的核心作用是：根据 is 属性的值，决定最终渲染成哪个具体的组件。 
+                如果传的是字符串，Vue 会去查找“全局注册”的组件。
+                该项目中，所有图标都是采用plugin方式全局注册的icon图标，所以可以直接传字符串。  
+              -->
               <el-icon><component :is="item.icon" /></el-icon>
               <span>{{ item.title }}</span>
             </template>
+            <!-- menu-item的index绑定路由路径，参与路由跳转 + 高亮匹配 -->
             <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
               {{ child.title }}
             </el-menu-item>
@@ -136,17 +166,32 @@ if (savedTheme === "dark") {
       <!-- 顶栏 -->
       <el-header class="header">
         <div class="header-left">
+          <!-- 侧边栏折叠/展开按钮 -->
           <el-icon class="collapse-btn" @click="appStore.toggleSidebar">
+            <!-- 当侧边栏处于展开状态时显示折叠图标 -->
             <Fold v-if="appStore.sidebarOpened" />
+            <!-- 当侧边栏处于折叠状态时显示展开图标 -->
             <Expand v-else />
           </el-icon>
           <el-breadcrumb separator="›">
+            <!-- 
+              route 是 Vue Router 提供的当前路由信息对象。route.matched 是一个数组，
+              它包含了当前 URL 匹配到的所有路由记录，按层级从父到子排列。
+              当用户访问 /user/list 时，route.matched 的值就是：
+              [
+                { path: '/user', meta: { title: '用户管理' }, ... },
+                { path: '/user/list', meta: { title: '用户列表' }, ... }
+              ]
+              filter 是 JavaScript 的数组方法，用来筛选符合条件的元素。
+              结合上面的路由例子，面包屑导航就是：用户管理 › 用户列表
+            -->
             <el-breadcrumb-item v-for="item in route.matched.filter(r => r.meta?.title)" :key="item.path">
               {{ item.meta?.title }}
             </el-breadcrumb-item>
           </el-breadcrumb>
         </div>
         <div class="header-right">
+          <!-- <el-tooltip> 鼠标悬停时显示提示文字，effect="dark"：设置提示框的风格为深色背景 -->
           <el-tooltip content="搜索菜单" effect="dark">
             <el-icon class="header-btn" @click="searchVisible = true"><Search /></el-icon>
           </el-tooltip>
@@ -159,13 +204,18 @@ if (savedTheme === "dark") {
           <el-tooltip content="全屏" effect="dark">
             <el-icon class="header-btn" @click="toggleFullscreen"><FullScreen /></el-icon>
           </el-tooltip>
+          <!-- @command="handleCommand"：这是 Element Plus 下拉菜单的核心事件。
+          当下拉菜单中的某一项被点击时，会触发该事件，并将被点击项的 command 值作为参数传入。 -->
           <el-dropdown @command="handleCommand">
+            <!-- 触发区（default 插槽） -->
             <span class="user-info">
               <el-avatar :size="32" icon="UserFilled" />
               <span class="username">{{ userStore.username || "用户" }}</span>
             </span>
+            <!-- 下拉菜单列表（#dropdown 插槽） -->
             <template #dropdown>
               <el-dropdown-menu>
+                <!-- command="logout" 点击它时，外层的 @command 会收到这个字符串。 -->
                 <el-dropdown-item command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -175,8 +225,25 @@ if (savedTheme === "dark") {
 
       <!-- 内容区 -->
       <el-main class="content">
+        <!-- 
+          v-slot="{ Component }" 是 Vue 3 的插槽语法，Component 就是当前路由对应的组件。
+          为什么非要这么写？ 因为只有把 Component 变量抓在手里，你才能手动控制它何时渲染、
+          怎么渲染——这就是下一步要做的事，既方便我们给他添加过渡动画。
+        --> 
         <router-view v-slot="{ Component }">
+          <!-- 
+            name="fade-transform"：指定了 CSS 动画类的前缀。意味着你要在样式表里写 
+            .fade-transform-enter-active、.fade-transform-leave-active 
+            等类来控制淡入淡出和位移效果。
+
+            mode="out-in"：这是非常关键的配置！
+            默认情况下，旧页面消失和新页面出现是同时进行的，容易产生“重叠闪动”。
+            加上 mode="out-in" 后，旧页面必须彻底淡出消失后，新页面才会开始淡入出现。
+            避免了切换时两个页面上下堆叠的尴尬，视觉上极其丝滑。
+          -->
           <transition name="fade-transform" mode="out-in">
+            <!-- 当路由改变时，Component 变量会变成新页面的组件对象。由于它被包裹在 <transition> 
+              内部，这个变量的变化会触发 <transition> 的进入/离开钩子，从而启动动画。 -->
             <component :is="Component" />
           </transition>
         </router-view>
@@ -273,7 +340,7 @@ if (savedTheme === "dark") {
   .header-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 16px; // 按钮之间的间距
     .header-btn {
       font-size: 22px;
       cursor: pointer;
