@@ -3,6 +3,9 @@ import { reactive, ref, computed } from "vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { usePagination } from "@/composables/usePagination"
 
+// Pinia 是“公司总部的共享数据库”（全局单例），Composables 是“部门里的工具箱”（局部逻辑复用）。
+// 如果你要存“一份数据，到处用，改了都要变” → 放 Pinia（如用户信息、系统配置）。
+// 如果你要抽“一段逻辑，多处用，但互相隔离” → 放 Composables（如表单校验、倒计时）。
 const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
 
 // 模拟表格数据
@@ -34,7 +37,7 @@ function handleAdd() {
 }
 
 function handleEdit(row: any) {
-  Object.assign(formData, row)
+  Object.assign(formData, row) // 将选中行的数据复制到表单数据中
   dialogVisible.value = true
 }
 
@@ -54,6 +57,7 @@ function handleSave() {
   <div class="app-container">
     <!-- 搜索栏 -->
     <el-card shadow="never" class="search-bar">
+      <!-- inline属性表示表单元素在一行内显示 -->
       <el-form :inline="true">
         <el-form-item label="用户名">
           <el-input v-model="paginationData.currentPage" placeholder="搜索..." style="width:200px" />

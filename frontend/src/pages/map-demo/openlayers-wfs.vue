@@ -1,5 +1,7 @@
 <template>
-  <div id="wfs-map" class="map-container">
+  <div id="wfs-map" class="map-container" style="position: relative">
+    <BasemapSwitcher :set-base-layer="setBaseLayer" />
+    <!-- WFS 要素弹出框（跟底图无关，独立浮层） -->
     <div ref="popupRef" class="ol-popup">
       <div ref="popupContent"></div>
     </div>
@@ -7,22 +9,28 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue"
+import { ref, onMounted } from "vue"
 import "ol/ol.css"
-import Map from "ol/Map"
-import View from "ol/View"
 import Overlay from "ol/Overlay"
-import TileLayer from "ol/layer/Tile"
 import VectorLayer from "ol/layer/Vector"
-import XYZ from "ol/source/XYZ"
 import VectorSource from "ol/source/Vector"
 import GeoJSON from "ol/format/GeoJSON"
 import { Style, Fill, Stroke } from "ol/style"
-import { fromLonLat } from "ol/proj"
+import { useMap } from "@/composables/useMap"
+import { BASEMAP_LIST } from "@/utils/basemaps"
+import BasemapSwitcher from "@/components/BasemapSwitcher.vue"
 
 const popupRef = ref<HTMLDivElement>()
 const popupContent = ref<HTMLDivElement>()
 
+// 地图实例 + 底图切换 — useMap 负责创建 Map、销毁、resize
+const { map, setBaseLayer } = useMap("wfs-map", {
+  layers: [BASEMAP_LIST[0].create()],
+  centerLonLat: [-0.1, 51.5],
+  view: { zoom: 10 }
+})
+
+// WFS 逻辑 — 在 useMap 的 onMounted 之后运行，此时 map.value 已就绪
 onMounted(() => {
   const geoserverUrl = import.meta.env.VITE_GEOSERVER_URL || "/geoserver"
   const wfsUrl = `${geoserverUrl}/Yuu/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=Yuu:London_Borough_Excluding_MHW&outputFormat=application/json&srsName=EPSG:3857`
@@ -33,21 +41,20 @@ onMounted(() => {
   const vectorLayer = new VectorLayer({ source: vectorSource, style: defaultStyle })
   const overlay = new Overlay({ element: popupRef.value!, positioning: "bottom-center", stopEvent: false, offset: [0, -10] })
 
-  const map = new Map({
-    target: "wfs-map",
-    layers: [new TileLayer({ source: new XYZ({ url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png" }) }), vectorLayer],
-    overlays: [overlay],
-    view: new View({ center: fromLonLat([-0.1, 51.5]), zoom: 10 })
-  })
+  const m = map.value!
+  m.addLayer(vectorLayer)
+  m.addOverlay(overlay)
 
+  // 数据加载后自动缩放到范围
   vectorSource.on("featuresloadend", () => {
     const extent = vectorSource.getExtent()
-    if (extent) map.getView().fit(extent, { duration: 800 })
+    if (extent) m.getView().fit(extent, { duration: 800 })
   })
 
+  // 点击要素高亮 + 弹窗
   let selectedFeature: any = null
-  map.on("click", (evt) => {
-    const feature = map.forEachFeatureAtPixel(evt.pixel, (f) => f) as any
+  m.on("click", (evt) => {
+    const feature = m.forEachFeatureAtPixel(evt.pixel, (f) => f) as any
     if (selectedFeature) selectedFeature.setStyle(defaultStyle)
     if (feature) {
       feature.setStyle(highlightStyle)
@@ -64,6 +71,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.map-container { width: 100%; height: calc(100vh - 50px); position: relative; }
+.map-container { width: 100%; height: calc(100vh - 50px); }
 .ol-popup { position: absolute; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; pointer-events: none; }
 </style>
