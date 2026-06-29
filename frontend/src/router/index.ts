@@ -49,6 +49,12 @@ const routes: RouteRecordRaw[] = [
             meta: { title: "02-基础工具" },
           },
           {
+            path: "load-data",
+            name: "LoadData",
+            component: () => import("@/pages/map-demo/03-load-data.vue"),
+            meta: { title: "03-加载数据" },
+          },
+          {
             path: "tianditu",
             name: "Tianditu",
             component: () => import("@/pages/map-demo/openlayers-tianditu.vue"),

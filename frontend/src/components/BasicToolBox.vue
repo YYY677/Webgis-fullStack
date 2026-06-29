@@ -406,7 +406,6 @@ const drawTool = (type) => {
 .fade-leave-active {
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
