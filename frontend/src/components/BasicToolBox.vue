@@ -134,10 +134,7 @@ function resetTool() {
     draw = null
   }
   sketch = null
-  if (measureTooltip) props.map.removeOverlay(measureTooltip)
-  // remove() → 外部清理：从 OL 地图 / DOM 树上移除对象
-  // = null   → 内部清理：JS 变量指向空，后续代码可以据此判断"当前没有工具"
-  if (measureTooltipElement) { measureTooltipElement.remove(); measureTooltipElement = null }
+  // 注意：不动 measureTooltip/measureTooltipElement，已完成测量的黄底结果留在图上
   deactivateEraser()
   activeMeasure.value = ""
   activeDraw.value = ""
@@ -162,6 +159,12 @@ function toggleEraser() {
         cancelButtonText: "取消",
         type: "warning",
       }).then(() => {
+        // 顺带删除附属的测量 tooltip
+        const tip = feature.get("_tipOverlay")
+        if (tip) {
+          if (tip.getElement()) tip.getElement().remove()
+          props.map.removeOverlay(tip)
+        }
         vectorSource.removeFeature(feature)
       }).catch(() => { })
     }
@@ -185,6 +188,14 @@ function clearAll() {
     type: "warning",
   }).then(() => {
     resetTool()
+    // 清除所有要素绑定的 tooltip Overlay
+    vectorSource.getFeatures().forEach((f) => {
+      const tip = f.get("_tipOverlay")
+      if (tip) {
+        if (tip.getElement()) tip.getElement().remove()
+        props.map.removeOverlay(tip)
+      }
+    })
     vectorSource.clear()
   }).catch(() => { })
 }
@@ -275,7 +286,14 @@ const measureTool = (type) => {
     // 固化测量数值：改成黄底固定样式留在图上
     measureTooltipElement.className = "ol-tooltip ol-tooltip-static";
     measureTooltip.setOffset([0, -7]);
-    // 局部清理：移除 draw 交互、重置状态，但不动 measureTooltip
+    // feature.set(key, value) 是 OL 给每个要素挂载自定义属性的方法
+    // 任何类型——字符串、数字、对象、OL 实例（Overlay、Layer）、函数，都能装。
+    // 把 tooltip Overlay 挂到要素上，橡皮擦能顺带删除
+    sketch.set("_tipOverlay", measureTooltip);
+    // 断开引用：tooltip 已绑定给 feature，measureTooltip 不再管理它
+    measureTooltip = null;
+    measureTooltipElement = null;
+    // 局部清理：移除 draw 交互、重置状态
     if (draw) { props.map.removeInteraction(draw); draw = null }
     sketch = null;
     unByKey(listener);
