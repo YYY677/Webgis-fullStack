@@ -43,6 +43,12 @@ const routes: RouteRecordRaw[] = [
             meta: { title: "01-底图切换" },
           },
           {
+            path: "tools",
+            name: "Tools",
+            component: () => import("@/pages/map-demo/02-basic-tools.vue"),
+            meta: { title: "02-基础工具" },
+          },
+          {
             path: "tianditu",
             name: "Tianditu",
             component: () => import("@/pages/map-demo/openlayers-tianditu.vue"),

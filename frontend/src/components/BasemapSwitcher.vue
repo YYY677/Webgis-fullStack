@@ -2,6 +2,8 @@
   <div class="basemap-switcher">
     <!-- 触发按钮 -->
     <el-tooltip content="切换底图" placement="left">
+      <!-- 这里的 Switch 是 JavaScript 变量值，不是模板组件名。
+      Vue 编译器需要它在当前作用域里有定义，全局注册帮不了忙，必须 import。 -->
       <el-button class="trigger-btn" :icon="Switch" circle @click="open = !open" />
     </el-tooltip>
 
@@ -73,6 +75,8 @@ function select(item: BasemapItem) {
 }
 
 .switcher-panel {
+  position: absolute;
+  right: 35px;
   background: var(--el-bg-color-overlay);
   backdrop-filter: blur(8px);
   border: 1px solid var(--el-border-color-light);
@@ -118,11 +122,11 @@ function select(item: BasemapItem) {
 /* 淡入淡出 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-20px);
 }
 </style>
