@@ -13,8 +13,9 @@ import BasemapSwitcher from "@/components/BasemapSwitcher.vue"
 import BasicToolBox from "@/components/BasicToolBox.vue";
 // OL模块引入
 import GeoJSON from "ol/format/GeoJSON"
+import { Overlay } from "ol"
 import { Vector as VectorSource } from "ol/source"
-import { Vector as VectorLayer } from "ol/layer"
+import { Vector as VectorLayer, Heatmap as HeatmapLayer } from "ol/layer"
 import { Style, Stroke, Fill, Text, RegularShape, Circle } from "ol/style"
 import Select from "ol/interaction/Select"
 import type { Map } from "ol"
@@ -38,6 +39,36 @@ async function loadGeoJSON(
   })
   map.addLayer(layer)
   return layer
+}
+
+/** 通用 Heatmap 加载器：fetch + 解析 + 创建热力图并添加到地图 */
+async function loadHeatmap(
+  map: Map,
+  url: string,
+  weightField: string,
+) {
+  const res = await fetch(url)
+  const geojson = await res.json()
+  const source = new VectorSource({
+    features: new GeoJSON().readFeatures(geojson, {
+      featureProjection: "EPSG:3857",
+    }),
+  })
+  const layer = new HeatmapLayer({
+    source,
+    radius: 5, // 半径越大，热力图点越模糊
+    blur: 7, // 模糊度越大，热力图点越模糊
+    // 通过 weightField 指定的字段值来计算热力图权重，值越大，热力图点越亮
+    weight: weightField
+      ? (feature) => {
+          const v = Number(feature.get(weightField))
+          return isNaN(v) ? 0.3 : v / 5
+        }
+      : 1,
+  })
+  map.addLayer(layer)
+  // 返回 source，供外部创建文字标注层
+  return { layer, source }
 }
 
 /** 初始化地图 */
@@ -103,19 +134,9 @@ const cityStyle = (feature: any) => {
 
 /** 县域边界样式（半透明填充 + 边界线 + 县名标注） */
 const countyStyle = (feature: any) => {
-  // const name = feature.get("NAME") || ""
-  // 缩放级别 >= 10 才显示县名，否则文字堆叠看不清
-  // const zoom = map.value?.getView()?.getZoom() ?? 0
-  // const showText = zoom >= 8
   return new Style({
     fill: new Fill({ color: "rgba(0, 120, 255, 0.08)" }),
     stroke: new Stroke({ color: "#0078ff", width: 1.5 }),
-    // text: showText ? new Text({
-    //   text: name,
-    //   font: "bold 13px Arial",
-    //   fill: new Fill({ color: "#0078ff" }),
-    //   stroke: new Stroke({ color: "white", width: 2 }),
-    // }) : undefined,
   })
 }
 
@@ -168,34 +189,53 @@ onMounted(async () => {
   const cityLayer = await loadGeoJSON(m, "/test_data/cities.geojson", cityStyle, 10)
   // 加载重庆县域边界
   const countyLayer = await loadGeoJSON(m, "/test_data/chongqing_county_border.geojson", countyStyle, 5)
+  // 加载大学热力图
+  const { layer: heatmapLayer } = await loadHeatmap(m, "/test_data/university.geojson", "")
 
-  // 鼠标悬停 + 点击
-  m.on("pointermove", (evt) => {
-    if (m.hasFeatureAtPixel(evt.pixel)) {
-      m.getTargetElement().style.cursor = "pointer"
-    } else {
-      m.getTargetElement().style.cursor = ""
-    }
+  // 大学名称弹窗（OL Overlay：浮在地图上的 DOM 元素）
+  // Overlay 帮你做了一件事：把地图坐标（经纬度）和 DOM 位置绑定起来，地图动它就动。 
+  // 你自己写也能实现，但得监听 moveend、resize 一堆事件，
+  // 手动调用 map.getPixelFromCoordinate() 算像素位置。Overlay 把这事包了。
+  const popupEl = document.createElement("div")
+  popupEl.className = "univ-popup"
+  const popup = new Overlay({
+    element: popupEl,
+    positioning: "bottom-center",
+    offset: [0, -8],
   })
+  m.addOverlay(popup)
+
+  // 鼠标悬停
+  m.on("pointermove", (evt) => {
+    m.getTargetElement().style.cursor = m.hasFeatureAtPixel(evt.pixel) ? "pointer" : ""
+  })
+
+  // 点击大学 → 弹窗显示名称
   m.on("click", (evt) => {
-    m.forEachFeatureAtPixel(evt.pixel, (feature) => {
-      console.log("当前点击feature：", feature)
+    popup.setPosition(undefined) // 先隐藏
+    m.forEachFeatureAtPixel(evt.pixel, (feature, layer) => {
+      if (layer !== heatmapLayer) return
+      const name = feature.get("name") || feature.get("NAME")
+      if (name) {
+        popupEl.innerHTML = name
+        // 从 Point geometry 取精确坐标，否则用点击位置
+        const geom = (feature as any).getGeometry()
+        const coord = geom?.getType() === "Point" ? geom.getCoordinates() : evt.coordinate
+        popup.setPosition(coord)
+      }
     })
   })
 
-  let select = new Select({
-    layers: [cityLayer, countyLayer],
-    style: function (feature) {
-      return selectStyle(feature)
-    }
+  // Select 给城市点和县域边界用
+  const select = new Select({
+    // layers: [cityLayer, countyLayer],
+    layers: [countyLayer],
+    style: (feature) => selectStyle(feature),
   })
   m.addInteraction(select)
   select.on("select", (evt) => {
-    let features = evt.selected
-    if (features.length > 0) {
-      let feature = features[0]
-      console.log(feature.get("name") || feature.get("NAME"));
-    }
+    const f = evt.selected[0]
+    if (f) console.log(f.get("name") || f.get("NAME"))
   })
 })
 
@@ -205,5 +245,20 @@ onMounted(async () => {
 .map-container {
   width: 100%;
   height: 100%;
+}
+/*
+  :global 穿透 scoped 限制。
+  大学弹窗由 document.createElement("div") 动态创建，没有 data-v-xxx 属性。
+  scoped 样式默认加上 [data-v-xxx] 选择器会匹配不到，所以用 :global 取消限制。
+*/
+:global(.univ-popup) {
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
 }
 </style>
