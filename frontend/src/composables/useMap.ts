@@ -60,7 +60,7 @@ export function useMap(containerId: string, options: UseMapOptions = {}) {
       layers: options.layers ?? [],
       view: new View(viewOpts),
       controls: defaultControls({
-        zoom: true, // 显示 +/- 按钮
+        zoom: false, // 显示 +/- 按钮
         rotate: false, // 隐藏指南针
         attribution: true, // 保留版权
       }),

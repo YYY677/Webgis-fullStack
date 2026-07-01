@@ -206,8 +206,12 @@ function openAttrTable(item: LayerInfo) {
   currentPage.value = 1
 
   const source = item.layer.getSource?.()
-  // ?? 表示如果 source 或 getFeatures 为 null/undefined，则返回空数组
-  const features = source?.getFeatures?.() ?? []
+  // Cluster source：getFeatures() 返回的是虚拟聚合要素，属性是 [Feature, Feature, ...] 数组
+  // 不能直接展示。通过 getSource() 拿到底层的 VectorSource，获取原始要素
+  const src = typeof (source as any)?.getSource === "function"
+    ? (source as any).getSource()
+    : source
+  const features = src?.getFeatures?.() ?? []
 
   // Set 自动去重 — 多个 feature 共有的字段只存一次
   const keys = new Set<string>()

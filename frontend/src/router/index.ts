@@ -61,6 +61,12 @@ const routes: RouteRecordRaw[] = [
             meta: { title: "04-图层控制" },
           },
           {
+            path: "add-freely",
+            name: "AddFreely",
+            component: () => import("@/pages/map-demo/05-add-freely.vue"),
+            meta: { title: "05-随意补充" },
+          },
+          {
             path: "tianditu",
             name: "Tianditu",
             component: () => import("@/pages/map-demo/openlayers-tianditu.vue"),
