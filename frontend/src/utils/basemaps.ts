@@ -113,12 +113,12 @@ export function createTdtLayer(type: TdtType): TileLayer<WMTS> {
     source: new WMTS({
       url: `http://t0.tianditu.gov.cn/${layerId}_w/wmts?tk=${key}`,
       layer: layerId,
-      matrixSet: "w",
-      format: "tiles",
-      style: "default",
+      matrixSet: "w", // 天地图 WMTS 的矩阵集 ID，w=Web墨卡托投影
+      format: "tiles", // 天地图 WMTS 的图像格式
+      style: "default", // 天地图 WMTS 的样式
       projection: TDT_TILE_GRID.projection,
       tileGrid: TDT_TILE_GRID.grid,
-      wrapX: true
+      wrapX: true // 是否允许水平循环加载瓦片，true=允许，false=不允许
     }),
     // 属性标记，方便调试时识别
     properties: { label: TDT_LABEL[type] }
@@ -213,13 +213,13 @@ export interface BasemapItem {
 }
 
 export const BASEMAP_LIST: BasemapItem[] = [
-  { id: "gd-vec",   label: "高德矢量（含标注）",  create: () => createGaodeVecLayer() },
-  { id: "gd-img",   label: "高德影像",            create: () => createGaodeImgLayer() },
-  { id: "gd-hybrid",label: "高德影像+路网",        create: () => createGaodeHybridLayer() },
-  { id: "tdt-vec",  label: "天地图矢量（含标注）",  create: () => createTdtComposite("vec") },
-  { id: "tdt-img",  label: "天地图影像（含标注）",  create: () => createTdtComposite("img") },
-  { id: "tdt-ter",  label: "天地图地形",           create: () => createTdtLayer("ter") },
-  { id: "osm",      label: "OSM 标准地图",         create: () => createOSMLayer() }
+  { id: "gd-vec",   label: "高德矢量",      create: () => createGaodeVecLayer() },
+  { id: "gd-img",   label: "高德影像",      create: () => createGaodeImgLayer() },
+  { id: "gd-hybrid",label: "高德影像+路网", create: () => createGaodeHybridLayer() },
+  { id: "tdt-vec",  label: "天地图矢量",    create: () => createTdtComposite("vec") },
+  { id: "tdt-img",  label: "天地图影像",    create: () => createTdtComposite("img") },
+  { id: "tdt-ter",  label: "天地图地形",    create: () => createTdtComposite("ter") },
+  { id: "osm",      label: "OSM 标准地图",  create: () => createOSMLayer() }
 ]
 
 /** 按 id 查底图配置项 */

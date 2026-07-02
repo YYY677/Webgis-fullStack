@@ -98,5 +98,6 @@ export function useMap(containerId: string, options: UseMapOptions = {}) {
     m.addLayer(layer);
     currentBaseLayer = layer;
   }
+  
   return { map, setBaseLayer };
 }
