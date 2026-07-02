@@ -329,10 +329,6 @@ const drawTool = (type) => {
 
 <style scoped>
 .basic-tool-box {
-  position: absolute;
-  top: 60px;
-  right: 12px;
-  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

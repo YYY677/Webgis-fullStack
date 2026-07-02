@@ -120,10 +120,7 @@ function zoomBy(delta: number) {
 /* 右侧触发按钮 + 开关面板                                      */
 /* ========================================================== */
 .map-setting-trigger {
-  position: absolute;
-  top: 156px;        /* 在 LayerControl (108px) 之下 */
-  right: 12px;
-  z-index: 10;
+  position: relative;  /* 给内部 .setting-panel 做定位锚点 */
 }
 
 .trigger-btn { font-size: 24px }
@@ -163,8 +160,8 @@ function zoomBy(delta: number) {
 /* 缩放控件 — 右下角，竖排 +/-                                 */
 /* ========================================================== */
 .zoom-widget {
-  position: absolute;
-  bottom: 48px;
+  position: fixed;   /* 脱离 flex 容器，定位到视口右下角 */
+  bottom: 32px;
   right: 12px;
   z-index: 10;
   display: flex;
@@ -203,9 +200,9 @@ function zoomBy(delta: number) {
 /* 底栏状态条 — 坐标 + zoom 级别                               */
 /* ========================================================== */
 .status-bar {
-  position: absolute;
-  bottom: 8px;
-  right: 12px;       /* 给 zoom widget 留空间 */
+  position: fixed;   /* 脱离 flex 容器，定位到视口右下角 */
+  bottom: 32px;
+  right: 56px;       /* 在 zoom widget 左侧，不重叠 */
   z-index: 10;
   display: flex;
   align-items: center;
@@ -233,6 +230,6 @@ function zoomBy(delta: number) {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(6px);
+  transform: translateY(-20px);
 }
 </style>

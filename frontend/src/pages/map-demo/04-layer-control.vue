@@ -1,8 +1,10 @@
 <template>
   <div id="map" class="map-container" style="position: relative">
-    <BasemapSwitcher :set-base-layer="setBaseLayer" />
-    <BasicToolBox v-if="map" :map="map" />
-    <LayerControl v-if="map" :map="map" :layers="layerInfos" />
+    <div class="map-controls-right">
+      <BasemapSwitcher :set-base-layer="setBaseLayer" />
+      <BasicToolBox v-if="map" :map="map" />
+      <LayerControl v-if="map" :map="map" :layers="layerInfos" />
+    </div>
   </div>
 </template>
 
@@ -256,6 +258,16 @@ onMounted(async () => {
 .map-container {
   width: 100%;
   height: 100%;
+}
+.map-controls-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
 }
 /*
   :global 穿透 scoped 限制。

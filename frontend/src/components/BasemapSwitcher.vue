@@ -58,10 +58,7 @@ function select(item: BasemapItem) {
 
 <style scoped>
 .basemap-switcher {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 10;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

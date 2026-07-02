@@ -332,10 +332,6 @@ function locateFeature(row: AttrRow) {
 
 <style scoped>
 .layer-control {
-  position: absolute;
-  top: 108px;
-  right: 12px;
-  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: flex-end;

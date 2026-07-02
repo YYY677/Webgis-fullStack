@@ -1,7 +1,9 @@
 <template>
   <div id="map" class="map-container" style="position: relative">
-    <BasemapSwitcher :set-base-layer="setBaseLayer" />
-    <BasicToolBox v-if="map" :map="map" />
+    <div class="map-controls-right">
+      <BasemapSwitcher :set-base-layer="setBaseLayer" />
+      <BasicToolBox v-if="map" :map="map" />
+    </div>
   </div>
 </template>
 
@@ -21,4 +23,14 @@ const { map, setBaseLayer } = useMap("map", {
 
 <style scoped>
 .map-container { width: 100%; height: 100%; }
+.map-controls-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+  gap: 10px;
+}
 </style>
