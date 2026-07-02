@@ -1,10 +1,12 @@
 <template>
   <div id="map" class="map-container" style="position: relative">
-    <BasemapSwitcher :set-base-layer="setBaseLayer" />
-    <BasicToolBox v-if="map" :map="map" />
-    <LayerControl v-if="map" :map="map" :layers="layerInfos" />
     <SearchBox v-if="map" :map="map" />
-    <MapSetting v-if="map" :map="map" />
+    <div class="map-controls-right">
+      <BasemapSwitcher :set-base-layer="setBaseLayer" />
+      <BasicToolBox v-if="map" :map="map" />
+      <LayerControl v-if="map" :map="map" :layers="layerInfos" />
+      <MapSetting v-if="map" :map="map" />
+    </div>
   </div>
 </template>
 
@@ -170,6 +172,16 @@ onMounted(async () => {
 
 <style scoped>
 .map-container { width: 100%; height: 100%; }
+.map-controls-right {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
 
 :global(.univ-popup) {
   background: rgba(0, 0, 0, 0.75);

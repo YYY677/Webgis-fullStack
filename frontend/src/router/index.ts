@@ -61,10 +61,16 @@ const routes: RouteRecordRaw[] = [
             meta: { title: "04-图层控制" },
           },
           {
-            path: "add-freely",
-            name: "AddFreely",
-            component: () => import("@/pages/map-demo/05-add-freely.vue"),
-            meta: { title: "05-随意补充" },
+            path: "search-setting",
+            name: "MapSettingSearch",
+            component: () => import("@/pages/map-demo/05-map-setting-search.vue"),
+            meta: { title: "05-地图设置与搜索" },
+          },
+          {
+            path: "province-charts",
+            name: "ProvinceCharts",
+            component: () => import("@/pages/map-demo/06-province-charts.vue"),
+            meta: { title: "06-省份数据可视化" },
           },
           {
             path: "tianditu",
