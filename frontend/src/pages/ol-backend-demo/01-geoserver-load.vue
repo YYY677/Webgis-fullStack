@@ -50,9 +50,9 @@ const layerInfos: LayerInfo[] = []
 
 onMounted(() => {
   // wmsImageLayer()
-  wmsTileLayer()
+  // wmsTileLayer()
   // wmtsLayer()
-  // wfsLayer()
+  wfsLayer()
 })
 
 /**
@@ -155,8 +155,15 @@ const wfsLayer = () => {
       dataProjection: 'EPSG:4326',     // 声明数据源头是经纬度（WFS 默认存储）
       featureProjection: 'EPSG:3857'   // 声明要让 OL 重投影到当前视图坐标系
     }),
-    // 需要指定返回类型为GeoJSON，默认为 GML
-    url: '/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature&typeName=ne:countries&srsname=EPSG:3857&outputFormat=application/json',
+    // url 为函数时配合 bbox 策略：每次地图移动/缩放，OL 自动传入当前视野范围
+    // 这个extent是由 OL 固定传入，这是 OL 的 API 契约。
+    url: function (extent: any) {
+      return '/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature'
+        + '&typeName=ne:countries'
+        + '&outputFormat=application/json'
+        + '&srsname=EPSG:3857'
+        + '&bbox=' + extent.join(',') + ',EPSG:3857'
+    },
     strategy: bboxStrategy,   // 按视图范围请求
     /*
     在 OpenLayers 中，VectorSource 的构造配置项（Options）并不包含 params 属性。
