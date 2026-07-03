@@ -102,8 +102,8 @@ const routes: RouteRecordRaw[] = [
           {
             path: "geoserver",
             name: "Geoserver",
-            component: () => import("@/pages/ol-backend-demo/01-geoserver.vue"),
-            meta: { title: "01-Geoserver应用" },
+            component: () => import("@/pages/ol-backend-demo/01-geoserver-load.vue"),
+            meta: { title: "01-Geoserver加载数据" },
           },
         ],
       },
