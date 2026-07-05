@@ -50,9 +50,9 @@ const layerInfos: LayerInfo[] = []
 
 onMounted(() => {
   // wmsImageLayer()
-  // wmsTileLayer()
+  wmsTileLayer()
   // wmtsLayer()
-  wfsLayer()
+  // wfsLayer()
 })
 
 /**
@@ -119,7 +119,7 @@ const wmtsLayer = () => {
   // 关于坐标系转换：
   // WMTS 可以靠 runtime 重投影自动适配，GeoJSON 必须在读数据时就转好。
   let wmtsSource = new WMTS({
-    url: "/geoserver/gwc/service/wmts?service=WMTS&version=1.0.0&request=GetTile",
+    url: "/geoserver/gwc/service/wmts",
     layer: 'ne:countries',
     matrixSet: 'EPSG:4326',
     format: 'image/png',
@@ -164,7 +164,7 @@ const wfsLayer = () => {
         + '&srsname=EPSG:3857'
         + '&bbox=' + extent.join(',') + ',EPSG:3857'
     },
-    strategy: bboxStrategy,   // 按视图范围请求
+    strategy: bboxStrategy,   // 按视图范围请求，这是必要的，否则会&bbox=-Infinity,-Infinity,Infinity,Infinity,
     /*
     在 OpenLayers 中，VectorSource 的构造配置项（Options）并不包含 params 属性。
     params 是 ImageWMS 或 TileWMS 等 WMS 数据源特有的配置项，用于向服务器传递动态查询参数。
