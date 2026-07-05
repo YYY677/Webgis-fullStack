@@ -6,9 +6,9 @@ spring:
     name: webgis-backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/webgis
+    url: jdbc:postgresql://localhost:5432/webgistest
     username: postgres
-    password: postgres
+    password: 123456
     driver-class-name: org.postgresql.Driver
 
   flyway:

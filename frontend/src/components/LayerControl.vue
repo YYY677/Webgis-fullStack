@@ -33,16 +33,23 @@
     <!-- 属性表弹窗 -->
     <el-dialog v-model="attrDialogVisible" :title="`${currentLayer?.name} — 属性表`" width="80%" top="5vh"
       destroy-on-close>
+      <!-- 非矢量源提示 -->
+      <el-alert
+        v-if="notVectorHint"
+        :title="notVectorHint"
+        type="warning" :closable="false" show-icon
+        style="margin-bottom: 12px"
+      />
+
       <!-- 搜索栏 -->
-      <div class="attr-toolbar">
-        <!-- clearable 表示输入框右侧会出现一个“清空”图标，点击后可一键清空已输入的内容。 -->
+      <div class="attr-toolbar" v-if="attrColumns.length > 0">
         <el-input v-model="searchText" placeholder="搜索（全字段模糊匹配）" clearable :prefix-icon="Search" size="default"
           style="width: 280px" />
         <span class="attr-summary">共 {{ filteredRows.length }} 条</span>
       </div>
 
       <!-- 表格 -->
-      <el-table :data="pagedRows" border stripe max-height="60vh" style="width: 100%">
+      <el-table v-if="attrColumns.length > 0" :data="pagedRows" border stripe max-height="60vh" style="width: 100%">
         <el-table-column type="index" label="#" width="55" fixed />
         <!--
             sortable 让 el-table 自动显示排序箭头（点击可升/降序），
@@ -138,6 +145,8 @@ function toggleLayer(item: LayerInfo) {
 
 const attrDialogVisible = ref(false)
 const currentLayer = ref<LayerInfo | null>(null)
+/** 非矢量源（WMS等）无法查属性时，显示此提示；null表示正常模式 */
+const notVectorHint = ref<string | null>(null)
 const attrColumns = ref<string[]>([])
 /** 全量行数据（含 feature 引用），搜索和分页都从这里切 */
 const attrRows = ref<AttrRow[]>([])
@@ -200,18 +209,27 @@ watch(searchText, () => {
  * 如果是后端分页的 WFS 服务，这里应该改成传 page/pageSize 给接口。
  */
 function openAttrTable(item: LayerInfo) {
-  // 重置搜索和分页状态
   currentLayer.value = item
   searchText.value = ""
   currentPage.value = 1
+  notVectorHint.value = null
 
   const source = item.layer.getSource?.()
-  // Cluster source：getFeatures() 返回的是虚拟聚合要素，属性是 [Feature, Feature, ...] 数组
-  // 不能直接展示。通过 getSource() 拿到底层的 VectorSource，获取原始要素
+  // Cluster source: 有 getSource() 说明包裹了底层 VectorSource
   const src = typeof (source as any)?.getSource === "function"
     ? (source as any).getSource()
     : source
-  const features = src?.getFeatures?.() ?? []
+
+  // WMS/Tile 等非矢量源的 source 没有 getFeatures 方法，无法提取属性
+  if (typeof src?.getFeatures !== "function") {
+    notVectorHint.value = "当前图层为 WMS 瓦片图层，不含矢量属性数据。如需查询属性，请使用 WFS 服务加载要素。"
+    attrColumns.value = []
+    attrRows.value = []
+    attrDialogVisible.value = true
+    return
+  }
+
+  const features: any[] = src.getFeatures() ?? []
 
   // Set 自动去重 — 多个 feature 共有的字段只存一次
   const keys = new Set<string>()

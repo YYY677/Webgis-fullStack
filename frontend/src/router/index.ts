@@ -100,11 +100,24 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "后端 OL Demo", icon: "Platform" },
         children: [
           {
-            path: "geoserver",
-            name: "Geoserver",
+            path: "geoserver-load",
+            name: "GeoserverLoad",
             component: () => import("@/pages/ol-backend-demo/01-geoserver-load.vue"),
             meta: { title: "01-Geoserver加载数据" },
           },
+          {
+            path: "geoserver-wfs",
+            name: "GeoserverWfs",
+            component: () => import("@/pages/ol-backend-demo/02-geoserver-wfs.vue"),
+            meta: { title: "02-WFS实现增删改查" },
+          },
+          {
+            path: "geoserver-rest",
+            name: "GeoserverRest",
+            component: () =>
+              import("@/pages/ol-backend-demo/03-geoserver-rest.vue"),
+            meta: { title: "03-GeoServer REST API" },
+          }
         ],
       },
     ],

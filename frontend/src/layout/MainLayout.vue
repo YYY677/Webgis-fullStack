@@ -11,7 +11,7 @@ const router = useRouter()
 const appStore = useAppStore() // “运行”这个工厂函数。如果只导入不调用，组件根本无法获得状态数据。
 const userStore = useUserStore()
 
-const sidebarWidth = computed(() => appStore.sidebarOpened ? "200px" : "64px")
+const sidebarWidth = computed(() => appStore.sidebarOpened ? "220px" : "64px")
 
 // 菜单 = 路由表 / 的子路由中 meta.hidden 不为 true 的那些
 const menuList = computed(() => {
