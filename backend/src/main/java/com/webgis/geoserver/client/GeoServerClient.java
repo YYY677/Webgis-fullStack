@@ -13,7 +13,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * GeoServer REST API 客户端 — 基于 Spring WebClient
  *
  * 封装了基本认证、路径拼接、错误处理，供各 Service 调用。
- * GeoServer REST API 文档参考: https://docs.geoserver.org/stable/en/api/
  */
 @Component
 public class GeoServerClient {
@@ -25,13 +24,14 @@ public class GeoServerClient {
         this.props = props;
     }
 
+    // @PostConstruct 注解的方法会在 Spring 容器初始化 Bean 后自动调用，用于初始化 WebClient 实例
     @PostConstruct
     void init() {
         this.client = WebClient.builder()
                 .baseUrl(props.getUrl() + "/rest")
                 .defaultHeaders(headers -> {
                     headers.setBasicAuth(props.getUsername(), props.getPassword());
-                    headers.set(ACCEPT, APPLICATION_JSON_VALUE);
+                    headers.set(ACCEPT, APPLICATION_JSON_VALUE); // 设置默认请求头，接受 JSON 响应
                 })
                 .build();
     }

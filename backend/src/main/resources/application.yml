@@ -42,7 +42,7 @@ geoserver:
   url: http://localhost:8081/geoserver
   username: admin
   password: geoserver
-  workspace: webgis
+  workspace: webgistest
 
 # JWT
 jwt:

@@ -24,6 +24,7 @@ public class LayerService {
                     Map<String, Object> layers = (Map<String, Object>) root.get("layers");
                     if (layers == null || layers.get("layer") == null) return List.<LayerInfo>of();
                     return WorkspaceService.normalizeList(layers.get("layer")).stream()
+                            // 过滤出指定工作空间的图层，或者如果 workspace 为空则返回所有图层
                             .filter(m -> workspace == null || workspace.isEmpty()
                                     || ((String) m.get("name")).startsWith(workspace + ":"))
                             .map(m -> new LayerInfo((String) m.get("name"), null, null))

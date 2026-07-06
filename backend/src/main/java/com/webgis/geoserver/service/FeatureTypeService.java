@@ -17,6 +17,7 @@ public class FeatureTypeService {
         this.client = client;
     }
 
+    // http://localhost:8081/geoserver/rest/workspaces/webgistest/datastores/pg-webgistest/featuretypes.json
     @SuppressWarnings("unchecked")
     public Mono<List<FeatureTypeInfo>> list(String workspace, String datastore) {
         return client.get("/workspaces/" + workspace + "/datastores/" + datastore + "/featuretypes.json", Map.class)

@@ -37,6 +37,9 @@ public class GeoServerController {
 
     /** GET /api/geoserver/workspaces — 工作空间列表 */
     @GetMapping("/workspaces")
+    // Mono<List<WorkspaceInfo>>（响应式编程中的“未来单值”，代表异步执行后最终会返回一个 List<WorkspaceInfo>）
+    // .map 是 Reactor 的操作符，它将 Mono 内部的数据进行同步转换（不改变异步性）
+    // Result::success 是 Java 方法引用，等价于 lambda 表达式 x -> Result.success(x)
     public Mono<Result<List<WorkspaceInfo>>> listWorkspaces() {
         return workspaceService.list().map(Result::success);
     }
