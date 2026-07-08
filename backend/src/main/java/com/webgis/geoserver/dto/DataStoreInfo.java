@@ -1,32 +1,22 @@
 package com.webgis.geoserver.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
- * 数据存储摘要 DTO — 对应 GeoServer /workspaces/{ws}/datastores 响应
+ * 数据存储 — 对应 GeoServer GET /rest/workspaces/{ws}/datastores 返回的摘要条目
+ * <p>
+ * 实际 API 返回示例：
+ * <pre>{@code
+ * {"dataStores":{"dataStore":[{"name":"pg-webgistest","href":"http://..."}]}}
+ * }</pre>
+ * 注意：列表接口只返回 name + href，没有 type 字段（type 在 detail 接口里）。
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class DataStoreInfo {
-
     private String name;
-    private String type;           // 如 PostGIS、Shapefile
     private String href;
-    private String workspaceName;
-
-    public DataStoreInfo() {}
-
-    public DataStoreInfo(String name, String type, String href) {
-        this.name = name;
-        this.type = type;
-        this.href = href;
-    }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
-
-    public String getHref() { return href; }
-    public void setHref(String href) { this.href = href; }
-
-    public String getWorkspaceName() { return workspaceName; }
-    public void setWorkspaceName(String workspaceName) { this.workspaceName = workspaceName; }
 }

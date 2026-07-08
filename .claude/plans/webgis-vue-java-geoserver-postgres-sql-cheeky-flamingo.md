@@ -1,84 +1,41 @@
-# 后端 GeoServer 模块重构
+# 文件上传两个 Bug 修复
 
-## Context
+## Bug 1: 上传超时
 
-已实现的 `geoserver/` 模块存在 4 个问题需要整改：
+**原因：** axios 默认超时 10s（request.ts:9）。2MB 的 Shapefile 需要解压→GeoTools 解析→JDBC 建表→500 条 batch insert，10s 不够。
 
-### 问题 1: DTO 字段多余
+**修复：** 
+- 前端 `uploadFeatureTypeFile` 单独设 `timeout: 60000`（60s）
+- Spring Boot 文件上传最大 50MB 已够，不用改
 
-GeoServer REST API **所有 summary 端点**（列表）只返回 `name` + `href`：
+## Bug 2: GeoJSON "未定义坐标系"
 
-```json
-// /workspaces.json → {"workspaces":{"workspace":[{"name":"webgis","href":"..."}]}}
-// /workspaces/{ws}/datastores.json → {"dataStores":{"dataStore":[{"name":"pg-webgistest","href":"..."}]}}
-// /workspaces/{ws}/datastores/{ds}/featuretypes.json → {"featureTypes":{"featureType":[{"name":"capital","href":"..."}]}}
-// /layers.json → {"layers":{"layer":[{"name":"webgistest:port","href":"..."}]}}
-```
+**原因：** GeoJSON 规范中 WGS84(EPSG:4326) 是默认值，大多数 GeoJSON 文件不写 `crs` 字段。但 `checkCRS()` 检测到 `schema.getCoordinateReferenceSystem() == null` 时直接拒绝。
 
-但当前 DTO 定义了不存在的字段：
-- `DataStoreInfo.type` → null
-- `FeatureTypeInfo.title`, `FeatureTypeInfo.nativeName` → null
-- `LayerInfo.title`, `LayerInfo.type`, `LayerInfo.defaultStyle` → null
+**修复：** 
+- 当 `crs == null` 时视为 EPSG:4326 通过校验
+- 如果是 Shapefile `.prj` 缺失（也导致 null），默认当作 4326 处理
 
-**整改：** 所有 DTO 只保留 `name` + `href`，删掉多余的。对应的前端 `geoserver.ts` 接口类型也同步简化。
+## 额外优化: 支持多文件 Shapefile
 
-### 问题 2: WebClient → RestClient
+用户要求支持"直接拉取多文件"（不打包 zip）。
 
-项目是 Spring MVC (Tomcat)，不是 WebFlux (Netty)。WebClient 的 `Mono`/`Flux` 在 MVC 下底层同步阻塞，白增加复杂度。
+**前端：** 文件 input 加 `multiple` 属性，允许同时选 .shp/.shx/.dbf/.prj
 
-Spring Boot 3.2+ 内置 `RestClient`：
-- 同步 API（不需要 Mono/Flux）
-- 同样支持 Builder 模式、error handler
-- 跟 MVC 体系一致
+**后端：** upload 端点接受 `@RequestParam("files") MultipartFile[]`，存到临时目录后用 ShapefileDataStore 读取
 
-**整改：** `GeoServerClient` 改用 `RestClient`；4 个 Service 去掉 `Mono<>`；Controller 返回 `Result<T>` 而非 `Mono<Result<T>>`。
+## 改动文件
 
-### 问题 3: Controller 改为 `web/` 包名
-
-项目规范：`auth/web/AuthController.java`、`system/web/UserController.java`。当前 `geoserver/controller/GeoServerController.java` 不符合命名。
-
-**整改：** 改包名为 `geoserver/web/`。
-
-### 问题 4: 包结构合理性
-
-当前结构：
-```
-geoserver/
-├── config/GeoServerProperties.java   ✓ 模块内横切配置
-├── client/GeoServerClient.java       ✓ 模块内 HTTP 客户端
-├── dto/                              ✓ 共享数据对象
-├── service/                          ✓ 业务逻辑
-└── controller/ → 改为 web/           ✗ 应改为 web/
-```
-
-对比项目其他模块（auth/, system/），结构合理。唯一改动：`controller/` → `web/`。
-
----
-
-## 改动文件清单
-
-| 文件 | 操作 | 说明 |
-|------|------|------|
-| `geoserver/dto/DataStoreInfo.java` | 修改 | 删掉 type, workspaceName，只留 name + href |
-| `geoserver/dto/FeatureTypeInfo.java` | 修改 | 删掉 title, nativeName, nativeBoundingBox，只留 name + href |
-| `geoserver/dto/LayerInfo.java` | 修改 | 删掉 title, type, defaultStyle，只留 name + href |
-| `geoserver/dto/WorkspaceInfo.java` | 不变 | 已经是 name + href |
-| `geoserver/client/GeoServerClient.java` | 重写 | WebClient → RestClient |
-| `geoserver/service/*.java` (4 个) | 修改 | Mono<> → 普通返回，配合 RestClient |
-| `geoserver/controller/GeoServerController.java` | 移动+修改 | 移到 `web/` 包，Mono<> 去掉 |
-| `geoserver/config/GeoServerProperties.java` | 不变 | 配置类无需改动 |
-| `frontend/src/api/geoserver.ts` | 修改 | 类型字段同步简化 |
-| `pom.xml` | 修改 | 删掉 webflux 依赖（如不再需要） |
-
-### 不删除 webflux 依赖
-
-保留 `spring-boot-starter-webflux`——后续可能有真正的异步场景（如 GeoServer 批量操作），RestClient 和 WebClient 可以共存。
-
----
+| 文件 | 改动 |
+|------|------|
+| `api/geoserver.ts` | uploadFeatureTypeFile 加 timeout: 60000 |
+| `03-geoserver-rest.vue` | 文件 input 加 multiple，支持多文件；区分 zip/多文件两种模式 |
+| `DataUploadService.java` | CRS 校验放宽(null 视为 4326)；支持 MultipartFile[] 多文件接收 |
+| `GeoServerController.java` | upload 端点接受 MultipartFile[] |
 
 ## 验证
 
-1. `mvn compile` 后端编译通过
-2. `npx vue-tsc --noEmit` 前端编译通过
-3. 启动后端 → `GET /api/geoserver/workspaces` 返回工作空间列表
-4. 前端 03 页面正常加载、切换 Tab、加载图层
+1. 上传 2MB Shapefile zip → 不超时，成功
+2. 同时拖选 .shp + .shx + .dbf → 成功
+3. 上传无 crs 声明的 GeoJSON → 视为 4326 通过
+4. 上传非 4326 数据 → 拒绝（保留校验）

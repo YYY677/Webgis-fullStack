@@ -15,6 +15,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * JWT 认证过滤器 — 每个 HTTP 请求只执行一次
+ * <p>
+ * 流程：
+ * <ol>
+ *   <li>从请求头 Authorization 提取 Bearer token</li>
+ *   <li>调用 {@link JwtTokenProvider#validateToken} 校验</li>
+ *   <li>校验通过 → 从 token 提取用户信息 → 构造 {@link LoginUser} → 放入 SecurityContext</li>
+ *   <li>校验失败 → 不放用户信息，后续由 SecurityConfig 拦截为 401</li>
+ * </ol>
+ * <p>
+ * 这个过滤器不查数据库（用户信息直接从 token 中提取），
+ * 因此每次 HTTP 请求不会产生数据库查询。
+ */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 

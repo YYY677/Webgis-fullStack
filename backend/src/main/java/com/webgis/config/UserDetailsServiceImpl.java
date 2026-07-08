@@ -12,6 +12,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 用户详情查询 — Spring Security 的 UserDetailsService 实现
+ * <p>
+ * 只在登录时被调用一次：用户提交用户名+密码 → Spring Security 调 loadUserByUsername()
+ * 查数据库 → 返回带密码的 LoginUser → Security 自动比对密码。
+ * <p>
+ * 登录成功后后续请求不再经过这里（JwtAuthFilter 直接读 token）。
+ */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 

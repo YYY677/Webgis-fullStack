@@ -3,107 +3,174 @@
  */
 import { request } from "./request"
 
-// ── 类型 ──────────────────────────────────────────────────────
+// ── 通用类型 ──────────────────────────────────────────────────
 
-export interface WorkspaceItem {
+export interface NameHrefItem {
   name: string
   href: string
 }
 
-export interface DataStoreItem {
-  name: string
-  type: string
-  href: string
-  workspaceName?: string
-}
+export interface WorkspaceItem extends NameHrefItem {}
+export interface DataStoreItem extends NameHrefItem {}
+export interface FeatureTypeItem extends NameHrefItem {}
+export interface LayerItem extends NameHrefItem {}
 
-export interface FeatureTypeItem {
-  name: string
-  title: string
-  nativeName: string
-  nativeBoundingBox?: string
-}
-
-export interface LayerItem {
-  name: string
-  title: string
-  type: string
-  defaultStyle?: string
-  href?: string
-}
-
-// ── Workspace ────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// Workspace
+// ══════════════════════════════════════════════════════════════
 
 export function getWorkspaces() {
   return request<{ code: number; data: WorkspaceItem[] }>({
-    url: "/geoserver/workspaces",
-    method: "get"
+    url: "/geoserver/workspaces", method: "get"
   })
 }
 
 export function createWorkspace(name: string) {
   return request<{ code: number; data: string }>({
-    url: "/geoserver/workspaces",
-    method: "post",
+    url: "/geoserver/workspaces", method: "post",
     data: { name }
   })
 }
 
-// ── DataStore ────────────────────────────────────────────────
+export function deleteWorkspace(name: string) {
+  return request<{ code: number; data: string }>({
+    url: `/geoserver/workspaces/${encodeURIComponent(name)}`, method: "delete"
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+// DataStore
+// ══════════════════════════════════════════════════════════════
 
 export function getDataStores(workspace: string) {
   return request<{ code: number; data: DataStoreItem[] }>({
-    url: "/geoserver/datastores",
-    method: "get",
+    url: "/geoserver/datastores", method: "get",
     params: { ws: workspace }
   })
 }
 
 export function createDataStore(params: {
-  workspace: string
-  name: string
-  host: string
-  port: number
-  database: string
-  user: string
-  password: string
-  schema: string
+  workspace: string; name: string; host: string; port: number
+  database: string; user: string; password: string; schema: string
 }) {
   return request<{ code: number; data: string }>({
-    url: "/geoserver/datastores",
-    method: "post",
-    data: params
+    url: "/geoserver/datastores", method: "post", data: params
   })
 }
 
-// ── FeatureType ──────────────────────────────────────────────
+export function getDataStoreDetail(workspace: string, name: string) {
+  return request<{ code: number; data: any }>({
+    url: "/geoserver/datastores/detail", method: "get",
+    params: { ws: workspace, name }
+  })
+}
 
+export function deleteDataStore(workspace: string, name: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/datastores", method: "delete",
+    params: { ws: workspace, name }
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+// FeatureType
+// ══════════════════════════════════════════════════════════════
+
+/** 已发布的要素类型列表 */
 export function getFeatureTypes(workspace: string, datastore: string) {
   return request<{ code: number; data: FeatureTypeItem[] }>({
-    url: "/geoserver/featuretypes",
-    method: "get",
+    url: "/geoserver/featuretypes", method: "get",
     params: { ws: workspace, ds: datastore }
   })
 }
 
-// ── Layer ────────────────────────────────────────────────────
+/** 所有表名（含未发布的） */
+export function listAllFeatureTypes(workspace: string, datastore: string) {
+  return request<{ code: number; data: string[] }>({
+    url: "/geoserver/featuretypes/all", method: "get",
+    params: { ws: workspace, ds: datastore }
+  })
+}
+
+/** 发布要素类型 */
+export function publishFeatureType(workspace: string, datastore: string, tableName: string, srs?: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/featuretypes/publish", method: "post",
+    data: { workspace, datastore, tableName, srs }
+  })
+}
+
+/** 要素类型详情 */
+export function getFeatureTypeDetail(workspace: string, datastore: string, name: string) {
+  return request<{ code: number; data: any }>({
+    url: "/geoserver/featuretypes/detail", method: "get",
+    params: { ws: workspace, ds: datastore, name }
+  })
+}
+
+/** 取消发布（从 GeoServer 移除，保留数据库表） */
+export function deleteFeatureType(workspace: string, datastore: string, name: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/featuretypes", method: "delete",
+    params: { ws: workspace, ds: datastore, name }
+  })
+}
+
+/** 彻底从数据库删除（DROP TABLE + 从 GeoServer 移除） */
+export function dropFeatureType(workspace: string, datastore: string, name: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/featuretypes/drop", method: "delete",
+    params: { ws: workspace, ds: datastore, name }
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+// Layer
+// ══════════════════════════════════════════════════════════════
 
 export function getLayers(workspace?: string) {
   return request<{ code: number; data: LayerItem[] }>({
-    url: "/geoserver/layers",
-    method: "get",
+    url: "/geoserver/layers", method: "get",
     params: workspace ? { ws: workspace } : {}
   })
 }
 
-export function publishLayer(params: {
-  workspace: string
-  datastore: string
-  featureType: string
-}) {
+export function getLayerDetail(name: string) {
+  return request<{ code: number; data: any }>({
+    url: "/geoserver/layers/detail", method: "get",
+    params: { name }
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+// 文件上传 (FeatureType)
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * 上传 Shapefile(.zip 或 多文件) / GeoJSON → 后端解析 → PostGIS → 发布为图层
+ *
+ * @param workspace GeoServer 工作空间名
+ * @param datastore GeoServer 数据存储名
+ * @param name      图层名 / PostGIS 表名
+ * @param format    "shp" 或 "geojson"
+ * @param files     文件数组：zip 传一个，多文件 shp 传多个(.shp .shx .dbf ...)
+ */
+export function uploadFeatureTypeFile(
+  workspace: string, datastore: string, name: string,
+  format: string, files: File[]
+) {
+  const formData = new FormData()
+  formData.append("workspace", workspace)
+  formData.append("datastore", datastore)
+  formData.append("name", name)
+  formData.append("format", format)
+  files.forEach(f => formData.append("files", f))
+
   return request<{ code: number; data: string }>({
-    url: "/geoserver/layers/publish",
+    url: "/geoserver/featuretypes/upload",
     method: "post",
-    data: params
+    data: formData,
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 60000, // Shapefile 解析 + 数据库写入可能较慢
   })
 }

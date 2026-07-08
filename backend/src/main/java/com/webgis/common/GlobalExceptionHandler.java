@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
 
+// @RestControllerAdvice 就像中央监控室，只要它在 Spring 的监控范围内（被扫描到），
+// 就会自动监听所有 Controller 的“报案”（异常），完全不需要你去跟每个 Controller 打招呼。
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
