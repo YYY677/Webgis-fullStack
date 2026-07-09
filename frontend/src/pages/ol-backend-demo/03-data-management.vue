@@ -5,7 +5,7 @@
     <!-- GeoServer 管理 -->
     <div class="gs-manager">
       <el-button :icon="Setting" @click="panelOpen = !panelOpen" :type="panelOpen ? 'primary' : 'default'">
-        GeoServer 管理
+        GeoServer 数据管理
       </el-button>
 
       <Transition name="fade">
@@ -22,6 +22,14 @@
             <el-button size="small" :icon="Refresh" @click="doRefresh" :loading="loading">刷新</el-button>
             <el-button v-if="activeTab !== 'layer'" size="small" type="primary" :icon="Plus"
               @click="showCreateDialog">创建</el-button>
+            <!-- 图层加载方式选择 -->
+            <template v-if="activeTab === 'layer'">
+              <el-radio-group v-model="layerType" size="small" style="margin-left: 8px">
+                <el-radio-button value="wfs">WFS</el-radio-button>
+                <el-radio-button value="tilewms">TileWMS</el-radio-button>
+                <el-radio-button value="wmts">WMTS</el-radio-button>
+              </el-radio-group>
+            </template>
           </div>
 
           <!-- ── 工作空间列表 ── -->
@@ -107,11 +115,11 @@
             <el-table :data="tableData" stripe size="small" max-height="240" style="width: 100%" v-loading="loading"
               empty-text="暂无已发布图层">
               <el-table-column prop="name" label="图层名" show-overflow-tooltip />
-              <el-table-column label="操作" width="190" fixed="right">
+              <el-table-column label="操作" width="220" fixed="right">
                 <template #default="{ row }">
-                  <el-button v-if="!addedLayerNames.has(row.name)" size="small" text type="primary"
-                    @click="addLayer(row.name)">加载</el-button>
-                  <el-button v-else size="small" text type="warning" @click="removeLayer(row.name)">移除</el-button>
+                  <el-button v-if="!addedLayerNames.has(`gs-${row.name}-${layerType}`)" size="small" text type="primary"
+                    @click="addLayer(row.name, layerType)">加载</el-button>
+                  <el-button v-else size="small" text type="warning" @click="removeLayer(row.name, layerType)">移除</el-button>
                   <el-button size="small" text type="info" @click="showLayerDetail(row.name)">详情</el-button>
                 </template>
               </el-table-column>
@@ -125,7 +133,7 @@
     <div class="map-controls-right">
       <BasemapSwitcher :set-base-layer="setBaseLayer" />
       <BasicToolBox v-if="map" :map="map" />
-      <LayerControl v-if="map" :map="map" :layers="layerInfos" />
+      <LayerControl v-if="map" :map="map" :layers="layerInfos" @reorder="onLayerReorder" />
       <MapSetting v-if="map" :map="map" />
     </div>
 
@@ -308,7 +316,11 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { useMap } from "@/composables/useMap";
 import { BASEMAP_LIST } from "@/utils/basemaps";
 import VectorLayer from "ol/layer/Vector";
+import TileLayer from "ol/layer/Tile";
 import VectorSource from "ol/source/Vector";
+import TileWMS from 'ol/source/TileWMS';
+import { WMTS } from 'ol/source';
+import WMTSGrid from 'ol/tilegrid/WMTS';
 import GeoJSON from "ol/format/GeoJSON";
 import { bbox as bboxStrategy } from "ol/loadingstrategy";
 import { Style, Fill, Stroke, Circle as CircleStyle } from "ol/style";
@@ -361,6 +373,26 @@ const selectedWs = ref("");
 // reactive(Set) — 跟踪已加载到地图上的 WFS 图层名，用于模板中控制"加载/移除"按钮切换。
 // 用 reactive 包装 Set，Vue 能监听到 add/delete 操作。
 const addedLayerNames = reactive(new Set<string>());
+
+// 图层加载方式
+const layerType = ref<'wfs' | 'tilewms' | 'wmts'>('wfs')
+
+// GeoServer WMTS EPSG:4326 预计算切片网格
+const wmtsGrid4326 = (() => {
+  const resolutions = new Array(21)
+  const matrixIds = new Array(21)
+  for (let z = 0; z < 21; ++z) {
+    resolutions[z] = 180 / (256 * Math.pow(2, z))
+    matrixIds[z] = 'EPSG:4326:' + z
+  }
+  return new WMTSGrid({
+    tileSize: [256, 256],
+    extent: [-180, -90, 180, 90],
+    origin: [-180, 90],
+    resolutions,
+    matrixIds,
+  })
+})()
 
 // ── 要素类型 ─────────────────────────────────────────────────
 const ftWs = ref("");
@@ -720,48 +752,93 @@ async function publishFt(tableName: string) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// WFS 加载/移除图层（不变）
+// WFS / TileWMS / WMTS 图层加载与移除
 // ══════════════════════════════════════════════════════════════
 
-function addLayer(layerFullName: string) {
+function addLayer(layerFullName: string, loadType = 'wfs') {
   const m = map.value;
-  if (!m || addedLayerNames.has(layerFullName)) return;
-  const source = new VectorSource({
-    format: new GeoJSON({
-      dataProjection: "EPSG:4326",
-      featureProjection: "EPSG:3857",
-    }),
-    url: (extent: any) =>
-      `/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature` +
-      `&typeName=${layerFullName}&outputFormat=application/json` +
-      `&srsname=EPSG:3857&bbox=${extent.join(",")},EPSG:3857`,
-    strategy: bboxStrategy,
-  });
-  // markRaw — 阻止 Vue 对 OL 图层对象做 Proxy 代理。
-  // Vue 的响应式代理会破坏 OL 内部的事件系统和引用对比（如 map.removeLayer 按引用查找）。
-  const wfsLayer = markRaw(new VectorLayer({ source, style: wfsStyle }));
-  m.addLayer(wfsLayer);
-  addedLayerNames.add(layerFullName);
-  // layerInfos 是 shallowRef，必须整体替换数组才能触发响应式更新，不能 push。
-  // LayerControl 通过这个数组知道哪些图层在地图上、以及它的 OL 实例引用。
+  if (!m) return;
+  const layerId = `gs-${layerFullName}-${loadType}`;
+  if (addedLayerNames.has(layerId)) return;
+
+  // loadType 是加载方式（wfs/tilewms/wmts），infoType 是存入 LayerInfo 的类型值（vector/tilewms/wmts）
+  let olLayer: any;
+  const infoType = loadType === 'wfs' ? 'vector' : loadType;
+  if (loadType === 'tilewms') {
+    olLayer = markRaw(new TileLayer({
+      source: new TileWMS({
+        url: '/geoserver/wms',
+        params: { LAYERS: layerFullName, TILED: true, FORMAT: 'image/png', VERSION: '1.1.1' },
+        serverType: 'geoserver',
+      }),
+    }));
+  } else if (loadType === 'wmts') {
+    olLayer = markRaw(new TileLayer({
+      source: new WMTS({
+        url: '/geoserver/gwc/service/wmts',
+        layer: layerFullName,
+        matrixSet: 'EPSG:4326',
+        format: 'image/png',
+        projection: 'EPSG:4326',
+        tileGrid: wmtsGrid4326,
+        style: '',
+        wrapX: true,
+      }),
+    }));
+  } else {
+    // WFS 矢量图层
+    const source = new VectorSource({
+      format: new GeoJSON({
+        dataProjection: "EPSG:4326",
+        featureProjection: "EPSG:3857",
+      }),
+      url: (extent: any) =>
+        `/geoserver/wfs?service=WFS&version=1.1.0&request=GetFeature` +
+        `&typeName=${layerFullName}&outputFormat=application/json` +
+        `&srsname=EPSG:3857&bbox=${extent.join(",")},EPSG:3857`,
+      strategy: bboxStrategy,
+    });
+    olLayer = markRaw(new VectorLayer({ source, style: wfsStyle }));
+  }
+
+  // 新图层的 zIndex 设为当前图层数 * 10，排在已有图层之上
+  olLayer.setZIndex?.(layerInfos.value.length * 10);
+  m.addLayer(olLayer);
+  addedLayerNames.add(layerId);
   layerInfos.value = [
     ...layerInfos.value,
-    { id: `gs-${layerFullName}`, name: layerFullName, layer: wfsLayer as any },
+    { id: layerId, name: layerFullName, type: infoType, layer: olLayer },
   ];
-  ElMessage.success(`${layerFullName} 已加载`);
+  ElMessage.success(`${layerFullName} (${loadType}) 已加载`);
 }
 
-function removeLayer(layerFullName: string) {
+function removeLayer(layerFullName: string, loadType = 'wfs') {
   const m = map.value;
-  if (!m || !addedLayerNames.has(layerFullName)) return;
-  const found = layerInfos.value.find((l) => l.id === `gs-${layerFullName}`);
+  const layerId = `gs-${layerFullName}-${loadType}`;
+  if (!m || !addedLayerNames.has(layerId)) return;
+  const found = layerInfos.value.find((l) => l.id === layerId);
   if (found) m.removeLayer(found.layer as any);
-  addedLayerNames.delete(layerFullName);
-  // 同样整体替换数组触发 shallowRef 更新
+  addedLayerNames.delete(layerId);
   layerInfos.value = layerInfos.value.filter(
-    (l) => l.id !== `gs-${layerFullName}`,
+    (l) => l.id !== layerId,
   );
-  ElMessage.success(`${layerFullName} 已移除`);
+  ElMessage.success(`${layerFullName} (${loadType}) 已移除`);
+}
+
+// ── 图层拖拽排序 ─────────────────────────────────────────────
+// LayerControl 拖拽完成后调用，重排 layerInfos + 更新 OL zIndex
+// newList 是 vuedraggable 传过来的新顺序数组，元素和原数组是同样的对象引用，只是换了位置
+function onLayerReorder(newList: LayerInfo[]) {
+  // 按新顺序从原数组取对象引用，保留 markRaw 的 OL 实例
+  const idOrder = newList.map(l => l.id)
+  const reordered = idOrder.map(id => layerInfos.value.find(l => l.id === id)!) // ! 感叹号 — 非空断言
+  // 为什么不用更简单的 layerInfos.value = newList？
+  // 如果直接赋值 layerInfos.value = newList，也能工作但风险更高：
+  // newList 是 vuedraggable 内部处理的数组，可能包含排序库的临时状态。
+  layerInfos.value = reordered // 替换整个数组，触发 LayerControl 重新渲染
+  // 列表顶部 → zIndex 最大（画在地图最上面），依序递减
+  // 这样拖到列表顶部的图层就会显示在最上面
+  reordered.forEach((info, i) => info.layer.setZIndex?.((reordered.length - 1 - i) * 10))
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -782,13 +859,14 @@ onMounted(async () => {
     wsList.value.find((w) => w.name === "webgistest") ?? wsList.value[0];
   if (tgt) selectedWs.value = tgt.name;
 
-  // 切到图层 Tab 再刷新，自动加载第一个图层
+  // 切到图层 Tab 再刷新
   activeTab.value = "layer";
   await doRefresh(); // 刷新图层列表
-  // 初始加载时，如果当前在图层标签页且有数据，则加载第一个图层
+  // 优先加载 webgistest:capital，不存在则取第一个
   if (activeTab.value === "layer" && tableData.value.length > 0) {
-    console.log("初始加载时，当前工作空间的图层", tableData.value);
-    addLayer(tableData.value[0].name); // name: 'webgistest:Borough_London'
+    const target = tableData.value.find((l: any) => l.name === "webgistest:capital")
+      ?? tableData.value[0]
+    addLayer(target.name, 'wfs');
   }
 });
 
@@ -901,7 +979,7 @@ async function loadFt() {
 .gs-manager {
   position: absolute;
   top: 12px;
-  left: 370px;
+  left: 270px;
   z-index: 10;
 }
 

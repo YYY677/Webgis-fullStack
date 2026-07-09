@@ -198,15 +198,15 @@ onMounted(async () => {
 
   // 加载城市点数据
   const cityLayer = await loadGeoJSON(m, "/test_data/cities.geojson", cityStyle, 10)
-  layerInfos.value.push({ id: "cities", name: "省会城市", layer: cityLayer })
+  layerInfos.value.push({ id: "cities", name: "省会城市", type: "vector", layer: cityLayer })
 
   // 加载重庆县域边界
   const countyLayer = await loadGeoJSON(m, "/test_data/chongqing_county_border.geojson", countyStyle, 5)
-  layerInfos.value.push({ id: "county", name: "重庆县域边界", layer: countyLayer })
+  layerInfos.value.push({ id: "county", name: "重庆县域边界", type: "vector", layer: countyLayer })
 
   // 加载大学热力图
   const { layer: heatmapLayer } = await loadHeatmap(m, "/test_data/university.geojson", "")
-  layerInfos.value.push({ id: "university", name: "大学热力图", layer: heatmapLayer })
+  layerInfos.value.push({ id: "university", name: "大学热力图", type: "vector", layer: heatmapLayer })
 
   // 大学名称弹窗（OL Overlay：浮在地图上的 DOM 元素）
   // Overlay 帮你把地图坐标（经纬度）和 DOM 位置绑定起来，地图动它就动。

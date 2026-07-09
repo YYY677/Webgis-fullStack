@@ -95,7 +95,7 @@ onMounted(async () => {
     zIndex: 20,
   })
   m.addLayer(clusterLayer)
-  layerInfos.value.push({ id: "univ-cluster", name: "大学分布（聚合）", layer: clusterLayer })
+  layerInfos.value.push({ id: "univ-cluster", name: "大学分布（聚合）", type: "vector", layer: clusterLayer })
 
   // 弹窗 Overlay
   const popupEl = document.createElement("div")

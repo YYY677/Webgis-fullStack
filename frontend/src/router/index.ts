@@ -112,12 +112,19 @@ const routes: RouteRecordRaw[] = [
             meta: { title: "02-WFS实现增删改查" },
           },
           {
-            path: "geoserver-rest",
-            name: "GeoserverRest",
+            path: "data-management",
+            name: "DataManagement",
             component: () =>
-              import("@/pages/ol-backend-demo/03-geoserver-rest.vue"),
-            meta: { title: "03-GeoServer REST API" },
-          }
+              import("@/pages/ol-backend-demo/03-data-management.vue"),
+            meta: { title: "03-后端API数据管理" },
+          },
+          {
+            path: "style-management",
+            name: "StyleManagement",
+            component: () =>
+              import("@/pages/ol-backend-demo/04-style-management.vue"),
+            meta: { title: "04-后端API样式管理" },
+          },
         ],
       },
     ],

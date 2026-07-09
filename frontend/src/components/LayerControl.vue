@@ -12,21 +12,53 @@
 
         <div v-if="layers.length === 0" class="empty-tip">暂无业务图层</div>
 
-        <div v-for="item in layers" :key="item.id" class="layer-row">
-          <!-- 可见性切换 -->
-          <!-- 当 hiddenIds 这个数据结构中包含（存在）当前项的 item.id 时，
-          元素就会被加上 off 类名；反之，则不会添加该类名。 -->
-          <el-icon class="visibility-icon" :class="{ off: hiddenIds.has(item.id) }" @click="toggleLayer(item)">
-            <View v-if="!hiddenIds.has(item.id)" />
-            <Hide v-else />
-          </el-icon>
+        <!-- v-model	draggableModel	双向绑定的列表数据（数组），拖拽排序后会自动更新这个数组。
+            item-key	"id"	用于标识每个列表项的唯一键，帮助 Vue 高效更新 DOM（类似 :key）。
+            tag	"div"	指定渲染的 HTML 标签，默认是 div。这里显式指定为 div。
+            ghost-class	"layer-ghost"	拖拽时，占位元素的 CSS 类名，可用于添加半透明、虚线边框等视觉效果。
+            force-fallback	true	强制使用 Sortable 的 fallback 模式（即使浏览器支持原生拖拽），可以解决某些触摸设备或滚动容器的问题。
+            animation	200	拖拽动画持续时间（毫秒），使排序过渡平滑。 
+            handle ".drag-handle"	指定拖拽手柄的 CSS 选择器，只有拖拽手柄区域可以触发拖拽，避免误操作。
+            @start	"onDragStart"	拖拽开始时触发的事件
+            @end	"onDragEnd"	拖拽结束时触发的事件
+        -->
+        <Draggable v-model="draggableModel" item-key="id" tag="div" class="layer-list"
+          ghost-class="layer-ghost" :force-fallback="true" animation="200"
+          handle=".drag-handle">
+          <!-- element 就是当前遍历到的数据对象（draggableModel 中的每一项） -->
+          <template #item="{ element }">
+            <div class="layer-row">
+              <!-- 拖拽手柄 -->
+              <span class="drag-handle" title="拖拽排序">⠿</span>
 
-          <span class="layer-name">{{ item.name }}</span>
+              <!-- 可见性切换 -->
+              <!-- 当 hiddenIds 这个数据结构中包含（存在）当前项的 element.id 时，
+              元素就会被加上 off 类名；反之，则不会添加该类名。 -->
+              <el-icon class="visibility-icon" :class="{ off: hiddenIds.has(element.id) }" @click="toggleLayer(element)">
+                <View v-if="!hiddenIds.has(element.id)" />
+                <Hide v-else />
+              </el-icon>
 
-          <el-button size="small" text type="primary" @click="openAttrTable(item)">
-            属性表
-          </el-button>
-        </div>
+              <span class="layer-name">{{ element.name }}</span>
+
+              <!-- 非矢量图层显示类型标记 -->
+              <el-tag v-if="element.type && element.type !== 'vector'" size="small" type="info" style="margin-right: 2px">
+                {{ element.type === 'tilewms' ? 'WMS' : 'WMTS' }}
+              </el-tag>
+
+              <!-- 属性表：仅矢量图层可用。type 为空视为 vector（向后兼容） -->
+              <el-tooltip :content="element.type && element.type !== 'vector' ? '当前图层类型不支持属性表' : '查看属性表'" placement="top">
+                <el-button size="small" text type="primary" :disabled="element.type && element.type !== 'vector'"
+                  @click="openAttrTable(element)">
+                  属性表
+                </el-button>
+              </el-tooltip>
+            </div>
+          </template>
+        </Draggable>
+
+        <!-- 拖拽排序提示 -->
+        <div v-if="layers.length > 1" class="drag-hint">🔄 拖动图层可调整显示顺序</div>
       </div>
     </Transition>
 
@@ -96,7 +128,8 @@
  * 用法：
  *   <LayerControl :map="map" :layers="layerInfos" />
  */
-import { ref, reactive, computed } from "vue"
+import { ref, reactive, computed, watch } from "vue"
+import Draggable from 'vuedraggable'
 import { MapLocation, View, Hide, Aim, Search } from "@element-plus/icons-vue"
 import { Style, Fill, Stroke, Circle as CircleStyle } from "ol/style"
 import type Map from "ol/Map"
@@ -106,10 +139,12 @@ import type Map from "ol/Map"
 export interface LayerInfo {
   id: string
   name: string
+  type?: string         // 'vector' | 'tilewms' | 'wmts'，用于判断属性表是否可用
   layer: {
     setVisible(visible: boolean): void
     getVisible(): boolean
     getSource?(): any
+    setZIndex?(z: number): void
   }
 }
 
@@ -125,6 +160,18 @@ const props = defineProps<{
   layers: LayerInfo[]
   map: Map | null
 }>()
+
+// 拖拽排序后通知父组件更新 layerInfos 顺序
+// "这个组件会触发一个叫 reorder 的事件，带一个参数 items，类型是 LayerInfo[]。"
+const emit = defineEmits<{
+  (e: 'reorder', items: LayerInfo[]): void
+}>()
+
+// 拖拽双向绑定模型：props.layers 是只读输入，用户拖拽时通过 emit 写回父组件
+const draggableModel = computed({
+  get: () => props.layers,
+  set: (val: LayerInfo[]) => emit('reorder', val),
+})
 
 // ── 图层可见性 ─────────────────────────────────────────────
 
@@ -191,7 +238,6 @@ const pagedRows = computed(() => {
 })
 
 // 搜索文本变化时回到第一页
-import { watch } from "vue"
 watch(searchText, () => {
   currentPage.value = 1
 })
@@ -396,6 +442,44 @@ function locateFeature(row: AttrRow) {
 
 .layer-row:last-child {
   border-bottom: none;
+}
+
+/* ── 拖拽排序 ──────────────────────────────────────────── */
+.layer-list {
+  min-height: 4px;
+}
+
+/* 拖拽手柄 — 拖拽交互的视觉锚点 */
+.drag-handle {
+  cursor: grab;
+  font-size: 14px;
+  color: var(--el-text-color-placeholder);
+  user-select: none; /* 禁止文本选择 */
+  flex-shrink: 0; 
+  line-height: 1;
+}
+.drag-handle:hover {
+  color: var(--el-color-primary);
+}
+.layer-row:active .drag-handle {
+  cursor: grabbing;
+}
+
+/* 拖拽中原位置的占位提示 */
+:deep(.layer-ghost) {
+  opacity: 0.35;
+  outline: 2px dashed var(--el-color-primary);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+/* 底部拖拽提示 */
+.drag-hint {
+  padding: 6px 12px 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  text-align: center;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .visibility-icon {

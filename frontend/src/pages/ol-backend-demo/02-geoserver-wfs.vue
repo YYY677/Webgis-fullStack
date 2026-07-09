@@ -121,7 +121,7 @@ function loadWfsLayer(m: Map) {
 
   wfsLayer = new VectorLayer({ source, style: defaultStyle })
   m.addLayer(wfsLayer)
-  layerInfos.push({ id: "wfs-port", name: "港口分布", layer: wfsLayer })
+  layerInfos.push({ id: "wfs-port", name: "港口分布", type: "vector", layer: wfsLayer })
 }
 
 // ── 交互管理 ──────────────────────────────────────────────
