@@ -24,6 +24,7 @@ public class WorkspaceService {
     // ── 列表 ──────────────────────────────────────────────────
 
     /**
+     * http://localhost:8081/geoserver/rest/workspaces.json
      * 获取所有工作空间
      * <p>
      * GET /rest/workspaces.json

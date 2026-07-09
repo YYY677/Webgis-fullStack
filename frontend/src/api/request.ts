@@ -19,18 +19,23 @@ instance.interceptors.request.use((config) => {
   return config
 })
 
-// response.use：在请求返回后执行
+// 响应拦截器：response → HTTP 状态码 2xx 时触发；error → 非 2xx / 请求未到达时触发
 instance.interceptors.response.use(
   (response) => {
+    // 走到这里：HTTP 状态码 2xx（如 200/201），但业务 code 仍可能非 200
+    // 例如后端返回 { code: 400, message: "参数错误" }，HTTP 仍然是 200
     const apiData = response.data
     const code = apiData.code
     if (code === 200) {
       return apiData
     }
+    // 业务失败：HTTP 成功但后端业务逻辑返回了错误码
     ElMessage.error(apiData.message || "请求失败")
     return Promise.reject(apiData)
   },
   (error) => {
+    // 走到这里：HTTP 非 2xx（404/500），或请求根本没发出去（网络断开/超时）
+    // 404/500 → error.response 有值；网络断开 → error.response 是 undefined
     if (error.response?.status === 401) {
       removeToken()
       window.location.hash = "#/login"

@@ -54,6 +54,11 @@ public class LayerService {
 
         // 按 workspace 过滤（图层名格式为 "workspace:layerName"）
         return WorkspaceService.normalizeList(layers.get("layer")).stream()
+                // 这个 filter 的作用：按工作空间过滤图层列表。
+                // 条件	                场景	            结果
+                // workspace == null	前端没传 ws 参数	不过滤，返回全部
+                // workspace.isEmpty()	前端传了空字符串	同上
+                // n.startsWith(workspace + ":")	图层名前缀匹配指定工作空间	只保留该 ws 的图层
                 .filter(m -> {
                     String n = m.get("name") != null ? m.get("name").toString() : "";
                     return workspace == null || workspace.isEmpty() || n.startsWith(workspace + ":");
