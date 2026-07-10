@@ -19,8 +19,6 @@
             force-fallback	true	强制使用 Sortable 的 fallback 模式（即使浏览器支持原生拖拽），可以解决某些触摸设备或滚动容器的问题。
             animation	200	拖拽动画持续时间（毫秒），使排序过渡平滑。 
             handle ".drag-handle"	指定拖拽手柄的 CSS 选择器，只有拖拽手柄区域可以触发拖拽，避免误操作。
-            @start	"onDragStart"	拖拽开始时触发的事件
-            @end	"onDragEnd"	拖拽结束时触发的事件
         -->
         <Draggable v-model="draggableModel" item-key="id" tag="div" class="layer-list"
           ghost-class="layer-ghost" :force-fallback="true" animation="200"

@@ -755,7 +755,7 @@ async function publishFt(tableName: string) {
 // WFS / TileWMS / WMTS 图层加载与移除
 // ══════════════════════════════════════════════════════════════
 
-function addLayer(layerFullName: string, loadType = 'wfs') {
+function addLayer(layerFullName: string, loadType = 'wfs') { // wfs是默认加载方式
   const m = map.value;
   if (!m) return;
   const layerId = `gs-${layerFullName}-${loadType}`;
