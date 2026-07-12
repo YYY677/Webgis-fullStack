@@ -43,8 +43,14 @@ public class GeoServerClient {
                 })
                 // 统一错误处理：4xx / 5xx 直接抛 RuntimeException，由 GlobalExceptionHandler 兜底
                 .defaultStatusHandler(HttpStatusCode::isError, (req, res) -> {
+                    String errorBody = "";
+                    try {
+                        java.io.InputStream is = res.getBody();
+                        if (is != null) errorBody = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                    } catch (Exception ignored) {}
                     throw new RuntimeException(
-                            "GeoServer 请求失败: " + res.getStatusCode() + " " + req.getURI());
+                            "GeoServer 请求失败: " + res.getStatusCode() + " " + req.getURI()
+                            + " body=" + errorBody);
                 })
                 .build();
     }
@@ -110,6 +116,71 @@ public class GeoServerClient {
                 .uri(path)
                 .retrieve()
                 .body(Void.class);
+    }
+
+    /**
+     * GET 请求，返回纯文本字符串（用于获取 SLD 等非 JSON 响应）
+     *
+     * @param path 相对路径（如 /styles/generic.sld）
+     * @return 响应体字符串
+     */
+    public String getString(String path) {
+        return client.get()
+                .uri(path)
+                .retrieve()
+                .body(String.class);
+    }
+
+    private static final org.springframework.http.MediaType SLD_XML =
+        // 请求体是一个 OGC SLD XML 文档，XML采用UTF-8编码
+        org.springframework.http.MediaType.parseMediaType("application/vnd.ogc.sld+xml;charset=UTF-8");
+
+    /**
+     * PUT 请求，发送 SLD/XML 字符串 body（用于更新 SLD 内容或 ?raw=true 创建）
+     *
+     * @param path   相对路径（如 /styles/generic.sld）
+     * @param xmlBody XML 字符串
+     */
+    public void putXml(String path, String xmlBody) {
+        client.put()
+                .uri(path)
+                // 等价于 Content-Type: application/vnd.ogc.sld+xml;charset=UTF-8
+                .contentType(SLD_XML)
+                .body(xmlBody)
+                .retrieve() // 发送请求，并准备处理响应
+                .toBodilessEntity(); // 只需要状态码和响应头，不需要响应内容。
+    }
+
+    /**
+     * POST 请求，发送 SLD XML（application/vnd.ogc.sld+xml）
+     *
+     * @param path   相对路径
+     * @param sldBody SLD XML 字符串
+     * @return 响应体
+     */
+    public String postSld(String path, String sldBody) {
+        return client.post()
+                .uri(path)
+                .contentType(SLD_XML)
+                .body(sldBody)
+                .retrieve()
+                .body(String.class);
+    }
+
+    /**
+     * POST 请求，发送纯 XML（application/xml），用于 GeoServer REST XML 格式
+     *
+     * @param path   相对路径
+     * @param xmlBody XML 字符串
+     * @return 响应体
+     */
+    public String postXml(String path, String xmlBody) {
+        return client.post()
+                .uri(path)
+                .contentType(org.springframework.http.MediaType.APPLICATION_XML)
+                .body(xmlBody)
+                .retrieve()
+                .body(String.class);
     }
 
     /** 获取配置（供 Service 读取默认 workspace 等） */

@@ -5,6 +5,7 @@
     <!-- GeoServer 数据管理组件 -->
     <!-- v-model:layer-infos等于 :layerInfos + @update:layer-infos -->
     <GeoServerDataManager :map="map" v-model:layer-infos="layerInfos" />
+    <StyleManager />
 
     <div class="map-controls-right">
       <BasemapSwitcher :set-base-layer="setBaseLayer" />
@@ -20,6 +21,7 @@ import { shallowRef } from "vue";
 import { useMap } from "@/composables/useMap"
 import { BASEMAP_LIST } from "@/utils/basemaps"
 import GeoServerDataManager from "@/components/GeoServerDataManager.vue"
+import StyleManager from "@/components/StyleManager.vue"
 import BasemapSwitcher from "@/components/BasemapSwitcher.vue"
 import BasicToolBox from "@/components/BasicToolBox.vue";
 import LayerControl from "@/components/LayerControl.vue";

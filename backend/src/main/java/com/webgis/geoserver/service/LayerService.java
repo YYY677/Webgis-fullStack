@@ -97,4 +97,19 @@ public class LayerService {
     public Map<String, Object> getDetail(String name) {
         return client.get("/layers/" + name + ".json", Map.class);
     }
+
+    // ── 设置默认样式 ──────────────────────────────────────────
+
+    /**
+     * 设置图层的默认样式
+     * <p>
+     * PUT /rest/layers/{name}.json
+     * Body: {"layer":{"name":"...","defaultStyle":{"name":"styleName"}}}
+     */
+    public String assignStyle(String layerName, String styleName) {
+        Map<String, Object> body = Map.of("layer", Map.of(
+                "name", layerName,
+                "defaultStyle", Map.of("name", styleName)));
+        return client.put("/layers/" + layerName + ".json", body, String.class);
+    }
 }

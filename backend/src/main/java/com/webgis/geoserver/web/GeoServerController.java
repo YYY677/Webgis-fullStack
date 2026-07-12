@@ -229,4 +229,15 @@ public class GeoServerController {
         layerService.publish(ws, ds, ft);
         return Result.success("图层 " + ws + ":" + ft + " 已发布");
     }
+
+    /** 设置图层默认样式 */
+    @PutMapping("/layers/style")
+    public Result<String> assignLayerStyle(@RequestBody Map<String, String> body) {
+        String layerName = body.get("layerName");
+        String styleName = body.get("styleName");
+        if (layerName == null || styleName == null)
+            return Result.error(400, "layerName, styleName 不能为空");
+        layerService.assignStyle(layerName, styleName);
+        return Result.success("样式 " + styleName + " 已应用到 " + layerName);
+    }
 }

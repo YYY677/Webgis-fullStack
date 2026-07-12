@@ -626,12 +626,15 @@ function addLayer(layerFullName: string, loadType = 'wfs') {
 
   let olLayer: any;
   const infoType = loadType === 'wfs' ? 'vector' : loadType;
+  // 缓存穿透时间戳——每次创建 source 时生成新的，tile URL 不同则浏览器不取旧缓存
+  const cb = Date.now()
   if (loadType === 'tilewms') {
     olLayer = markRaw(new TileLayer({
       source: new TileWMS({
         url: '/geoserver/wms',
-        params: { LAYERS: layerFullName, TILED: true, FORMAT: 'image/png', VERSION: '1.1.1' },
+        params: { LAYERS: layerFullName, TILED: true, FORMAT: 'image/png', VERSION: '1.1.1', _cb: cb },
         serverType: 'geoserver',
+        cacheSize: 0,
       }),
     }));
   } else if (loadType === 'wmts') {
@@ -645,6 +648,7 @@ function addLayer(layerFullName: string, loadType = 'wfs') {
         tileGrid: wmtsGrid4326,
         style: '',
         wrapX: true,
+        cacheSize: 0,
       }),
     }));
   } else {

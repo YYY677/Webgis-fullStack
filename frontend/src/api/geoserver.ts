@@ -174,3 +174,118 @@ export function uploadFeatureTypeFile(
     timeout: 60000, // Shapefile 解析 + 数据库写入可能较慢
   })
 }
+
+// ══════════════════════════════════════════════════════════════
+// Style
+// ══════════════════════════════════════════════════════════════
+
+export interface StyleItem extends NameHrefItem {}
+
+/** 所有样式列表 */
+export function getStyles() {
+  return request<{ code: number; data: StyleItem[] }>({
+    url: "/geoserver/styles", method: "get"
+  })
+}
+
+/** 样式元数据详情 */
+export function getStyleDetail(name: string) {
+  return request<{ code: number; data: any }>({
+    url: "/geoserver/styles/detail", method: "get",
+    params: { name }
+  })
+}
+
+/** 获取 SLD 原始内容（纯文本 XML） */
+export function getStyleSld(name: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/styles/sld", method: "get",
+    params: { name }
+  })
+}
+
+/** 创建样式 — 按 type 选预设模板 */
+export function createStyle(name: string, opts?: { description?: string; type?: string }) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/styles", method: "post",
+    data: { name, description: opts?.description ?? "", type: opts?.type ?? "point" }
+  })
+}
+
+/** 更新 SLD 内容 */
+export function updateStyleSld(name: string, sldBody: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/styles/sld", method: "put",
+    params: { name },
+    data: sldBody,
+    headers: { "Content-Type": "application/xml" },
+  })
+}
+
+/** 重命名样式 */
+export function renameStyle(oldName: string, newName: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/styles/rename", method: "put",
+    data: { oldName, newName }
+  })
+}
+
+/** 删除样式 */
+export function deleteStyle(name: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/styles", method: "delete",
+    params: { name }
+  })
+}
+
+/** 设置图层的默认样式 */
+export function assignLayerStyle(layerName: string, styleName: string) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/layers/style", method: "put",
+    data: { layerName, styleName }
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+// Style Value（SLD 表单编辑）
+// ══════════════════════════════════════════════════════════════
+
+export interface MapStyleItem {
+  geomType: string     // "POINT" | "LINE" | "POLYGON" | "RASTER"
+  name: string          // Rule/Name — 查找钥匙，不可编辑
+  description?: string  // UserStyle/Abstract
+  legendTitle?: string  // Rule/Title — 图例名称
+  fillcolor?: string
+  fillopacity?: string
+  bordercolor?: string
+  borderwidth?: string
+  borderopacity?: string
+  size?: string
+  markname?: string
+  rotation?: string
+  dash?: string
+  dashoffset?: string
+  linecap?: string
+  linejoin?: string
+  minscale?: string
+  maxscale?: string
+  opacity?: string      // RASTER: RasterSymbolizer/Opacity
+  colorMapEntries?: Array<{ color: string; quantity: string; label?: string }>
+}
+
+/** 解析 SLD → MapStyle 列表 */
+export function getStyleValue(name: string) {
+  return request<{ code: number; data: MapStyleItem[] }>({
+    url: "/geoserver/styles/value", method: "get",
+    params: { name }
+  })
+}
+
+/** DOM+XPath 修改 SLD 并保存 */
+export function updateStyleValue(name: string, mapStyles: MapStyleItem[]) {
+  return request<{ code: number; data: string }>({
+    url: "/geoserver/styles/value", method: "put",
+    params: { name },
+    data: mapStyles
+  })
+}
