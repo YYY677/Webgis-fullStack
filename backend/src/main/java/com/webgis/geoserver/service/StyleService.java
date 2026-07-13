@@ -95,16 +95,16 @@ public class StyleService {
                   <FeatureTypeStyle>
                     <Rule>
                       <Name>point</Name>
-                      <Title>Point</Title>
+                      <Title>Red Square Point</Title>
                       <PointSymbolizer>
                         <Graphic>
                           <Mark>
-                            <WellKnownName>circle</WellKnownName>
+                            <WellKnownName>square</WellKnownName>
                             <Fill>
-                              <CssParameter name="fill">#3388ff</CssParameter>
+                              <CssParameter name="fill">#FF0000</CssParameter>
                             </Fill>
                           </Mark>
-                          <Size>8</Size>
+                          <Size>6</Size>
                         </Graphic>
                       </PointSymbolizer>
                     </Rule>
@@ -130,11 +130,11 @@ public class StyleService {
                   <FeatureTypeStyle>
                     <Rule>
                       <Name>Line</Name>
-                      <Title>Line</Title>
+                      <Title>Blue Line</Title>
                       <LineSymbolizer>
                         <Stroke>
                           <CssParameter name="stroke">#0000FF</CssParameter>
-                          <CssParameter name="stroke-width">1</CssParameter>
+                          <CssParameter name="stroke-opacity">1</CssParameter>
                         </Stroke>
                       </LineSymbolizer>
                     </Rule>
@@ -160,10 +160,10 @@ public class StyleService {
                   <FeatureTypeStyle>
                     <Rule>
                       <Name>Polygon</Name>
-                      <Title>Polygon</Title>
+                      <Title>Grey Polygon</Title>
                       <PolygonSymbolizer>
                         <Fill>
-                          <CssParameter name="fill">#E6BCBC</CssParameter>
+                          <CssParameter name="fill">#AAAAAA</CssParameter>
                         </Fill>
                         <Stroke>
                           <CssParameter name="stroke">#000000</CssParameter>
@@ -193,7 +193,7 @@ public class StyleService {
                   <FeatureTypeStyle>
                     <Rule>
                       <Name>raster</Name>
-                      <Title>Raster</Title>
+                      <Title>ColorMap Raster</Title>
                       <RasterSymbolizer>
                         <Opacity>1.0</Opacity>
                         <ColorMap>
@@ -228,7 +228,7 @@ public class StyleService {
                   <FeatureTypeStyle>
                     <Rule>
                       <Name>raster</Name>
-                      <Title>Opaque Raster</Title>
+                      <Title>ColorMap Raster</Title>
                       <ogc:Filter>
                         <ogc:PropertyIsEqualTo>
                           <ogc:Function name="isCoverage"/>
@@ -236,7 +236,15 @@ public class StyleService {
                         </ogc:PropertyIsEqualTo>
                       </ogc:Filter>
                       <RasterSymbolizer>
-                        <ContrastEnhancement/>
+                        <Opacity>1.0</Opacity>
+                        <ColorMap>
+                          <ColorMapEntry color="#AAFFAA" quantity="0" label="values"/>
+                          <ColorMapEntry color="#00FF00" quantity="1000"/>
+                          <ColorMapEntry color="#FFFF00" quantity="1200" label="values"/>
+                          <ColorMapEntry color="#FF7F00" quantity="1400" label="values"/>
+                          <ColorMapEntry color="#BF7F3F" quantity="1600" label="values"/>
+                          <ColorMapEntry color="#000000" quantity="2000" label="values"/>
+                        </ColorMap>
                       </RasterSymbolizer>
                     </Rule>
                     <Rule>
@@ -252,9 +260,12 @@ public class StyleService {
                       </ogc:Filter>
                       <PolygonSymbolizer>
                         <Fill>
-                          <CssParameter name="fill">#E6BCBC</CssParameter>
+                          <CssParameter name="fill">#AAAAAA</CssParameter>
                         </Fill>
-                        <Stroke/>
+                        <Stroke>
+                          <CssParameter name="stroke">#000000</CssParameter>
+                          <CssParameter name="stroke-width">1</CssParameter>
+                        </Stroke>
                       </PolygonSymbolizer>
                     </Rule>
                     <Rule>
@@ -271,18 +282,20 @@ public class StyleService {
                       <LineSymbolizer>
                         <Stroke>
                           <CssParameter name="stroke">#0000FF</CssParameter>
+                          <CssParameter name="stroke-opacity">1</CssParameter>
                         </Stroke>
                       </LineSymbolizer>
                     </Rule>
                     <Rule>
                       <Name>point</Name>
-                      <Title>Blue Point</Title>
+                      <Title>Red Square Point</Title>
                       <ElseFilter/>
                       <PointSymbolizer>
                         <Graphic>
                           <Mark>
+                            <WellKnownName>square</WellKnownName>
                             <Fill>
-                              <CssParameter name="fill">#0022FF</CssParameter>
+                              <CssParameter name="fill">#FF0000</CssParameter>
                             </Fill>
                           </Mark>
                           <Size>6</Size>
@@ -329,7 +342,7 @@ public class StyleService {
 
     /** DOM+XPath 修改 SLD 并保存 */
     public void updateStyleValue(String name, List<MapStyle> mapStyles) throws Exception {
-        String sld = client.getString("/styles/" + name + ".sld");
+        String sld = client.getString("/styles/" + name + ".sld"); // 获取当前样式原始 SLD 内容
         String modified = SldModifier.modify(sld, mapStyles);
         client.putXml("/styles/" + name + ".sld", modified);
     }

@@ -16,7 +16,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -85,12 +84,6 @@ public class SldModifier {
     private static final Map<String, String> RASTER_XPATH = new LinkedHashMap<>();
 
     /**
-     * geomType → Rule 名称映射。
-     * 用于在 SLD 中按 Rule/Name 找到对应的 Rule 节点。
-     * 例如 geomType="POINT" 对应 Rule/Name="point"。
-     */
-    private static final Map<String, String> RULE_NAME_MAP = new LinkedHashMap<>();
-    /**
      * geomType → 字段-XPath 映射表。
      * 用于根据几何类型快速查到该类型有哪些可编辑字段以及它们对应的 XPath。
      */
@@ -106,10 +99,6 @@ public class SldModifier {
      * XPath 采用 {@code sld:} 前缀，因为我们的 NamespaceContext
      * 将 {@code sld} 绑定到 {@link #SLD_NS}。不管原始 XML 用什么前缀，
      * 在 DOM 中 namespaceURI 是固定的，XPath 用 {@code sld:} 就能匹配。
-     *
-     * <p>
-     * RULE_NAME_MAP 记录几何类型对应的 Rule/Name 值，
-     * 用于在 SLD 中按名称定位目标 Rule。
      */
     static {
         // ── 点 ──────────────────────────────────────────────────
@@ -155,12 +144,6 @@ public class SldModifier {
         RASTER_XPATH.put("opacity", "sld:RasterSymbolizer/sld:Opacity");
         // ColorMap 不在这里配置，因为它涉及多个 ColorMapEntry 子节点的新增/删除，
         // 不能简单地 setTextContent，需要单独在 modify() 中特殊处理。
-
-        // ── 几何类型 → Rule 名称 ──────────────────────────────
-        RULE_NAME_MAP.put("POINT", "point");
-        RULE_NAME_MAP.put("LINE", "Line");
-        RULE_NAME_MAP.put("POLYGON", "Polygon");
-        RULE_NAME_MAP.put("RASTER", "raster");
 
         // ── 类型 → 映射表 ──────────────────────────────────────
         XPATH_MAP.put("POINT", POINT_XPATH);
@@ -239,12 +222,13 @@ public class SldModifier {
 
             String ruleName = ms.getName();
             if (ruleName == null || ruleName.isEmpty())
-                continue;
+                throw new IllegalArgumentException("MapStyle 缺少 name 字段，无法定位 Rule");
 
             // 在 SLD 中用 Rule/Name 定位特定的 Rule 节点
             Element rule = findRuleNode(xp, doc, ruleName);
             if (rule == null)
-                continue; // 没找到（可能是 ElseFilter 等特殊 Rule），跳过
+                throw new IllegalArgumentException(
+                        "找不到 Rule [" + ruleName + "]，该 Rule 缺少 Name 和 Title，无法通过表单编辑");
 
             // ── Step 4a: 图例标题（UserStyle/Title） ────────────
             String lt = ms.getLegendTitle();
@@ -253,7 +237,6 @@ public class SldModifier {
 
             // ── Step 4b: 符号参数（填充色、边框色、大小等） ─────
             // 根据几何类型从 XPATH_MAP 取对应的 字段名→XPath 映射，
-            // 每个字段通过反射从 MapStyle 中取值。
             for (Map.Entry<String, String> entry : fieldXpath.entrySet()) {
                 String fieldName = entry.getKey();
                 String xpath = entry.getValue();
@@ -422,37 +405,57 @@ public class SldModifier {
      * @return XPath 路径最末端的元素
      */
     private static Element ensureNodePath(Element parent, String relativeXpath) throws Exception {
+        // ── Step 1: 拆路径 ────────────────────────────────────
+        // "sld:PolygonSymbolizer/sld:Fill/sld:CssParameter[@name='fill']"
+        //     → ["sld:PolygonSymbolizer", "sld:Fill", "sld:CssParameter[@name='fill']"]
         String[] segments = relativeXpath.split("/");
         Element current = parent;
+
         for (String seg : segments) {
-            // 去掉 sld: 前缀，获取本地标签名
+            // ── Step 2: 解析路径段 ──────────────────────────────
+            // 去掉 "sld:" 前缀，剩下 "PolygonSymbolizer" 或 "CssParameter[@name='fill']"
             String raw = seg.startsWith("sld:") ? seg.substring(4) : seg;
             String attrName = null, attrValue = null;
 
-            // 处理 CssParameter[@name='fill'] 这样的谓词
+            // ── Step 3: 提取属性谓词 ────────────────────────────
+            // 如果有 [@name='fill']，从中提取：
+            //     attrName = "name", attrValue = "fill"
+            // localName = "CssParameter"（去掉谓词部分）
+            //
+            // 为什么需要这个？
+            // 一个 <Stroke> 下可能有多个 CssParameter：
+            //   <CssParameter name="stroke">#000</CssParameter>
+            //   <CssParameter name="stroke-width">2</CssParameter>
+            // 必须带上 name 属性才能区分要创建哪一个。
             if (raw.contains("[@")) {
-                int start = raw.indexOf("[@") + 2;
-                int eq = raw.indexOf("='", start);
-                int end = raw.indexOf("']", start);
+                // raw = "CssParameter[@name='fill']"
+                int start = raw.indexOf("[@") + 2;           // "name='fill']" 的起始
+                int eq = raw.indexOf("='", start);            // name 和 value 之间的 =
+                int end = raw.indexOf("']", start);           // 结尾的 ']
                 if (eq > 0 && end > 0) {
-                    attrName = raw.substring(start, eq);
-                    attrValue = raw.substring(eq + 2, end);
+                    attrName = raw.substring(start, eq);      // "name"
+                    attrValue = raw.substring(eq + 2, end);   // "fill"
                 }
-                raw = raw.substring(0, raw.indexOf('['));
+                raw = raw.substring(0, raw.indexOf('['));     // "CssParameter"
             }
-            final String localName = raw;
+            final String localName = raw; // "CssParameter" 或 "PolygonSymbolizer" 等
 
-            // 在当前子元素中查找已有的匹配节点
+            // ── Step 4: 在当前子元素中查找是否已存在 ──────────
+            // 不能直接用 getElementsByTagName——它会递归搜索所有后代，
+            // 而我们只检查直接子元素（避免跳过中间层级）。
             NodeList children = current.getChildNodes();
             Element found = null;
             for (int i = 0; i < children.getLength(); i++) {
                 if (children.item(i).getNodeType() != org.w3c.dom.Node.ELEMENT_NODE)
-                    continue;
+                    continue; // 跳过文本节点、注释等非元素节点
                 Element child = (Element) children.item(i);
-                // 匹配命名空间 + 标签名
+                // 必须同时匹配命名空间（SLD_NS）+ 标签名（CssParameter）
+                // 检查子元素的命名空间URI和本地名称是否与预期值匹配
+                // 如果命名空间URI不等于SLD_NS常量，或者本地名称不等于localName变量，
+                // 则跳过当前循环迭代继续考察下一个child是否等于目标标签。
                 if (!SLD_NS.equals(child.getNamespaceURI()) || !localName.equals(child.getLocalName()))
                     continue;
-                // 如果 XPath 中有属性谓词，还要匹配属性值
+                // 如果有 [@name='fill']，还要匹配 name 属性值
                 if (attrName != null && attrValue != null && !attrValue.equals(child.getAttribute(attrName)))
                     continue;
                 found = child;
@@ -460,42 +463,45 @@ public class SldModifier {
             }
 
             if (found != null) {
-                current = found; // 已有 → 移进去
+                // 节点已存在 → 进入下一层
+                current = found;
             } else {
-                // 不存在 → 创建并追加
+                // 找完了所有children都没找到 → 节点不存在 → 创建并追加为当前节点的子元素
+                // 注意：所有 SLD 元素都必须用 SLD_NS 命名空间创建
                 Element newEl = current.getOwnerDocument().createElementNS(SLD_NS, localName);
                 if (attrName != null)
-                    newEl.setAttribute(attrName, attrValue);
+                    newEl.setAttribute(attrName, attrValue); // 设置 name="fill" 等属性
                 current.appendChild(newEl);
                 current = newEl;
             }
         }
+        // Step 5: 返回最末端节点，调用方在这个元素上 setTextContent(colorValue)
         return current;
     }
 
     /**
-     * 通过反射读取 MapStyle 对象的指定字段值。
-     *
-     * <p>
-     * 使用反射而非 getter 的原因是：字段名在 {@code POINT_XPATH} 等映射表中定义为字符串，
-     * 与 {@code MapStyle} 的字段名一一对应。直接用反射按名字取值比 switch-case 更通用。
-     *
-     * <p>
-     * 如果字段不存在（如 MapStyle 没有 "xxx" 字段）返回空字符串，不抛异常。
-     *
-     * @param ms        MapStyle 实例
-     * @param fieldName Java 字段名（如 "fillcolor"、"borderwidth"）
-     * @return 字段值的字符串表示，不存在或 null 返回 ""
+     * 读取 MapStyle 字段值（字符串形式）。
+     * switch 覆盖所有 XPath 映射表中的字段名，编译器保证类型安全。
      */
     private static String getFieldValue(MapStyle ms, String fieldName) {
-        try {
-            Field f = MapStyle.class.getDeclaredField(fieldName);
-            f.setAccessible(true);
-            Object v = f.get(ms);
-            return v != null ? v.toString() : "";
-        } catch (Exception e) {
-            return "";
-        }
+        return switch (fieldName) {
+            case "fillcolor" -> ms.getFillcolor();
+            case "fillopacity" -> ms.getFillopacity();
+            case "bordercolor" -> ms.getBordercolor();
+            case "borderwidth" -> ms.getBorderwidth();
+            case "borderopacity" -> ms.getBorderopacity();
+            case "size" -> ms.getSize();
+            case "rotation" -> ms.getRotation();
+            case "markname" -> ms.getMarkname();
+            case "dash" -> ms.getDash();
+            case "dashoffset" -> ms.getDashoffset();
+            case "linecap" -> ms.getLinecap();
+            case "linejoin" -> ms.getLinejoin();
+            case "minscale" -> ms.getMinscale();
+            case "maxscale" -> ms.getMaxscale();
+            case "opacity" -> ms.getOpacity();
+            default -> "";
+        };
     }
 
     /**
@@ -525,7 +531,8 @@ public class SldModifier {
      */
     private static String serializeXml(Document doc) throws Exception {
         Transformer t = TransformerFactory.newInstance().newTransformer();
-        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+        // 保留 <?xml ...?> 声明
+        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no"); 
         t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         StringWriter sw = new StringWriter();
         t.transform(new DOMSource(doc), new StreamResult(sw));

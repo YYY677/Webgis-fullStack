@@ -30,7 +30,7 @@
     </Transition>
 
     <!-- ── 编辑弹窗 ──────────────────────────────────────── -->
-    <el-dialog v-model="editVisible" :title="'编辑样式 — ' + editingName" width="850px" top="5vh" destroy-on-close>
+    <el-dialog v-model="editVisible" :title="'编辑样式 — ' + editingName" width="600px" top="5vh" destroy-on-close>
       <el-tabs v-model="editTab">
         <!-- 表单编辑 Tab — 读取 SLD → MapStyle 表单 -->
         <el-tab-pane label="表单编辑" name="form">
@@ -51,14 +51,14 @@
                 </div>
                 <div class="desc-field">
                   <span class="desc-label">描述</span>
-                  <el-input v-model="editingDescription" placeholder="样式的描述信息" size="small" style="flex: 1" />
+                  <el-input v-model="editingDescription" placeholder="样式的描述信息" type="textarea" :rows="2" size="small" style="width: 100%" />
                 </div>
               </div>
 
               <!-- Rule 选择器 -->
               <div class="rule-selector">
                 <span class="rule-label">Rule：</span>
-                <el-radio-group v-model="currentRuleIdx" size="small">
+                <el-radio-group v-model="currentRuleIdx" size="small" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%">
                   <el-radio-button v-for="(r, i) in editingValue" :key="i" :value="i">
                     {{ r.legendTitle || r.name }}（{{ r.geomType === 'POLYGON' ? '面' : r.geomType === 'LINE' ? '线' : r.geomType === 'RASTER' ? '栅格' : '点' }}）
                   </el-radio-button>
@@ -66,10 +66,10 @@
               </div>
 
               <!-- 表单区域 -->
-              <el-form v-if="currentRule" label-width="90px" size="small" class="style-form">
+              <el-form v-if="currentRule" label-width="80px" size="small" class="style-form">
                 <!-- 图例标题 -->
                 <el-form-item label="图例名称">
-                  <el-input v-model="currentRule.legendTitle" placeholder="显示在图例中的名称" style="width: 200px" />
+                  <el-input v-model="currentRule.legendTitle" placeholder="显示在图例中的名称" style="width: 180px" />
                 </el-form-item>
 
                 <!-- 面参数 -->
@@ -121,7 +121,7 @@
 
                 <!-- 栅格参数 -->
                 <template v-if="currentRule.geomType === 'RASTER'">
-                  <el-form-item label="透明度"><el-slider v-model="rasterOpacityNum" :min="0" :max="1" :step="0.1" style="width: 200px" /></el-form-item>
+                  <el-form-item label="透明度"><el-slider v-model="rasterOpacityNum" :min="0" :max="1" :step="0.1" style="width: 180px" /></el-form-item>
 
                   <el-divider style="margin: 8px 0" />
                   <div class="cm-title">ColorMap 颜色分级</div>
@@ -140,7 +140,7 @@
                       <el-button size="small" text type="danger" :icon="Delete" class="cm-col-act" @click="removeColorMapEntry(ci)" />
                     </div>
                   </div>
-                  <el-button size="small" @click="addColorMapEntry" style="margin-top:4px">+ 添加分级</el-button>
+                  <el-button size="medium" @click="addColorMapEntry" style="margin-top:6px">+ 添加分级</el-button>
                 </template>
               </el-form>
             </div>
@@ -291,7 +291,14 @@ const rasterOpacityNum = computed({
 function addColorMapEntry() {
   if (!currentRule.value) return
   if (!currentRule.value.colorMapEntries) currentRule.value.colorMapEntries = []
+  // 计算当前规则中颜色映射条目的最大数量值
+  // 使用reduce方法遍历colorMapEntries数组，找到quantity属性的最大值
+  // 如果quantity不存在，则默认为0
   const max = currentRule.value.colorMapEntries.reduce((m, e) => Math.max(m, +(e.quantity || 0)), 0)
+  // 向当前规则的颜色映射条目中添加一个新的条目
+  // 新条目的颜色设置为黑色(#000000)
+  // 数量值为最大值加500，并转换为字符串类型
+  // 标签设置为"values"
   currentRule.value.colorMapEntries.push({ color: "#000000", quantity: (max + 500).toString(), label: "values" })
 }
 
@@ -535,7 +542,7 @@ onMounted(loadStyles)
   gap: 16px;
 }
 .edit-form {
-  flex: 1;
+  flex: 1; // 1代表占据剩余空间，右侧图例固定宽度
   min-width: 0;
 }
 .meta-fields {
@@ -554,19 +561,25 @@ onMounted(loadStyles)
   margin-right: 6px;
 }
 .rule-selector {
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
 }
 .rule-label {
   font-size: 13px;
   margin-right: 8px;
   color: var(--el-text-color-secondary);
 }
+.rule-selector :deep(.el-radio-button__inner) {
+  width: 100%;
+  justify-content: center;
+}
 .style-form {
-  max-height: 320px;
-  overflow-y: auto;
+  max-height: 400px;
+  overflow-y: auto; // 表单内容过多时出现滚动条
 }
 .edit-legend {
-  width: 200px;
+  width: 160px;
   flex-shrink: 0;
   padding: 10px 12px;
   background: var(--el-bg-color);
@@ -620,14 +633,14 @@ onMounted(loadStyles)
 
 /* ── ColorMap 编辑表格 ────────────────────────────── */
 .cm-title {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--el-text-color-lighter);
+  margin-bottom: 10px;
 }
 .cm-table {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .cm-header-row,
 .cm-row {
@@ -636,13 +649,13 @@ onMounted(loadStyles)
   gap: 6px;
 }
 .cm-header-row {
-  font-size: 11px;
-  color: var(--el-text-color-placeholder);
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
   padding: 0 2px;
 }
 .cm-col-color { width: 80px; flex-shrink: 0; }
 .cm-col-qty   { width: 120px; flex-shrink: 0; }
-.cm-col-label { flex: 1; min-width: 0; }
+.cm-col-label { width: 120px; min-width: 0; }
 .cm-col-act   { flex-shrink: 0; }
 
 .fade-enter-active,

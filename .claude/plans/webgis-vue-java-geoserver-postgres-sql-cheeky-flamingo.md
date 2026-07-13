@@ -1,41 +1,30 @@
-# 文件上传两个 Bug 修复
+# 编辑弹窗 UI 布局调整
 
-## Bug 1: 上传超时
+## Context
 
-**原因：** axios 默认超时 10s（request.ts:9）。2MB 的 Shapefile 需要解压→GeoTools 解析→JDBC 建表→500 条 batch insert，10s 不够。
+当前编辑弹窗 850px 偏宽；描述字段单行不够用；generic 有 4 个 Rule 时选择器横排太长撑宽；表单内容区没有滚动，内容多时弹窗很高。
 
-**修复：** 
-- 前端 `uploadFeatureTypeFile` 单独设 `timeout: 60000`（60s）
-- Spring Boot 文件上传最大 50MB 已够，不用改
+## 改动（仅 StyleManager.vue）
 
-## Bug 2: GeoJSON "未定义坐标系"
+**弹窗宽度**：`width="850px"` → `width="680px"`
 
-**原因：** GeoJSON 规范中 WGS84(EPSG:4326) 是默认值，大多数 GeoJSON 文件不写 `crs` 字段。但 `checkCRS()` 检测到 `schema.getCoordinateReferenceSystem() == null` 时直接拒绝。
+**描述字段**：
+- `el-input` → `el-input type="textarea" :rows="2"`
+- `style="width: 360px"` → `style="width: 100%"`
+- `.meta-fields` 去掉固定 `height: 50px`（textarea 比 input 高）
 
-**修复：** 
-- 当 `crs == null` 时视为 EPSG:4326 通过校验
-- 如果是 Shapefile `.prj` 缺失（也导致 null），默认当作 4326 处理
+**Rule 选择器**：
+- `el-radio-group` 加 `style="flex-wrap: wrap"`，4 项自动折行成两排
 
-## 额外优化: 支持多文件 Shapefile
+**表单区域**：
+- `.style-form` 加 `max-height: 360px; overflow-y: auto`
 
-用户要求支持"直接拉取多文件"（不打包 zip）。
-
-**前端：** 文件 input 加 `multiple` 属性，允许同时选 .shp/.shx/.dbf/.prj
-
-**后端：** upload 端点接受 `@RequestParam("files") MultipartFile[]`，存到临时目录后用 ShapefileDataStore 读取
-
-## 改动文件
-
-| 文件 | 改动 |
-|------|------|
-| `api/geoserver.ts` | uploadFeatureTypeFile 加 timeout: 60000 |
-| `03-geoserver-rest.vue` | 文件 input 加 multiple，支持多文件；区分 zip/多文件两种模式 |
-| `DataUploadService.java` | CRS 校验放宽(null 视为 4326)；支持 MultipartFile[] 多文件接收 |
-| `GeoServerController.java` | upload 端点接受 MultipartFile[] |
+**图例预览**：
+- `.edit-legend` 宽度 200px → 160px
 
 ## 验证
 
-1. 上传 2MB Shapefile zip → 不超时，成功
-2. 同时拖选 .shp + .shx + .dbf → 成功
-3. 上传无 crs 声明的 GeoJSON → 视为 4326 通过
-4. 上传非 4326 数据 → 拒绝（保留校验）
+1. generic 样式 → Rule 两排显示，不撑宽
+2. 描述框 2 行高，可拖动拉高
+3. 弹窗 680px，内容完整
+4. 表单超出 360px 出现滚动条

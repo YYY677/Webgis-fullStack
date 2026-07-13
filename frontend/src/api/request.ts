@@ -30,7 +30,7 @@ instance.interceptors.response.use(
       return apiData
     }
     // 业务失败：HTTP 成功但后端业务逻辑返回了错误码
-    ElMessage.error(apiData.message || "请求失败")
+    // 拦截器不弹 toast——由调用方 catch 根据上下文给出精确提示
     return Promise.reject(apiData)
   },
   (error) => {

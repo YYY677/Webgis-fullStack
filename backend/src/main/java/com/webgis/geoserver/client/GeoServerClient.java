@@ -125,10 +125,12 @@ public class GeoServerClient {
      * @return 响应体字符串
      */
     public String getString(String path) {
-        return client.get()
+        // 读为 byte[] 再手动 UTF-8 解码，避免 StringHttpMessageConverter 用错 charset
+        byte[] raw = client.get()
                 .uri(path)
                 .retrieve()
-                .body(String.class);
+                .body(byte[].class);
+        return raw != null ? new String(raw, java.nio.charset.StandardCharsets.UTF_8) : "";
     }
 
     private static final org.springframework.http.MediaType SLD_XML =
@@ -144,11 +146,10 @@ public class GeoServerClient {
     public void putXml(String path, String xmlBody) {
         client.put()
                 .uri(path)
-                // 等价于 Content-Type: application/vnd.ogc.sld+xml;charset=UTF-8
                 .contentType(SLD_XML)
-                .body(xmlBody)
-                .retrieve() // 发送请求，并准备处理响应
-                .toBodilessEntity(); // 只需要状态码和响应头，不需要响应内容。
+                .body(xmlBody.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                .retrieve()
+                .toBodilessEntity();
     }
 
     /**
@@ -162,7 +163,7 @@ public class GeoServerClient {
         return client.post()
                 .uri(path)
                 .contentType(SLD_XML)
-                .body(sldBody)
+                .body(sldBody.getBytes(java.nio.charset.StandardCharsets.UTF_8))
                 .retrieve()
                 .body(String.class);
     }
