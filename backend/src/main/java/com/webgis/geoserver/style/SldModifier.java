@@ -107,14 +107,10 @@ public class SldModifier {
         POINT_XPATH.put("markname", "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:WellKnownName");
         POINT_XPATH.put("fillcolor",
                 "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Fill/sld:CssParameter[@name='fill']");
-        POINT_XPATH.put("fillopacity",
-                "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Fill/sld:CssParameter[@name='fill-opacity']");
         POINT_XPATH.put("bordercolor",
                 "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Stroke/sld:CssParameter[@name='stroke']");
         POINT_XPATH.put("borderwidth",
                 "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Stroke/sld:CssParameter[@name='stroke-width']");
-        POINT_XPATH.put("borderopacity",
-                "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Stroke/sld:CssParameter[@name='stroke-opacity']");
 
         // ── 线 ──────────────────────────────────────────────────
         LINE_XPATH.put("bordercolor", "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke']");
@@ -192,31 +188,13 @@ public class SldModifier {
             }
         });
 
-        // ── Step 3: 处理 UserStyle 级元数据 ──────────────────────
+        // ── Step 3: 处理样式描述 ──────────────────────────────
+        // null 跳过（前端没传），空字符串写空值（用户清空了描述）
         if (!mapStyles.isEmpty()) {
-            MapStyle first = mapStyles.get(0);
-            String desc = first.getDescription();
-            if (desc != null) {
-                // 用 DOM 直接操作，不走 ensureNodePath（它会 split("//") 出空段导致 NAMESPACE_ERR）
-                NodeList usList = doc.getElementsByTagNameNS(SLD_NS, "UserStyle");
-                if (usList.getLength() > 0) {
-                    Element us = (Element) usList.item(0);
-                    NodeList abList = us.getElementsByTagNameNS(SLD_NS, "Abstract");
-                    Element ab;
-                    if (abList.getLength() > 0) {
-                        ab = (Element) abList.item(0);
-                    } else {
-                        ab = doc.createElementNS(SLD_NS, "Abstract");
-                        // 插入到 FeatureTypeStyle 之前（放在 UserStyle 子元素最后面也可以，但保持顺序更好）
-                        NodeList ftsList = us.getElementsByTagNameNS(SLD_NS, "FeatureTypeStyle");
-                        if (ftsList.getLength() > 0)
-                            us.insertBefore(ab, ftsList.item(0));
-                        else
-                            us.appendChild(ab);
-                    }
-                    ab.setTextContent(desc);
-                }
-            }
+            String desc = mapStyles.get(0).getDescription();
+            if (desc != null) // null 跳过（前端没传），空字符串写空值（用户清空了描述）
+                setNodeText(xp, doc.getDocumentElement(),
+                        "sld:NamedLayer/sld:UserStyle/sld:Abstract", desc);
         }
 
         // ── Step 4: 遍历每个 Rule 的参数 ─────────────────────────
@@ -236,32 +214,19 @@ public class SldModifier {
                 throw new IllegalArgumentException(
                         "找不到 Rule [" + ruleName + "]，该 Rule 缺少 Name 和 Title，无法通过表单编辑");
 
-            boolean removeBorder = ("POINT".equals(geomType) || "POLYGON".equals(geomType))
-                    && "".equals(ms.getBordercolor());
-            if (removeBorder) {
-                deleteNodeByXPath(xp, rule, getStrokeXPath(geomType));
-            }
-
-            // ── Step 4a: 图例标题（UserStyle/Title） ────────────
+            // ── Step 4a: 图例标题 ──────────────────────────────
             String lt = ms.getLegendTitle();
-            if (lt != null && !lt.isEmpty())
+            if (lt != null) // null 跳过（前端没传），空字符串写空值（用户清空了图例标题）
                 setNodeText(xp, rule, "sld:Title", lt);
-            else if (lt != null)
-                deleteNodeByXPath(xp, rule, "sld:Title");
 
-            // ── Step 4b: 符号参数（填充色、边框色、大小等） ─────
-            // 根据几何类型从 XPATH_MAP 取对应的 字段名→XPath 映射，
+            // ── Step 4b: 符号参数 ─────────────────────────────
+            // null 或 "" → 删除该节点（空标签会导致 GeoServer 渲染失败）
             for (Map.Entry<String, String> entry : fieldXpath.entrySet()) {
-                String fieldName = entry.getKey();
-                String xpath = entry.getValue();
-                if (removeBorder && isBorderField(fieldName)) continue;
-                String value = getFieldValue(ms, fieldName);
-                if (value == null || value.isEmpty()) {
-                    // null（el-color-picker 清空）或空字符串 → 删除节点
-                    deleteNodeByXPath(xp, rule, xpath);
-                } else {
-                    setNodeText(xp, rule, xpath, value);
-                }
+                String value = getFieldValue(ms, entry.getKey());
+                if (value == null || value.isEmpty())
+                    deleteNodePath(rule, entry.getValue());
+                else
+                    setNodeText(xp, rule, entry.getValue(), value);
             }
 
             // ── Step 4c: RASTER 特殊处理：ColorMap ──────────────
@@ -360,68 +325,6 @@ public class SldModifier {
      * @param nameOrTitle Rule 的 Name 或 Title 文本
      * @return 匹配到的 Rule Element，没找到返回 null
      */
-    /**
-     * 按 XPath 在 DOM 中逐级导航到目标节点并删除。
-     * 不依赖 XPath.evaluate（它在 GeoServer 输出的 sld: 前缀 SLD 中全部返回 count=0），
-     * 而是像 ensureNodePath 一样拆分路径、逐段匹配命名空间+标签名+属性值来定位。
-     */
-    private static void deleteNodeByXPath(XPath xp, Element rule, String xpath) throws Exception {
-        // 按 / 拆路径：sld:Stroke/sld:CssParameter[@name='stroke'] → [...]
-        String[] segments = xpath.split("/");
-        // 路径末段是目标节点，前 N-1 段是导航路径
-        Element current = rule;
-        for (int si = 0; si < segments.length; si++) {
-            String seg = segments[si];
-            String raw = seg.startsWith("sld:") ? seg.substring(4) : seg;
-            String attrName = null, attrValue = null;
-            if (raw.contains("[@")) {
-                int s = raw.indexOf("[@") + 2;
-                int e1 = raw.indexOf("='", s);
-                int e2 = raw.indexOf("']", s);
-                if (e1 > 0 && e2 > 0) {
-                    attrName = raw.substring(s, e1);
-                    attrValue = raw.substring(e1 + 2, e2);
-                }
-                raw = raw.substring(0, raw.indexOf('['));
-            }
-            final String localName = raw;
-            final boolean isLast = (si == segments.length - 1);
-
-            // 在当前元素的直接子节点中查找
-            NodeList children = current.getChildNodes();
-            Element found = null;
-            for (int i = 0; i < children.getLength(); i++) {
-                if (children.item(i).getNodeType() != org.w3c.dom.Node.ELEMENT_NODE) continue;
-                Element child = (Element) children.item(i);
-                if (!SLD_NS.equals(child.getNamespaceURI()) || !localName.equals(child.getLocalName())) continue;
-                if (attrName != null && !attrValue.equals(child.getAttribute(attrName))) continue;
-                found = child;
-                break;
-            }
-
-            if (found == null) return; // 节点不存在，无需删除
-            if (isLast) {
-                // 最后一段 → 删除这个节点
-                current.removeChild(found);
-            } else {
-                current = found; // 中间段 → 进入下一层
-            }
-        }
-    }
-
-    private static String getStrokeXPath(String geomType) {
-        return "POINT".equals(geomType)
-                ? "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Stroke"
-                : "sld:PolygonSymbolizer/sld:Stroke";
-    }
-
-    private static boolean isBorderField(String fieldName) {
-        return "bordercolor".equals(fieldName)
-                || "borderwidth".equals(fieldName)
-                || "borderopacity".equals(fieldName)
-                || "dash".equals(fieldName);
-    }
-
     private static Element findRuleNode(XPath xp, Document doc, String nameOrTitle) throws Exception {
         // 优先按 Name 匹配（我们模板中 Name 是唯一标识）
         NodeList nl = (NodeList) xp.evaluate(
@@ -557,6 +460,79 @@ public class SldModifier {
         }
         // Step 5: 返回最末端节点，调用方在这个元素上 setTextContent(colorValue)
         return current;
+    }
+
+    /** 检查 Element 下是否还有 Element 类型的子节点 */
+    private static boolean hasElementChild(Element el) {
+        NodeList children = el.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            if (children.item(i).getNodeType() == org.w3c.dom.Node.ELEMENT_NODE)
+                return true;
+        }
+        return false;
+    }
+
+    // ── 删除节点 ────────────────────────────────────────────────
+    // 与 ensureNodePath 对称：它逐级创建节点，这个逐级走到最后一步删除。
+    // XPath 查整个文档（//sld:Rule[...]）是可以工作的（findRuleNode 在用），
+    // 但相对于 Rule 节点的子查询全部 count=0，原因不明。
+    // 所以 setNodeText 的 XPath 也走不通，一直 fallback 到 ensureNodePath。
+    // 这里直接用手动遍历子节点 + 命名空间 + 属性匹配来定位并删除。
+    // ─────────────────────────────────────────────────────────────
+
+    private static void deleteNodePath(Element parent, String relativeXpath) {
+        // 拆路径：sld:Stroke/sld:CssParameter[@name='stroke'] → [sld:Stroke, sld:CssParameter[@name='stroke']]
+        String[] segments = relativeXpath.split("/");
+        Element current = parent;
+
+        for (int si = 0; si < segments.length; si++) {
+            String seg = segments[si];
+            // 去掉 sld: 前缀，取标签名
+            String raw = seg.startsWith("sld:") ? seg.substring(4) : seg;
+            String attrName = null, attrValue = null;
+
+            // 如果有 [@name='stroke']，提取属性名和值
+            // 因为一个 <Stroke> 下面可能有多个 <CssParameter>，需要靠属性区分。
+            if (raw.contains("[@")) {
+                int s = raw.indexOf("[@") + 2;
+                int e1 = raw.indexOf("='", s);
+                int e2 = raw.indexOf("']", s);
+                if (e1 > 0 && e2 > 0) {
+                    attrName = raw.substring(s, e1);
+                    attrValue = raw.substring(e1 + 2, e2);
+                }
+                raw = raw.substring(0, raw.indexOf('['));
+            }
+            String localName = raw;
+            boolean isLast = (si == segments.length - 1);
+
+            // 在当前元素的直接子节点中，找匹配的
+            NodeList children = current.getChildNodes();
+            Element found = null;
+            for (int i = 0; i < children.getLength(); i++) {
+                if (children.item(i).getNodeType() != org.w3c.dom.Node.ELEMENT_NODE) continue;
+                Element child = (Element) children.item(i);
+                // 必须同时满足：同命名空间 + 同标签名 + 属性值匹配
+                if (!SLD_NS.equals(child.getNamespaceURI()) || !localName.equals(child.getLocalName())) continue;
+                // 如果有属性谓词，检查属性值是否匹配
+                if (attrName != null && !attrValue.equals(child.getAttribute(attrName))) continue;
+                // 找到匹配的子节点
+                found = child;
+                break;
+            }
+
+            if (found == null) return;       // 节点不存在 → 不用删，直接结束
+            if (isLast) {
+                current.removeChild(found);  // 路径最后一段 → 删除目标节点
+                // 如果父节点没有其他 Element 子节点了（如 Stroke 下最后一个 CssParameter 被删），
+                // 也删掉父节点，避免空标签（如 <sld:Stroke/>）导致 GeoServer 画默认黑框
+                if (!hasElementChild(current)) {
+                    current.getParentNode().removeChild(current);
+                }
+            } else {
+                current = found;             // 中间段 → 继续往下走
+            }
+        }
     }
 
     /**

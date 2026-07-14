@@ -1,30 +1,42 @@
-# 编辑弹窗 UI 布局调整
+# Skill 拆分方案
 
 ## Context
 
-当前编辑弹窗 850px 偏宽；描述字段单行不够用；generic 有 4 个 Rule 时选择器横排太长撑宽；表单内容区没有滚动，内容多时弹窗很高。
+当前 geoserver SKILL.md 176 行，内容涵盖：API 参考、SLD 模板、DOM+XPath 编辑、常见陷阱。按方案二拆分，SKILL.md 保持精炼，长篇内容引用外部文件。
 
-## 改动（仅 StyleManager.vue）
+## 结构
 
-**弹窗宽度**：`width="850px"` → `width="680px"`
+```
+.claude/skills/geoserver/
+├── SKILL.md                  ← 概述 + 核心陷阱 + 文件索引
+├── api-reference.md          ← REST API 参考（workspace→style 端点）
+└── sld-patterns.md           ← SLD 模板设计 + DOM+XPath 编辑 + 坑
+```
 
-**描述字段**：
-- `el-input` → `el-input type="textarea" :rows="2"`
-- `style="width: 360px"` → `style="width: 100%"`
-- `.meta-fields` 去掉固定 `height: 50px`（textarea 比 input 高）
+## 各文件内容
 
-**Rule 选择器**：
-- `el-radio-group` 加 `style="flex-wrap: wrap"`，4 项自动折行成两排
+### SKILL.md（~50 行）
+- name/description 不变
+- 核心陷阱（Content-Type、UTF-8、Tile 缓存、响应格式）
+- 指向 `api-reference.md` 和 `sld-patterns.md` 的索引
 
-**表单区域**：
-- `.style-form` 加 `max-height: 360px; overflow-y: auto`
+### api-reference.md（~70 行）
+- 当前 SKILL.md 中 `## 完整 API 参考` 章节
+- Workspace / DataStore / FeatureType / Layer / Style 端点
+- Style Rename 两步走
+- 常见错误表
 
-**图例预览**：
-- `.edit-legend` 宽度 200px → 160px
+### sld-patterns.md（~100 行）——重点
+- **5 种预设模板设计**（point/line/polygon/raster/generic）
+- **DOM+XPath 修补模式**：为什么不用 GeoTools、Parser-Modifier 对称关系
+- **XPath vs 手动遍历**：何时可用、何时不可用（相对节点子查询失效）
+- **手动遍历模式**：ensureNodePath 逐级创建、deleteNodePath 逐级删除 + 清理空父节点
+- **GeoServer 序列化陷阱**：默认值被丢弃（`<WellKnownName>square</WellKnownName>` 消失、Stroke 只剩空壳）
+- **ColorMapEntry 属性模式**：setAttribute 而非 setTextContent
+- **ColorMap 重建模式**：清空 → 全量重建
+- **空值处理策略**：空字符串/ null → 删除节点；空父节点 → 连带删除
 
 ## 验证
-
-1. generic 样式 → Rule 两排显示，不撑宽
-2. 描述框 2 行高，可拖动拉高
-3. 弹窗 680px，内容完整
-4. 表单超出 360px 出现滚动条
+1. SKILL.md 不超过 60 行
+2. api-reference.md 覆盖所有现有 API 参考内容
+3. sld-patterns.md 包含 XPath/手动遍历/序列化陷阱等用户指定的要点

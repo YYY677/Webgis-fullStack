@@ -134,6 +134,7 @@ public class StyleService {
                       <LineSymbolizer>
                         <Stroke>
                           <CssParameter name="stroke">#0000FF</CssParameter>
+                          <CssParameter name="stroke-width">1</CssParameter>
                           <CssParameter name="stroke-opacity">1</CssParameter>
                         </Stroke>
                       </LineSymbolizer>
@@ -282,6 +283,7 @@ public class StyleService {
                       <LineSymbolizer>
                         <Stroke>
                           <CssParameter name="stroke">#0000FF</CssParameter>
+                          <CssParameter name="stroke-width">1</CssParameter>
                           <CssParameter name="stroke-opacity">1</CssParameter>
                         </Stroke>
                       </LineSymbolizer>
