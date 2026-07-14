@@ -198,7 +198,7 @@ public class StyleService {
                         <Opacity>1.0</Opacity>
                         <ColorMap>
                           <ColorMapEntry color="#AAFFAA" quantity="0" label="values"/>
-                          <ColorMapEntry color="#00FF00" quantity="1000"/>
+                          <ColorMapEntry color="#00FF00" quantity="1000" label="values"/>
                           <ColorMapEntry color="#FFFF00" quantity="1200" label="values"/>
                           <ColorMapEntry color="#FF7F00" quantity="1400" label="values"/>
                           <ColorMapEntry color="#BF7F3F" quantity="1600" label="values"/>
@@ -239,7 +239,7 @@ public class StyleService {
                         <Opacity>1.0</Opacity>
                         <ColorMap>
                           <ColorMapEntry color="#AAFFAA" quantity="0" label="values"/>
-                          <ColorMapEntry color="#00FF00" quantity="1000"/>
+                          <ColorMapEntry color="#00FF00" quantity="1000" label="values"/>
                           <ColorMapEntry color="#FFFF00" quantity="1200" label="values"/>
                           <ColorMapEntry color="#FF7F00" quantity="1400" label="values"/>
                           <ColorMapEntry color="#BF7F3F" quantity="1600" label="values"/>

@@ -131,10 +131,6 @@ public class SldParser {
             ms.setDescription(styleDescription);
             ms.setLegendTitle(getChildText(rule, "Title", xp));
 
-            // 读取通用属性（所有几何类型都有）
-            ms.setMinscale(getChildText(rule, "MinScaleDenominator", xp));
-            ms.setMaxscale(getChildText(rule, "MaxScaleDenominator", xp));
-
             // ── Step 4c: 按几何类型读取个性参数 ─────────────────
             switch (geomType) {
                 case "POLYGON" -> readPolygon(ms, rule, xp);
@@ -171,7 +167,7 @@ public class SldParser {
 
     /**
      * 从 Rule 中读取线符号参数。
-     * 线没有 Fill，只有 Stroke（颜色、宽度、透明度、虚线样式、端点样式、连接样式）。
+     * 线没有 Fill，只有 Stroke（颜色、宽度、透明度、虚线样式）。
      */
     private static void readLine(MapStyle ms, Element rule, XPath xp) throws Exception {
         ms.setBordercolor(xpathValue(rule, "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke']", xp));
@@ -179,10 +175,6 @@ public class SldParser {
         ms.setBorderopacity(
                 xpathValue(rule, "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke-opacity']", xp));
         ms.setDash(xpathValue(rule, "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke-dasharray']", xp));
-        ms.setDashoffset(
-                xpathValue(rule, "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke-dashoffset']", xp));
-        ms.setLinecap(xpathValue(rule, "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke-linecap']", xp));
-        ms.setLinejoin(xpathValue(rule, "sld:LineSymbolizer/sld:Stroke/sld:CssParameter[@name='stroke-linejoin']", xp));
     }
 
     /**
@@ -237,6 +229,7 @@ public class SldParser {
                 "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Stroke/sld:CssParameter[@name='stroke']", xp));
         ms.setBorderwidth(xpathValue(rule,
                 "sld:PointSymbolizer/sld:Graphic/sld:Mark/sld:Stroke/sld:CssParameter[@name='stroke-width']", xp));
+        ms.setRotation(xpathValue(rule, "sld:PointSymbolizer/sld:Graphic/sld:Rotation", xp));
     }
 
     /**

@@ -43,11 +43,4 @@ public class MapStyle {
 
     // ── 线 ─────────────────────────────────────────────────────
     private String dash;          // stroke-dasharray
-    private String dashoffset;
-    private String linecap;       // butt/round/square
-    private String linejoin;      // bevel/miter/round
-
-    // ── 尺度 ───────────────────────────────────────────────────
-    private String minscale;
-    private String maxscale;
 }

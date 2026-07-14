@@ -264,11 +264,6 @@ export interface MapStyleItem {
   markname?: string
   rotation?: string
   dash?: string
-  dashoffset?: string
-  linecap?: string
-  linejoin?: string
-  minscale?: string
-  maxscale?: string
   opacity?: string      // RASTER: RasterSymbolizer/Opacity
   colorMapEntries?: Array<{ color: string; quantity: string; label?: string }>
 }

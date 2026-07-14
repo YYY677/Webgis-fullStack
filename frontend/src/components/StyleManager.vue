@@ -81,27 +81,34 @@
                   <el-form-item label="填充透明度"><el-slider v-model="fillOpacityNum" :min="0" :max="1" :step="0.1" style="width: 180px" /></el-form-item>
                   <el-form-item label="边框色">
                     <el-input v-model="currentRule.bordercolor" placeholder="#000000" style="width: 120px" />
-                    <el-color-picker v-model="currentRule.bordercolor" size="small" style="margin-left: 6px" />
+                    <el-color-picker v-model="currentRule.bordercolor" clearable size="small" style="margin-left: 6px" />
                   </el-form-item>
-                  <el-form-item label="边框宽"><el-slider v-model="borderWidthNum" :min="0" :max="5" :step="0.5" style="width: 180px" /></el-form-item>
+                  <el-form-item label="边框宽"><el-slider v-model="borderWidthNum" :min="1" :max="5" :step="0.5" style="width: 180px" /></el-form-item>
                   <el-form-item label="边框透明度"><el-slider v-model="borderOpacityNum" :min="0" :max="1" :step="0.1" style="width: 180px" /></el-form-item>
+                  <el-form-item label="虚线">
+                    <el-input v-model="currentRule.dash" placeholder="如 5 2" style="width: 120px" />
+                    <span style="font-size:11px;color:#999;margin-left:6px">实线长 间隔长，空格分隔</span>
+                  </el-form-item>
                 </template>
 
                 <!-- 线参数 -->
                 <template v-if="currentRule.geomType === 'LINE'">
                   <el-form-item label="线条色">
                     <el-input v-model="currentRule.bordercolor" placeholder="#0000FF" style="width: 120px" />
-                    <el-color-picker v-model="currentRule.bordercolor" size="small" style="margin-left: 6px" />
+                    <el-color-picker v-model="currentRule.bordercolor" clearable size="small" style="margin-left: 6px" />
                   </el-form-item>
-                  <el-form-item label="线宽"><el-slider v-model="borderWidthNum" :min="0.5" :max="10" :step="0.5" style="width: 180px" /></el-form-item>
+                  <el-form-item label="线宽"><el-slider v-model="borderWidthNum" :min="1" :max="10" :step="0.5" style="width: 180px" /></el-form-item>
                   <el-form-item label="透明度"><el-slider v-model="borderOpacityNum" :min="0" :max="1" :step="0.1" style="width: 180px" /></el-form-item>
-                  <el-form-item label="虚线"><el-input v-model="currentRule.dash" placeholder="如 5 2" style="width: 120px" /></el-form-item>
+                  <el-form-item label="虚线">
+                    <el-input v-model="currentRule.dash" placeholder="如 5 2" style="width: 120px" />
+                    <span style="font-size:11px;color:#999;margin-left:6px">实线长 间隔长，空格分隔</span>
+                  </el-form-item>
                 </template>
 
                 <!-- 点参数 -->
                 <template v-if="currentRule.geomType === 'POINT'">
                   <el-form-item label="形状">
-                    <el-select v-model="currentRule.markname" style="width: 130px">
+                    <el-select v-model="currentRule.markname" placeholder="默认为方形" style="width: 130px">
                       <el-option value="circle" label="圆形" /><el-option value="square" label="方形" />
                       <el-option value="triangle" label="三角" /><el-option value="star" label="星形" />
                       <el-option value="cross" label="十字" /><el-option value="x" label="X" />
@@ -114,9 +121,10 @@
                   </el-form-item>
                   <el-form-item label="边框色">
                     <el-input v-model="currentRule.bordercolor" placeholder="#000000" style="width: 120px" />
-                    <el-color-picker v-model="currentRule.bordercolor" size="small" style="margin-left: 6px" />
+                    <el-color-picker v-model="currentRule.bordercolor" clearable size="small" style="margin-left: 6px" />
                   </el-form-item>
                   <el-form-item label="边框宽"><el-slider v-model="borderWidthNum" :min="0" :max="5" :step="0.5" style="width: 180px" /></el-form-item>
+                  <el-form-item label="旋转角度"><el-slider v-model="rotationNum" :min="0" :max="360" :step="1" style="width: 180px" /></el-form-item>
                 </template>
 
                 <!-- 栅格参数 -->
@@ -267,11 +275,11 @@ const currentRule = computed(() => editingValue.value[currentRuleIdx.value] ?? n
 
 // 滑块用数字（因为 slider 绑定 number，MapStyle 字段都是 string）
 const fillOpacityNum = computed({
-  get: () => currentRule.value?.fillopacity ? parseFloat(currentRule.value.fillopacity) : 0.5,
+  get: () => currentRule.value?.fillopacity ? parseFloat(currentRule.value.fillopacity) : 1,
   set: (v: number) => { if (currentRule.value) currentRule.value.fillopacity = v.toString() }
 })
 const borderWidthNum = computed({
-  get: () => currentRule.value?.borderwidth ? parseFloat(currentRule.value.borderwidth) : 1,
+  get: () => currentRule.value?.borderwidth ? parseFloat(currentRule.value.borderwidth) : 0,
   set: (v: number) => { if (currentRule.value) currentRule.value.borderwidth = v.toString() }
 })
 const borderOpacityNum = computed({
@@ -285,6 +293,10 @@ const sizeNum = computed({
 const rasterOpacityNum = computed({
   get: () => currentRule.value?.opacity ? parseFloat(currentRule.value.opacity) : 1,
   set: (v: number) => { if (currentRule.value) currentRule.value.opacity = v.toString() }
+})
+const rotationNum = computed({
+  get: () => currentRule.value?.rotation ? parseInt(currentRule.value.rotation) : 0,
+  set: (v: number) => { if (currentRule.value) currentRule.value.rotation = v.toString() }
 })
 
 // ── ColorMap 编辑 ──────────────────────────────────────
