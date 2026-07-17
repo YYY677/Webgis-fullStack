@@ -6,8 +6,14 @@
         <span>空间数据表</span>
         <el-button text :icon="Refresh" size="small" @click="loadTables" />
       </div>
-      <el-input v-model="tableFilter" placeholder="搜索表名..." size="small" clearable
-        prefix-icon="Search" class="panel-search" />
+      <el-input v-model="tableFilter" placeholder="搜索表名..." size="small" clearable prefix-icon="Search"
+        class="panel-search" />
+      <!-- 几何编辑工具栏 -->
+      <div v-if="isEditingGeom" class="geom-edit-toolbar">
+        <el-tag type="warning" size="default">正在编辑几何</el-tag>
+        <el-button size="small" type="success" @click="confirmGeomEdit">确认</el-button>
+        <el-button size="small" @click="cancelGeomEdit">取消</el-button>
+      </div>
       <el-scrollbar class="panel-scroll">
         <el-menu :default-active="activeTable?.tableName ?? ''" @select="onTableSelect">
           <el-menu-item v-for="t in filteredTables" :key="t.tableName" :index="t.tableName">
@@ -32,41 +38,43 @@
 
       <div class="bottom-bar">
         <div class="toolbar">
-          <el-button :type="isDrawing ? 'danger' : 'primary'" size="small" @click="isDrawing ? cancelDraw() : startAddDraw()">
+          <el-button :type="isDrawing ? 'danger' : 'primary'" size="small"
+            @click="isDrawing ? cancelDraw() : startAddDraw()">
             {{ isDrawing ? '取消绘制' : '添加' }}
           </el-button>
           <el-button size="small" @click="refreshData">刷新</el-button>
-          <el-input v-model="searchText" placeholder="全字段搜索..." size="small" clearable
-            style="width: 200px" @clear="refreshData" @keyup.enter="doSearch" />
+          <el-input v-model="searchText" placeholder="全字段搜索..." size="small" clearable style="width: 200px"
+            @clear="refreshData" @keyup.enter="doSearch" />
           <el-button size="small" @click="doSearch">搜索</el-button>
           <span v-if="activeTable" class="total-hint">共 {{ totalRows }} 条</span>
         </div>
 
-        <el-table ref="tableRef" :data="tableRows" border stripe max-height="280" size="small"
+        <el-table ref="tableRef" :data="tableRows" border stripe max-height="280" size="small" highlight-current-row
           @row-click="onRowClick" @selection-change="onSelectionChange" height="260">
           <el-table-column type="selection" width="36" />
           <el-table-column type="index" label="#" width="44" />
-          <el-table-column v-for="col in displayFields" :key="col.name" :prop="col.name"
-            :label="col.name" show-overflow-tooltip min-width="80" />
-          <el-table-column label="操作" width="140" fixed="right">
+          <el-table-column v-for="col in displayFields" :key="col.name" :prop="col.name" :label="col.name"
+            show-overflow-tooltip min-width="80" />
+          <el-table-column label="操作" width="150" fixed="right">
             <template #default="{ row }">
               <el-button size="small" type="primary" link @click.stop="onEdit(row)">编辑</el-button>
+              <el-button size="small" type="warning" link @click.stop="onEditGeom(row)">几何</el-button>
               <el-button size="small" type="danger" link @click.stop="onDelete(row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
 
-        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
-          :total="totalRows" :page-sizes="[20, 50, 100]" layout="total, sizes, prev, pager, next, jumper"
-          background small @current-change="loadData" @size-change="loadData" />
+        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :total="totalRows"
+          :page-sizes="[20, 50, 100]" layout="total, sizes, prev, pager, next, jumper" background small
+          @current-change="loadData" @size-change="loadData" />
       </div>
     </div>
 
     <!-- 编辑弹窗 -->
-    <el-dialog v-model="editDialogVisible" :title="isAdd ? '添加要素' : '编辑要素'" width="55%"
-      :close-on-click-modal="false" @close="onEditClose">
-      <el-alert v-if="isAdd && pendingWkt" type="success" :closable="false" show-icon
-        title="几何已绘制，请填写属性字段" style="margin-bottom: 12px" />
+    <el-dialog v-model="editDialogVisible" :title="isAdd ? '添加要素' : '编辑要素'" width="55%" :close-on-click-modal="false"
+      @close="onEditClose">
+      <el-alert v-if="isAdd && pendingWkt" type="success" :closable="false" show-icon title="几何已绘制，请填写属性字段"
+        style="margin-bottom: 12px" />
       <el-form :model="editForm" label-width="120px" size="small" label-position="top">
         <el-form-item v-for="f in formFields" :key="f.name" :label="f.name">
           <el-input v-model="editForm[f.name]" />
@@ -134,6 +142,7 @@ const activeTable = ref<SpatialTableVO | null>(null)
 const searchText = ref("")
 const isSearching = ref(false)
 
+const tableRef = ref<any>(null)
 const tableRows = ref<Record<string, any>[]>([])
 const displayFields = ref<FieldInfoVO[]>([])
 const totalRows = ref(0)
@@ -144,6 +153,7 @@ const selectedRows = ref<Record<string, any>[]>([])
 const editDialogVisible = ref(false)
 const isAdd = ref(false)
 const isDrawing = ref(false)
+const isEditingGeom = ref(false)
 const editForm = ref<Record<string, any>>({})
 const editingRow = ref<Record<string, any> | null>(null)
 const pendingWkt = ref("")
@@ -174,7 +184,43 @@ const saveFields = computed(() =>
 
 onMounted(() => {
   loadTables()
+  // 地图就绪后设置交互
+  nextTick(() => setupMapInteractions())
 })
+
+// ── 地图交互 ──────────────────────────────────────────────────
+
+function setupMapInteractions() {
+  const m = map.value
+  if (!m) {
+    nextTick(() => setupMapInteractions())  // 地图尚未就绪，重试
+    return
+  }
+  // 悬浮要素时切换指针样式
+  m.on("pointermove", (e: any) => {
+    const hit = m.hasFeatureAtPixel(e.pixel)
+    m.getTargetElement().style.cursor = hit ? "pointer" : ""
+  })
+  // 点击要素 → 高亮对应表格行
+  m.on("click", (e: any) => {
+    const feature = m.forEachFeatureAtPixel(e.pixel, (f: any) => f)
+    if (!feature) return
+    const rowIndex = feature.get("_rowIndex")
+    if (rowIndex === undefined || rowIndex < 0 || rowIndex >= tableRows.value.length) return
+    const row = tableRows.value[rowIndex]
+    // 高亮表格行并滚动到可视区域
+    tableRef.value?.setCurrentRow(row)
+    nextTick(() => {
+      const wrapper = tableRef.value?.$el?.querySelector('.el-table__body-wrapper')
+      if (wrapper) {
+        const rowEl = (wrapper as HTMLElement).querySelector('.current-row') as HTMLElement
+        if (rowEl) rowEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    })
+    // 同时高亮地图要素
+    onRowClick(row)
+  })
+}
 
 // ── 加载表列表 ───────────────────────────────────────────────
 
@@ -328,8 +374,10 @@ function onRowClick(row: Record<string, any>) {
       f.setStyle(new Style({
         fill: new Fill({ color: "rgba(255, 255, 0, 0.35)" }),
         stroke: new Stroke({ color: "#ff6600", width: 3 }),
-        image: new CircleStyle({ radius: 8, fill: new Fill({ color: "#ff6600" }),
-          stroke: new Stroke({ color: "#fff", width: 2 }) }),
+        image: new CircleStyle({
+          radius: 8, fill: new Fill({ color: "#ff6600" }),
+          stroke: new Stroke({ color: "#fff", width: 2 })
+        }),
       }))
     } else {
       f.setStyle(undefined)
@@ -392,6 +440,67 @@ function onEdit(row: Record<string, any>) {
   editDialogVisible.value = true
 
   nextTick(() => startModify())
+}
+
+/** 快速编辑几何 — 点击后激活 Modify，拖拽修改，手动确认/取消 */
+function onEditGeom(row: Record<string, any>) {
+  if (!map.value || !vectorLayer.value) {
+    ElMessage.warning("地图尚未就绪")
+    return
+  }
+  isEditingGeom.value = true
+  editingRow.value = row
+  pendingWkt.value = row.wkt ?? ""
+
+  // 高亮该要素
+  onRowClick(row)
+
+  // 激活 Modify，不自动保存
+  cleanupInteractions()
+  const modify = new Modify({ source: vectorLayer.value.getSource()! })
+  map.value.addInteraction(modify)
+  modifyInteraction = modify
+  ElMessage.info("请在地图上拖拽修改几何，修改完成后点击「确认」保存")
+}
+
+function confirmGeomEdit() {
+  if (!map.value || !editingRow.value) return
+  const t = activeTable.value
+  if (!t) return
+  const source = vectorLayer.value?.getSource()
+  if (!source) return
+  // 找到编辑的要素取最新几何
+  const rowIndex = tableRows.value.indexOf(editingRow.value)
+  let newWkt = pendingWkt.value
+  source.forEachFeature((f) => {
+    if (f.get("_rowIndex") === rowIndex) {
+      const geom4326 = f.getGeometry()!.clone().transform("EPSG:3857", "EPSG:4326")
+      newWkt = wktFormat.writeGeometry(geom4326)
+    }
+  })
+  if (!newWkt) { ElMessage.warning("无几何数据"); return }
+  updateTableRow(t.tableName, {
+    geomColumn: t.geomColumn,
+    rowKeyColumn: t.rowKeyColumn,
+    rowKeyValue: editingRow.value[t.rowKeyColumn],
+    newRow: {},
+    fields: [],
+    wkt: newWkt,
+  }).then(() => {
+    ElMessage.success("几何已更新")
+    isEditingGeom.value = false
+    cleanupInteractions()
+    refreshData()
+  }).catch((e: any) => {
+    ElMessage.error(e?.message || "更新失败")
+  })
+}
+
+function cancelGeomEdit() {
+  isEditingGeom.value = false
+  cleanupInteractions()
+  refreshData()  // 重新加载原始几何
+  ElMessage.info("已取消编辑")
 }
 
 function removeTempDrawLayer() {
@@ -560,9 +669,18 @@ function mapDrawType(geomType: string | null | undefined): "Point" | "LineString
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.panel-search { padding: 8px 12px; }
-.panel-scroll { flex: 1; }
-.table-name { margin-left: 6px; font-size: 13px; }
+.panel-search {
+  padding: 8px 12px;
+}
+
+.panel-scroll {
+  flex: 1;
+}
+
+.table-name {
+  margin-left: 6px;
+  font-size: 13px;
+}
 
 .main-area {
   flex: 1;
@@ -611,5 +729,21 @@ function mapDrawType(geomType: string | null | undefined): "Point" | "LineString
   border: 1px dashed var(--el-border-color);
   border-radius: 4px;
   background: var(--el-fill-color-lighter);
+}
+
+/* 几何编辑浮动工具栏 */
+.geom-edit-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 70%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: var(--el-bg-color-overlay);
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: var(--el-box-shadow-light);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 </style>

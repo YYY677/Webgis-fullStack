@@ -3,7 +3,6 @@ package com.webgis.config;
 import com.webgis.auth.JwtAuthFilter;          // 自定义的 JWT 过滤器（校验 Token）
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;       // 用于区分 GET/POST 等请求方法
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -62,8 +61,8 @@ public class SecurityConfig {
                         // ---- 必须登录区（携带有效 Token） ----
                         // 获取当前用户信息，必须登录
                         .requestMatchers("/api/auth/me").authenticated()
-                        // GET 方式访问空间数据接口，必须登录
-                        .requestMatchers(HttpMethod.GET, "/api/spatial/**").authenticated()
+                        // 空间数据 CRUD 接口，全部放行（开发阶段与 GeoServer 保持一致）
+                        .requestMatchers("/api/spatial/**").permitAll()
                         // 文件操作接口，必须登录
                         .requestMatchers("/api/files/**").authenticated()
 

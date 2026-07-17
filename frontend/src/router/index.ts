@@ -112,18 +112,31 @@ const routes: RouteRecordRaw[] = [
             meta: { title: "02-WFS实现增删改查" },
           },
           {
+            path: "spatial-editor",
+            name: "SpatialEditor",
+            component: () => import("@/pages/ol-backend-demo/03-spatial-editor.vue"),
+            meta: { title: "03-后端空间数据CRUD" },
+          },
+          {
             path: "data-management",
             name: "DataManagement",
             component: () =>
-              import("@/pages/ol-backend-demo/03-data-management.vue"),
-            meta: { title: "03-后端API数据管理" },
+              import("@/pages/ol-backend-demo/04-data-management.vue"),
+            meta: { title: "04-后端API数据管理" },
           },
           {
             path: "style-management",
             name: "StyleManagement",
             component: () =>
-              import("@/pages/ol-backend-demo/04-style-management.vue"),
-            meta: { title: "04-后端API样式管理" },
+              import("@/pages/ol-backend-demo/05-style-management.vue"),
+            meta: { title: "05-后端API样式管理" },
+          },
+          {
+            path: "spatial-analysis",
+            name: "SpatialAnalysis",
+            component: () =>
+              import("@/pages/ol-backend-demo/06-spatial-analysis.vue"),
+            meta: { title: "06-后端空间分析" },
           },
         ],
       },

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webgis.spatial.mapper.SpatialMapper">
+
+    <!-- ── 元数据查询 ────────────────────────────────────────── -->
+
+    <select id="getValidTableNames" resultType="string">
+        SELECT table_name FROM spatial_data.layer_catalog
+    </select>
+
+    <select id="getCatalogTables" resultType="java.util.Map">
+        SELECT id, name, table_name AS "tableName", geometry_type AS "geometryType",
+               srid, description
+        FROM spatial_data.layer_catalog
+        ORDER BY name
+    </select>
+
+    <select id="findGeomColumn" resultType="string">
+        SELECT column_name FROM information_schema.COLUMNS
+        WHERE table_schema = 'public' AND table_name = #{tableName}
+          AND udt_name = 'geometry'
+        LIMIT 1
+    </select>
+
+    <!-- 1. MyBatis 映射声明：id 为方法名，返回类型为 String -->
+    <select id="findPrimaryKey" resultType="string">
+        <!-- 2. 选择列名（最终要返回的结果） -->
+        SELECT c.column_name
+
+        <!-- 3. 从标准信息视图 COLUMNS 查询（别名为 c），包含所有表的字段元数据 -->
+        FROM information_schema.COLUMNS c
+
+        <!-- 4. 连接 KEY_COLUMN_USAGE 视图（别名为 kcu），该视图记录哪些字段参与了约束（主键、外键等） -->
+        JOIN information_schema.KEY_COLUMN_USAGE kcu
+            <!-- 4a. 关联条件1：表名必须一致 -->
+            ON c.table_name = kcu.table_name
+            <!-- 4b. 关联条件2：字段名必须一致 -->
+            AND c.column_name = kcu.column_name
+            <!-- 4c. 限定连接侧的模式为 public（性能优化+安全，防止跨模式干扰） -->
+            AND kcu.table_schema = 'public'
+
+        <!-- 5. 连接 TABLE_CONSTRAINTS 视图（别名为 tc），该视图记录约束的具体类型（主键、外键、唯一等） -->
+        JOIN information_schema.TABLE_CONSTRAINTS tc
+            <!-- 5a. 通过约束名关联（确保 kcu 中的约束与 tc 中的约束是同一个） -->
+            ON kcu.constraint_name = tc.constraint_name
+            <!-- 5b. 关键过滤：只保留约束类型为 "PRIMARY KEY" 的记录 -->
+            AND tc.constraint_type = 'PRIMARY KEY'
+
+        <!-- 6. 过滤条件：限定左侧 COLUMNS 视图的模式为 public -->
+        WHERE c.table_schema = 'public'
+            <!-- 7. 动态参数：指定具体的表名（由 MyBatis 传入） -->
+            AND c.table_name = #{tableName}
+
+        <!-- 8. 只取第一条记录（应对复合主键场景，只返回第一个主键字段） -->
+        LIMIT 1
+    </select>
+
+    <select id="getFields" resultType="java.util.Map">
+        SELECT c.column_name AS name,
+            c.udt_name    AS type,
+            (c.udt_name = 'geometry') AS "isGeom"
+        FROM information_schema.COLUMNS c
+        WHERE c.table_schema = 'public' AND c.table_name = #{tableName}
+        ORDER BY c.ordinal_position
+    </select>
+
+    <!-- 
+    MyBatis 查询映射：快速获取 public 模式下指定表的估算行数。
+    利用 PostgreSQL 系统表 pg_class 的统计信息，无需扫描全表，性能极高。
+
+    注意事项：
+    1. 结果来自统计采样，非精确 COUNT(*)，尤其在高并发写入场景下偏差可能较大。
+    2. reltuples 仅在执行 ANALYZE 或 VACUUM 后才会更新，新插入大量数据后若未及时分析，值可能滞后。
+    3. 只查询 public 模式下的表，避免跨模式同名表干扰。
+    4. 对于分区表，reltuples 仅反映父表本身，不包含子分区的汇总数据。
+    
+    适用场景：分页组件总条数显示、粗略判断表是否为空（reltuples = 0 基本可确定无数据）。
+    不适用场景：需要精确计数的业务逻辑（如库存扣减、财务统计）。
+    -->
+    <select id="getRowCount" resultType="long">
+        <!-- 将 real 类型的估算行数转为整数 -->
+        SELECT reltuples::bigint          
+        <!-- PostgreSQL 系统表，存储所有表、索引、视图的元数据 -->
+        FROM pg_class         
+        <!-- 表名（由调用方传入） -->
+        WHERE relname = #{tableName}      
+        <!-- 限定模式为 public（::regnamespace 将字符串转为模式 OID）  -->
+        AND relnamespace = 'public'::regnamespace 
+    </select>
+
+    <!-- ── 分页查询 ──────────────────────────────────────────── -->
+    <!-- 没有 OVER() = 普通聚合，返回一行总计数有 OVER() = 窗口函数，每行附加总计数，
+    不压缩行数好处是一次查询搞定分页 + 总数，不用两条 SQL。 -->
+    <select id="selectPage" resultType="java.util.Map">
+        SELECT *, st_astext("${geomColumn}") AS wkt,
+            COUNT(*) OVER() AS total
+        FROM "${tableName}"
+        ORDER BY 1
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- ── 全字段搜索 ────────────────────────────────────────── -->
+
+    <select id="searchPage" resultType="java.util.Map">
+        SELECT *, st_astext("${geomColumn}") AS wkt,
+               COUNT(*) OVER() AS total
+        FROM "${tableName}"
+        WHERE
+        <foreach collection="fields" item="f" separator="OR">
+            "${f}"::varchar ILIKE '%' || #{keyword} || '%'
+        </foreach>
+        ORDER BY 1
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- ── 新增 ──────────────────────────────────────────────── -->
+
+    <insert id="insertRow">
+        INSERT INTO "${tableName}"
+        (<foreach collection="fields" item="f" separator=",">"${f}"</foreach>, "${geomColumn}")
+        VALUES
+        (<foreach collection="fields" item="f" separator=",">#{row[${f}]}</foreach>, st_geomfromtext(#{wkt}, 4326))
+    </insert>
+
+    <!-- ── 更新 geometry ─────────────────────────────────────── -->
+
+    <update id="updateGeometry">
+        UPDATE "${tableName}"
+        SET "${geomColumn}" = st_geomfromtext(#{wkt}, 4326)
+        WHERE "${rowKeyColumn}" = #{rowKeyValue}
+    </update>
+
+    <!-- ── 更新行属性（含 geometry）──────────────────────────── -->
+
+    <update id="updateRow">
+        UPDATE "${tableName}"
+        <set>
+            <foreach collection="fields" item="f" separator=",">
+                <if test="f != geomColumn and f != rowKeyColumn">
+                    "${f}" = #{row[${f}]}
+                </if>
+            </foreach>
+            <if test="wkt != null and wkt != ''">
+                , "${geomColumn}" = st_geomfromtext(#{wkt}, 4326)
+            </if>
+        </set>
+        WHERE "${rowKeyColumn}" = #{rowKeyValue}
+    </update>
+
+    <!-- ── 删除 ──────────────────────────────────────────────── -->
+
+    <delete id="deleteRow">
+        DELETE FROM "${tableName}"
+        WHERE "${rowKeyColumn}" = #{rowKeyValue}
+    </delete>
+
+</mapper>
