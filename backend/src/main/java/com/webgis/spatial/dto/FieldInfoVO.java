@@ -5,10 +5,10 @@ package com.webgis.spatial.dto;
  */
 public class FieldInfoVO {
 
-    private String name;
-    private String type;
-    private boolean geom;
-    private boolean pk;
+    private String name; // 字段名 
+    private String type; // 字段类型
+    private boolean geom; // 是否为 geometry 字段
+    private boolean pk; // 是否为主键字段
 
     public FieldInfoVO() {}
 

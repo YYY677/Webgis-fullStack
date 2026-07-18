@@ -101,10 +101,19 @@
     </select>
 
     <!-- ── 全字段搜索 ────────────────────────────────────────── -->
+    <!-- ILIKE中的I = Insensitive也就是：不区分大小写的 LIKE;
+        ::varchar = PostgreSQL的类型转换操作符，将字段强制转换为 varchar 类型，避免类型不匹配报错;
+        #{} 和 ${} 不是同一种东西。
+            #{} = 参数绑定（预编译，占位符），安全参数，搜索词、分页参数等可以用 #{}，防止 SQL 注入。
+            ${} = 字符串拼接（直接替换），更危险。表名、字段名等不能用 #{}，只能用 ${}，否则会报错。
+
+            WHERE name = #{name}相当于执行WHERE name = ?，然后 ? = 'tom'
+            WHERE name = ${name}相当于执行WHERE name = 'tom'，直接拼接字符串，容易 SQL 注入
+    -->
 
     <select id="searchPage" resultType="java.util.Map">
         SELECT *, st_astext("${geomColumn}") AS wkt,
-               COUNT(*) OVER() AS total
+            COUNT(*) OVER() AS total
         FROM "${tableName}"
         WHERE
         <foreach collection="fields" item="f" separator="OR">
@@ -123,16 +132,8 @@
         (<foreach collection="fields" item="f" separator=",">#{row[${f}]}</foreach>, st_geomfromtext(#{wkt}, 4326))
     </insert>
 
-    <!-- ── 更新 geometry ─────────────────────────────────────── -->
-
-    <update id="updateGeometry">
-        UPDATE "${tableName}"
-        SET "${geomColumn}" = st_geomfromtext(#{wkt}, 4326)
-        WHERE "${rowKeyColumn}" = #{rowKeyValue}
-    </update>
-
     <!-- ── 更新行属性（含 geometry）──────────────────────────── -->
-
+    <!-- 一句话记：表名列名用 ${}，数据值用 #{} -->
     <update id="updateRow">
         UPDATE "${tableName}"
         <set>

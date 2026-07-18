@@ -51,6 +51,26 @@ public class SpatialAnalysisController {
         return Result.success(spatialAnalysisService.relation(params.get("wkt1"), params.get("wkt2")));
     }
 
+    @PostMapping("/distance")
+    public Result<Double> distance(@RequestBody Map<String, String> params) {
+        return Result.success(spatialAnalysisService.distance(params.get("wkt1"), params.get("wkt2")));
+    }
+
+    @PostMapping("/area")
+    public Result<Double> area(@RequestBody Map<String, String> params) {
+        return Result.success(spatialAnalysisService.area(params.get("wkt")));
+    }
+
+    @PostMapping("/length")
+    public Result<Double> length(@RequestBody Map<String, String> params) {
+        return Result.success(spatialAnalysisService.length(params.get("wkt")));
+    }
+
+    @PostMapping("/centroid")
+    public Result<String> centroid(@RequestBody Map<String, String> params) {
+        return Result.success(spatialAnalysisService.centroid(params.get("wkt")));
+    }
+
     @PostMapping("/shortest-path")
     public Result<Map<String, Object>> shortestPath(@RequestBody Map<String, Object> params) {
         double x1 = ((Number) params.get("x1")).doubleValue();

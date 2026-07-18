@@ -25,9 +25,9 @@ export interface FieldInfoVO {
 }
 
 export interface PageResultVO {
-  rows: Record<string, any>[]
-  fields: FieldInfoVO[]
-  total: number
+  rows: Record<string, any>[] // 查询结果行数据
+  fields: FieldInfoVO[] // 字段信息
+  total: number // 查询到的总行数
   page: number
   size: number
 }

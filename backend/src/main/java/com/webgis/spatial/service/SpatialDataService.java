@@ -96,25 +96,26 @@ public class SpatialDataService {
         }
 
         // 过滤 geometry 二进制字段（只留业务字段 + wkt）
-        List<Map<String, Object>> rawFields = spatialMapper.getFields(tableName);
-        String pkColumn = spatialMapper.findPrimaryKey(tableName);
+        List<Map<String, Object>> rawFields = spatialMapper.getFields(tableName); // 字段名+类型
+        String pkColumn = spatialMapper.findPrimaryKey(tableName); // 该表主键字段名
         List<FieldInfoVO> fieldVOs = rawFields.stream()
                 .map(m -> new FieldInfoVO(
                         str(m.get("name")),
                         str(m.get("type")),
                         Boolean.TRUE.equals(m.get("isGeom")),
                         str(m.get("name")).equals(pkColumn)))
-                .filter(f -> !f.isGeom())
+                .filter(f -> !f.isGeom()) // 过滤掉 geometry 字段，保留业务字段
                 .collect(Collectors.toList());
-        // 追加 wkt 虚拟字段
-        fieldVOs.add(new FieldInfoVO("wkt", "text", false, false));
 
         PageResultVO result = new PageResultVO();
+        // 查询到的行数据（含 geometry 字段的二进制数据 + wkt 文本）
+        // rows 给 OL 用于渲染要素
         result.setRows(rows);
+        // fieldVOs 给前端表格显示字段名和类型
         result.setFields(fieldVOs);
-        result.setTotal(total);
-        result.setPage(page);
-        result.setSize(size);
+        result.setTotal(total); // 查询到的总行数
+        result.setPage(page); // 当前页码
+        result.setSize(size); // 每页大小
         return result;
     }
 
@@ -134,7 +135,8 @@ public class SpatialDataService {
         String[] searchFields = rawFields.stream()
                 .filter(m -> !Boolean.TRUE.equals(m.get("isGeom")))
                 .map(m -> str(m.get("name")))
-                .toArray(String[]::new);
+                .toArray(String[]::new); // stream转String数组，String[]::new是方法引用。
+                
 
         if (searchFields.length == 0) {
             return new PageResultVO();
@@ -157,9 +159,9 @@ public class SpatialDataService {
                         str(m.get("type")),
                         Boolean.TRUE.equals(m.get("isGeom")),
                         str(m.get("name")).equals(pkColumn)))
-                .filter(f -> !f.isGeom())
-                .collect(Collectors.toList());
-        fieldVOs.add(new FieldInfoVO("wkt", "text", false, false));
+                .filter(f -> !f.isGeom()) // 过滤掉 geometry 字段，保留业务字段
+                .collect(Collectors.toList()); // stream转list
+                // .toList();
 
         PageResultVO result = new PageResultVO();
         result.setRows(rows);
@@ -210,10 +212,13 @@ public class SpatialDataService {
         }
 
         Map<String, Object> row = dto.getNewRow();
+        // 若 row 为 null，则只更新 geometry 字段
+        // 若 row 不为 null，则更新 geometry + 属性字段
         if (row != null) {
             convertNumericFields(row);
         }
 
+        // 前端传的fields和row都为空，只更新 geometry
         spatialMapper.updateRow(
                 tableName, geomColumn, dto.getFields(), row,
                 dto.getRowKeyColumn(), dto.getRowKeyValue(),
@@ -241,6 +246,8 @@ public class SpatialDataService {
     /** 将 String 类型的数值字段转为 Double，避免 PostgreSQL 类型不匹配 */
     private void convertNumericFields(Map<String, Object> row) {
         if (row == null) return;
+        // entrySet() 遍历 Map 的键值对，修改值时使用 entry.setValue()
+        // entry是 map的每个键值对
         for (Map.Entry<String, Object> entry : row.entrySet()) {
             Object val = entry.getValue();
             if (val instanceof String s) {

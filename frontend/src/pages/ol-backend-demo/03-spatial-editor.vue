@@ -8,13 +8,8 @@
       </div>
       <el-input v-model="tableFilter" placeholder="搜索表名..." size="small" clearable prefix-icon="Search"
         class="panel-search" />
-      <!-- 几何编辑工具栏 -->
-      <div v-if="isEditingGeom" class="geom-edit-toolbar">
-        <el-tag type="warning" size="default">正在编辑几何</el-tag>
-        <el-button size="small" type="success" @click="confirmGeomEdit">确认</el-button>
-        <el-button size="small" @click="cancelGeomEdit">取消</el-button>
-      </div>
       <el-scrollbar class="panel-scroll">
+        <!-- el-menu 的 @select 回调参数就是被点击菜单项的 :index 值 -->
         <el-menu :default-active="activeTable?.tableName ?? ''" @select="onTableSelect">
           <el-menu-item v-for="t in filteredTables" :key="t.tableName" :index="t.tableName">
             <el-tag :type="typeTag(t.geometryType)" size="small">
@@ -29,6 +24,12 @@
     <div class="main-area">
       <div id="spatial-map" class="map-container">
         <SearchBox v-if="map" :map="map" />
+        <!-- 几何编辑工具栏 -->
+        <div v-if="isEditingGeom" class="geom-edit-toolbar">
+          <el-tag type="warning" size="default">正在编辑几何</el-tag>
+          <el-button size="small" type="success" @click="confirmGeomEdit">确认</el-button>
+          <el-button size="small" @click="cancelGeomEdit">取消</el-button>
+        </div>
         <div class="map-controls-right">
           <BasemapSwitcher :set-base-layer="setBaseLayer" />
           <BasicToolBox v-if="map" :map="map" />
@@ -53,10 +54,12 @@
           @row-click="onRowClick" @selection-change="onSelectionChange" height="260">
           <el-table-column type="selection" width="36" />
           <el-table-column type="index" label="#" width="44" />
+          <!-- ``:prop="col.name"绑定 Element Plus 的prop` 属性，指定这一列从行数据中取哪个字段。 -->
           <el-table-column v-for="col in displayFields" :key="col.name" :prop="col.name" :label="col.name"
             show-overflow-tooltip min-width="80" />
           <el-table-column label="操作" width="150" fixed="right">
             <template #default="{ row }">
+              <!-- .stop是阻止事件冒泡的修饰符，防止事件向上冒泡导致不必要的触发 -->
               <el-button size="small" type="primary" link @click.stop="onEdit(row)">编辑</el-button>
               <el-button size="small" type="warning" link @click.stop="onEditGeom(row)">几何</el-button>
               <el-button size="small" type="danger" link @click.stop="onDelete(row)">删除</el-button>
@@ -102,7 +105,7 @@
  * 编辑流程：点击"编辑" → 弹窗改属性 + 地图改几何 → 保存
  * 所有几何存储为 EPSG:4326，地图显示自动转换为 EPSG:3857
  */
-import { ref, computed, onMounted, nextTick } from "vue"
+import { ref, shallowRef, computed, onMounted, nextTick } from "vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { Refresh } from "@element-plus/icons-vue"
 
@@ -136,49 +139,52 @@ const { map, setBaseLayer } = useMap("spatial-map", {
 
 // ── 状态 ──────────────────────────────────────────────────────
 
-const tableFilter = ref("")
-const allTables = ref<SpatialTableVO[]>([])
-const activeTable = ref<SpatialTableVO | null>(null)
-const searchText = ref("")
-const isSearching = ref(false)
+// 表列表 & 搜索
+const tableFilter = ref("")                                          // 左侧面板搜索关键字
+const allTables = ref<SpatialTableVO[]>([])                          // layer_catalog 所有注册表
+const activeTable = ref<SpatialTableVO | null>(null)                 // 当前选中的表
+const searchText = ref("")                                           // 属性搜索关键字
+const isSearching = ref(false)                                       // 是否处于搜索模式
 
-const tableRef = ref<any>(null)
-const tableRows = ref<Record<string, any>[]>([])
-const displayFields = ref<FieldInfoVO[]>([])
-const totalRows = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(50)
-const selectedRows = ref<Record<string, any>[]>([])
+// 表格分页
+const tableRef = ref<any>(null)                                      // el-table 实例
+const tableRows = ref<Record<string, any>[]>([])                     // 当前页数据行
+const displayFields = ref<FieldInfoVO[]>([])                         // 当前表字段列表
+const totalRows = ref(0)                                             // 总记录数
+const currentPage = ref(1)                                           // 当前页码
+const pageSize = ref(50)                                             // 每页条数
+const selectedRows = ref<Record<string, any>[]>([])                  // 多选选中行
 
+// 编辑弹窗
 const editDialogVisible = ref(false)
-const isAdd = ref(false)
-const isDrawing = ref(false)
-const isEditingGeom = ref(false)
-const editForm = ref<Record<string, any>>({})
-const editingRow = ref<Record<string, any> | null>(null)
-const pendingWkt = ref("")
+const isAdd = ref(false)                                             // true=新增 / false=编辑，编辑弹窗中使用
+const isDrawing = ref(false)                                         // 是否正在地图绘制
+const isEditingGeom = ref(false)                                     // 是否正在编辑几何，用于控制几何工具栏显示
+const editForm = ref<Record<string, any>>({})                        // 弹窗表单数据
+const editingRow = ref<Record<string, any> | null>(null)             // 正在编辑的原始行
+const pendingWkt = ref("")                                           // 待保存的 WKT 几何
 
-// OL
-const vectorLayer = ref<VectorLayer<VectorSource> | null>(null)
-const wktFormat = new WKT()
-let drawInteraction: Draw | null = null
-let modifyInteraction: Modify | null = null
-const tempDrawLayer = ref<VectorLayer<VectorSource> | null>(null)
+// OL 地图对象（shallowRef 避免 Vue proxy 干扰 OL 内部状态）
+const vectorLayer = shallowRef<VectorLayer<VectorSource> | null>(null)
+const wktFormat = new WKT()                                          // WKT 解析器（纯工具，无需响应式）
+let drawInteraction: Draw | null = null                              // 当前绘制交互（let，频繁创建销毁）
+let modifyInteraction: Modify | null = null                          // 当前修改交互
+const tempDrawLayer = shallowRef<VectorLayer<VectorSource> | null>(null)
 
 // ── 计算属性 ──────────────────────────────────────────────────
 
 const filteredTables = computed(() => {
-  if (!tableFilter.value) return allTables.value
+  if (!tableFilter.value) return allTables.value // 未输入关键字时返回全部表
   const kw = tableFilter.value.toLowerCase()
   return allTables.value.filter(t => t.name.toLowerCase().includes(kw))
 })
 
-/** 编辑弹窗中显示的字段（排除 PK、几何、wkt） */
+/** 编辑弹窗中显示的字段（排除几何、主键） */
 const formFields = computed(() =>
-  displayFields.value.filter(f => !f.geom && !f.pk && f.name !== "wkt"))
-/** 提交时写入的字段（排除 PK、几何、wkt） */
+  displayFields.value.filter(f => !f.geom && !f.pk))
+/** 提交时写入的字段（排除几何、主键） */
 const saveFields = computed(() =>
-  displayFields.value.filter(f => !f.geom && !f.pk && f.name !== "wkt").map(f => f.name))
+  displayFields.value.filter(f => !f.geom && !f.pk).map(f => f.name))
 
 // ── 生命周期 ──────────────────────────────────────────────────
 
@@ -210,10 +216,16 @@ function setupMapInteractions() {
     const row = tableRows.value[rowIndex]
     // 高亮表格行并滚动到可视区域
     tableRef.value?.setCurrentRow(row)
+    // 为什么需要 nextTick？ setCurrentRow(row) 后 Vue 需要一轮 DOM 更新才会把 current-row class 
+    // 加到对应 <tr> 上。不加 nextTick 的话 .querySelector('.current-row') 返回 null。
     nextTick(() => {
+      // 获取表格DOM元素的body包装器
       const wrapper = tableRef.value?.$el?.querySelector('.el-table__body-wrapper')
       if (wrapper) {
+        // 在 tbody 区域找到带有 .current-row 类的行元素
         const rowEl = (wrapper as HTMLElement).querySelector('.current-row') as HTMLElement
+        // 如果找到当前行元素，则平滑滚动到该行位置
+        // block: 'nearest' 的意思是：如果该行已经在可视区域内就不动，在下方就滚到可见区底部，在上方就滚到顶部。
         if (rowEl) rowEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       }
     })
@@ -291,9 +303,12 @@ function refreshData() {
 
 function applyPageResult(result: PageResultVO) {
   tableRows.value = result.rows ?? []
-  displayFields.value = result.fields?.filter(f => f.name !== "wkt") ?? []
+  displayFields.value = result.fields ?? []
   totalRows.value = result.total
-  nextTick(() => loadFeaturesToMap())
+  // 使用 nextTick 确保 DOM 更新完成后执行回调函数
+  // 在 Vue 中，nextTick 用于在下次 DOM 更新循环结束之后执行延迟回调
+  // 这里在地图相关 DOM 更新后，调用 loadFeaturesToMap 函数加载地图要素
+  nextTick(() => loadFeaturesToMap()) 
 }
 
 // ── 地图要素加载（WKT 4326 → Feature 3857）─────────────────
@@ -307,7 +322,7 @@ function loadFeaturesToMap() {
   const features = []
 
   for (const row of tableRows.value) {
-    const wkt = row.wkt
+    const wkt = row.wkt // xml中的 st_astext("${geomColumn}") AS wkt
     if (!wkt) continue
     try {
       // 数据库存储为 4326 → WKT 解析为 4326 → 地图显示为 3857
@@ -315,7 +330,9 @@ function loadFeaturesToMap() {
         dataProjection: "EPSG:4326",
         featureProjection: "EPSG:3857",
       })
-      feature.set("_rowIndex", tableRows.value.indexOf(row))
+      // 标记该要素对应的表格行索引
+      // indexOf 是 JS 数组的原生方法，返回元素在数组中的位置（0-based）。
+      feature.set("_rowIndex", tableRows.value.indexOf(row)) 
       features.push(feature)
     } catch (e) {
       console.warn("WKT 解析失败:", wkt, e)
@@ -328,8 +345,8 @@ function loadFeaturesToMap() {
     source,
     style: createStyleFunction(),
   })
-  m.addLayer(layer)
-  vectorLayer.value = layer
+  m.addLayer(layer) // 将图层添加到地图中
+  vectorLayer.value = layer // 保存图层引用，便于后续操作
 
   if (features.length > 0) {
     const extent = source.getExtent()
@@ -352,8 +369,11 @@ function cleanupVectorLayer() {
 function createStyleFunction() {
   // 统一风格：fill 对多边形生效，image 对点生效，stroke 对线/多边形都生效
   return new Style({
+    // 面样式 
     fill: new Fill({ color: "rgba(64, 158, 255, 0.15)" }),
+    // 线样式
     stroke: new Stroke({ color: "#409eff", width: 2 }),
+    // 点样式
     image: new CircleStyle({
       radius: 5, fill: new Fill({ color: "#409eff" }),
       stroke: new Stroke({ color: "#fff", width: 1.5 }),
@@ -385,6 +405,7 @@ function onRowClick(row: Record<string, any>) {
   })
 }
 
+// 暂时没用到，涉及到多选功能
 function onSelectionChange(selection: Record<string, any>[]) {
   selectedRows.value = selection
 }
@@ -408,8 +429,8 @@ function startAddDraw() {
   tempDrawLayer.value = layer  // 临时绘制图层，不覆盖 vectorLayer
 
   const draw = new Draw({ source, type: olType })
-  map.value.addInteraction(draw)
-  drawInteraction = draw
+  map.value.addInteraction(draw) // 添加绘制交互
+  drawInteraction = draw // 保存引用，便于后续移除
 
   draw.on("drawend", (e) => {
     isDrawing.value = false
@@ -420,8 +441,8 @@ function startAddDraw() {
     pendingWkt.value = wktFormat.writeGeometry(geom4326)
 
     isAdd.value = true
-    editingRow.value = null
-    editForm.value = {}
+    editingRow.value = null // 新建要素没有原始行数据
+    editForm.value = {} // 清空表单
     editDialogVisible.value = true
   })
 }
@@ -429,17 +450,15 @@ function startAddDraw() {
 // ── 编辑流程：弹窗 + Modify 交互 ──────────────────────────
 
 function onEdit(row: Record<string, any>) {
-  isAdd.value = false
+  isAdd.value = false // 编辑模式
   editingRow.value = row
-  // 复制行数据，跳过几何和 wkt
   editForm.value = {}
   for (const f of formFields.value) {
     editForm.value[f.name] = row[f.name]
   }
   pendingWkt.value = row.wkt ?? ""
   editDialogVisible.value = true
-
-  nextTick(() => startModify())
+  // 几何编辑请点击该行的「几何」按钮 → 地图上拖拽 → 确认/取消
 }
 
 /** 快速编辑几何 — 点击后激活 Modify，拖拽修改，手动确认/取消 */
@@ -455,9 +474,13 @@ function onEditGeom(row: Record<string, any>) {
   // 高亮该要素
   onRowClick(row)
 
-  // 激活 Modify，不自动保存
+  // 激活 Modify，只允许编辑目标要素
   cleanupInteractions()
-  const modify = new Modify({ source: vectorLayer.value.getSource()! })
+  const rowIndex = tableRows.value.indexOf(row)
+  const modify = new Modify({
+    source: vectorLayer.value.getSource()!,
+    filter: (f) => f.get("_rowIndex") === rowIndex,
+  })
   map.value.addInteraction(modify)
   modifyInteraction = modify
   ElMessage.info("请在地图上拖拽修改几何，修改完成后点击「确认」保存")
@@ -469,9 +492,9 @@ function confirmGeomEdit() {
   if (!t) return
   const source = vectorLayer.value?.getSource()
   if (!source) return
-  // 找到编辑的要素取最新几何
+  // 从地图要素上取拖拽后的最新几何，不依赖 pendingWkt
   const rowIndex = tableRows.value.indexOf(editingRow.value)
-  let newWkt = pendingWkt.value
+  let newWkt: string | null = null
   source.forEachFeature((f) => {
     if (f.get("_rowIndex") === rowIndex) {
       const geom4326 = f.getGeometry()!.clone().transform("EPSG:3857", "EPSG:4326")
@@ -488,7 +511,7 @@ function confirmGeomEdit() {
     wkt: newWkt,
   }).then(() => {
     ElMessage.success("几何已更新")
-    isEditingGeom.value = false
+    isEditingGeom.value = false // 关闭几何编辑状态，隐藏工具栏
     cleanupInteractions()
     refreshData()
   }).catch((e: any) => {
@@ -497,7 +520,7 @@ function confirmGeomEdit() {
 }
 
 function cancelGeomEdit() {
-  isEditingGeom.value = false
+  isEditingGeom.value = false // 关闭几何编辑状态，隐藏工具栏
   cleanupInteractions()
   refreshData()  // 重新加载原始几何
   ElMessage.info("已取消编辑")
@@ -505,7 +528,8 @@ function cancelGeomEdit() {
 
 function removeTempDrawLayer() {
   if (!tempDrawLayer.value) return
-  tempDrawLayer.value.getSource()?.clear()      // 清空绘制的要素
+  // clear()清空绘制的要素，但其实不需要，下方赋值null后会被垃圾回收
+  tempDrawLayer.value.getSource()?.clear()      
   if (map.value) {
     map.value.removeLayer(tempDrawLayer.value as any)  // 移除图层
   }
@@ -528,26 +552,11 @@ function cancelDraw() {
   removeTempDrawLayer()  // 移除临时绘制图层，保留原有业务图层
   isDrawing.value = false
   isAdd.value = false
-  pendingWkt.value = ""
+  pendingWkt.value = "" // 清空待提交的 WKT
   editDialogVisible.value = false
 }
 
-function startModify() {
-  if (!map.value || !vectorLayer.value) return
-  cleanupInteractions()
-
-  const modify = new Modify({ source: vectorLayer.value.getSource()! })
-  map.value.addInteraction(modify)
-  modify.on("modifyend", (e) => {
-    const f = e.features.getArray()[0]
-    if (f) {
-      const geom4326 = f.getGeometry()!.clone().transform("EPSG:3857", "EPSG:4326")
-      pendingWkt.value = wktFormat.writeGeometry(geom4326)
-    }
-  })
-  modifyInteraction = modify
-}
-
+// 
 function cleanupInteractions() {
   if (drawInteraction && map.value) { map.value.removeInteraction(drawInteraction); drawInteraction = null }
   if (modifyInteraction && map.value) { map.value.removeInteraction(modifyInteraction); modifyInteraction = null }
@@ -561,12 +570,12 @@ async function saveEdit() {
 
   const pkCol = t.rowKeyColumn
   const dto = {
-    geomColumn: t.geomColumn,
-    rowKeyColumn: pkCol,
-    rowKeyValue: editingRow.value?.[pkCol] ?? null,
-    newRow: { ...editForm.value },
-    fields: saveFields.value,
-    wkt: pendingWkt.value || undefined,
+    geomColumn: t.geomColumn, // 几何列名
+    rowKeyColumn: pkCol, // 主键列名
+    rowKeyValue: editingRow.value?.[pkCol] ?? null, // 主键具体值，新增时为 null，编辑时为原始值
+    newRow: { ...editForm.value }, // 复制表单数据
+    fields: saveFields.value, // 只提交非几何、非主键字段
+    wkt: pendingWkt.value || undefined, // 几何数据
   }
 
   try {
@@ -735,7 +744,7 @@ function mapDrawType(geomType: string | null | undefined): "Point" | "LineString
 .geom-edit-toolbar {
   position: absolute;
   top: 12px;
-  left: 70%;
+  left: 400px;
   transform: translateX(-50%);
   z-index: 10;
   background: var(--el-bg-color-overlay);

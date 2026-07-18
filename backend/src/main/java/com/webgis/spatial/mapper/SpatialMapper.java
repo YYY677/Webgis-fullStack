@@ -60,14 +60,6 @@ public interface SpatialMapper {
             @Param("row") Map<String, Object> row,
             @Param("wkt") String wkt);
 
-    /** 更新 geometry 字段（按主键匹配） */
-    int updateGeometry(
-            @Param("tableName") String tableName,
-            @Param("geomColumn") String geomColumn,
-            @Param("wkt") String wkt,
-            @Param("rowKeyColumn") String rowKeyColumn,
-            @Param("rowKeyValue") Object rowKeyValue);
-
     /** 更新行属性（按主键匹配） */
     int updateRow(
             @Param("tableName") String tableName,

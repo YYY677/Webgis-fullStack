@@ -45,6 +45,34 @@ export function relationAnalysis(wkt1: string, wkt2: string) {
   })
 }
 
+export function distanceAnalysis(wkt1: string, wkt2: string) {
+  return request<{ code: number; data: number }>({
+    url: "/spatial/analysis/distance", method: "post",
+    data: { wkt1, wkt2 }
+  })
+}
+
+export function areaAnalysis(wkt: string) {
+  return request<{ code: number; data: number }>({
+    url: "/spatial/analysis/area", method: "post",
+    data: { wkt }
+  })
+}
+
+export function lengthAnalysis(wkt: string) {
+  return request<{ code: number; data: number }>({
+    url: "/spatial/analysis/length", method: "post",
+    data: { wkt }
+  })
+}
+
+export function centroidAnalysis(wkt: string) {
+  return request<{ code: number; data: string }>({
+    url: "/spatial/analysis/centroid", method: "post",
+    data: { wkt }
+  })
+}
+
 export function shortestPath(x1: number, y1: number, x2: number, y2: number) {
   return request<{ code: number; data: { wkt: string; totalCost: number } }>({
     url: "/spatial/analysis/shortest-path", method: "post",
