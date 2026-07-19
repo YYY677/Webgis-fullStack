@@ -73,31 +73,13 @@ const routes: RouteRecordRaw[] = [
             component: () => import("@/pages/ol-frontend-demo/06-province-charts.vue"),
             meta: { title: "06-省份数据可视化" },
           },
-          {
-            path: "tianditu",
-            name: "Tianditu",
-            component: () => import("@/pages/ol-frontend-demo/openlayers-tianditu.vue"),
-            meta: { title: "天地图" },
-          },
-          {
-            path: "wfs",
-            name: "Wfs",
-            component: () => import("@/pages/ol-frontend-demo/openlayers-wfs.vue"),
-            meta: { title: "WFS 查询" },
-          },
-          {
-            path: "cesium",
-            name: "Cesium",
-            component: () => import("@/pages/ol-frontend-demo/cesium.vue"),
-            meta: { title: "Cesium 3D" },
-          },
         ],
       },
       {
         path: "ol-backend-demo",
         name: "OlBackendDemo",
-        redirect: "/ol-backend-demo/basemap",
-        meta: { title: "后端 OL Demo", icon: "Platform" },
+        redirect: "/ol-backend-demo/basemap", 
+        meta: { title: "全栈 OL Demo", icon: "Platform" },
         children: [
           {
             path: "geoserver-load",
@@ -140,6 +122,20 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
+      {
+        path: "cesium-demo",
+        name: "CesiumDemo",
+        redirect: "/cesium-demo/cesium-entry",
+        meta: { title: "Cesium Demo", icon: "Camera" },
+        children:[
+          {
+            path: "cesium-entry",
+            name: "CesiumEntry",
+            component: () => import("@/pages/cesium-frontend-demo/01-cesium-entry.vue"),
+            meta: { title: "01-初识Cesium" },
+          }
+        ]
+      }
     ],
   },
   { path: "/:pathMatch(.*)*", redirect: "/404" },
