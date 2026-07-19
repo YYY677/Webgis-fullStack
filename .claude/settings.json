@@ -24,5 +24,6 @@
         ]
       }
     ]
-  }
+  },
+  "plansDirectory": ".claude/plans"
 }
