@@ -133,6 +133,12 @@ const routes: RouteRecordRaw[] = [
             name: "CesiumEntry",
             component: () => import("@/pages/cesium-frontend-demo/01-cesium-entry.vue"),
             meta: { title: "01-初识Cesium" },
+          },
+          {
+            path: "coordinates",
+            name: "CesiumCoordinates",
+            component: () => import("@/pages/cesium-frontend-demo/02-cesium-coordinates.vue"),
+            meta: { title: "02-坐标与方位角" },
           }
         ]
       }

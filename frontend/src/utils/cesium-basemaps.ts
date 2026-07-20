@@ -280,12 +280,13 @@ export const CESIUM_BASEMAP_LIST: CesiumBasemapItem[] = [
           maximumLevel: 18,
         })
       )
-      // CesiumTerrainProvider 在 1.142 中构造函数不再接受 url，
-      // 改用静态工厂方法 fromUrl() 异步加载。旧版 new CesiumTerrainProvider({ url })
-      // 会创建空 provider 导致地球变透明。
+      // EllipsoidTerrainProvider 是默认地形提供者，返回一个光滑的椭球体表面。
       const fallback = new EllipsoidTerrainProvider()
       viewer.terrainProvider = fallback
       try {
+        // CesiumTerrainProvider 在 1.142 中构造函数不再接受 url，
+        // 改用静态工厂方法 fromUrl() 异步加载。旧版 new CesiumTerrainProvider({ url })
+        // 会创建空 provider 导致地球变透明。
         viewer.terrainProvider = await CesiumTerrainProvider.fromUrl(
           "//data.mars3d.cn/terrain"
         )
