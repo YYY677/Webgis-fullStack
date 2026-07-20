@@ -139,6 +139,12 @@ const routes: RouteRecordRaw[] = [
             name: "CesiumCoordinates",
             component: () => import("@/pages/cesium-frontend-demo/02-cesium-coordinates.vue"),
             meta: { title: "02-坐标与方位角" },
+          },
+          {
+            path: "events",
+            name: "CesiumEvents",
+            component: () => import("@/pages/cesium-frontend-demo/03-cesium-events.vue"),
+            meta: { title: "03-事件监听" },
           }
         ]
       }
