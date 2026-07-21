@@ -274,6 +274,7 @@ function onDblClick(click: any) {
   if (c) {
     const carto = Cartographic.fromCartesian(c)
     // Cartographic 已经是弧度，直接 fromRadians 即可，不需要先 toDegrees 再转回来
+    // c也是笛卡尔，dest加了高度。
     const dest = Cartesian3.fromRadians(carto.longitude, carto.latitude, 500000)
     // Cesium 相机 API 全部使用弧度（radian）而非角度（degree），所以不能直接写 -90
     // 弧度 = 角度 × π / 180，-90° = -π/2 ≈ -1.5708 rad
@@ -399,7 +400,7 @@ function toggleScene(name: string, on: boolean) {
     }
     sceneRemoveFns[name] = removeFn
   } else {
-    sceneRemoveFns[name]?.()
+    sceneRemoveFns[name]?.()  // 取消订阅
     sceneRemoveFns[name] = null
   }
   sceneEnabled[name] = on

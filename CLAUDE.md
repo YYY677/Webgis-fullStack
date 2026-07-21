@@ -21,10 +21,10 @@ Webgis-fullStack/
 
 | 层       | 技术                      | 版本                   |
 |----------|---------------------------|------------------------|
-| 前端框架 | Vue 3 + TypeScript + Vite | 3.5.32 / \~6.0 / 8.0.8 |
+| 前端框架 | Vue 3 + TypeScript + Vite | 3.5.32 / ^7.3.1 |
 | 地图 2D  | OpenLayers                | 10.9.0                 |
 | 地图 3D  | CesiumJS (自托管)         | 1.142.0                |
-| UI 组件  | Element Plus              | 后续安装               |
+| UI 组件  | Element Plus              | ^2.13.1                |
 | 状态管理 | Pinia                     | 3.0.4                  |
 | 后端框架 | Spring Boot               | 3.5.15                 |
 | ORM      | MyBatis-Plus              | 3.5.12                 |
@@ -35,11 +35,12 @@ Webgis-fullStack/
 ## 关键架构约定
 
 - **后端分层**: 模块化 + 内部三层（详见 backend/CLAUDE.md）
-- **前端分层**: 标准 Vue 项目结构，composables/componets/views/stores/api（详见 frontend/CLAUDE.md）
+- **前端分层**: 标准 Vue 项目结构，api/router/stores/layout/composables/utils/styles/pages/assets/components/plugins（详见 frontend/CLAUDE.md）
 - **API 规范**: RESTful，统一响应体 `{code, message, data}`
 - **认证**: JWT 无状态，前端 Header `Authorization: Bearer <token>`
 - **空间数据**: PostGIS 存储 → GeoServer 发布 WMS/WFS → 前端 OpenLayers 加载
 - **版本兼容关键**: GeoTools 35.0 已迁移 Jakarta EE，与 SB 3.5.x 兼容；**禁止使用 GeoTools ≤34.x**
+- **SRID 约定**: 空间数据存 EPSG:4326，前端显示转 EPSG:3857。后端 `st_geomfromtext(#{wkt}, 4326)`，前端 `readFeature(wkt, {dataProjection: '4326', featureProjection: '3857'})`
 
 ## 本地开发端口
 

@@ -20,47 +20,19 @@ Spring Boot 3.5 + MyBatis-Plus + GeoTools + PostgreSQL/PostGIS
 ```
 backend/src/main/java/com/webgis/
 │
-├── WebgisApplication.java        # 启动类
-│
-├── config/                       # Spring 配置 (横切)
-│   ├── SecurityConfig.java       # Spring Security + JWT 无状态
-│   ├── CorsConfig.java           # 跨域
-│   ├── MyBatisPlusConfig.java    # 分页插件 + 自动填充
-│   ├── UserDetailsServiceImpl.java
-│   └── DataInitializer.java      # 首次启动创建 admin 账号
-│
-├── common/                       # 全局通用 (横切)
-│   ├── Result.java               # 统一响应 {code, message, data}
-│   ├── GlobalExceptionHandler.java
-│   └── HealthController.java     # /api/health
-│
-├── auth/                         # 认证模块
-│   ├── web/AuthController.java
-│   ├── JwtTokenProvider.java
-│   ├── JwtAuthFilter.java
-│   ├── LoginUser.java            # UserDetails 实现
-│   └── dto/
-│       ├── LoginRequest.java
-│       ├── LoginResponse.java
-│       └── RegisterRequest.java
-│
-├── system/                       # 系统管理模块 (用户、角色、日志)
-│   ├── entity/User.java          # @TableName("sys_user")
-│   ├── mapper/UserMapper.java    # extends BaseMapper<User>
-│   ├── service/UserService.java
-│   └── web/UserController.java
-│
-├── spatial/                      # 空间数据模块 (待实现)
-│   ├── entity/
-│   ├── mapper/
-│   ├── service/
-│   └── web/
-│
-├── geoserver/                    # GeoServer 集成 (待实现)
-│   └── GeoServerClient.java
-│
-└── file/                         # 文件上传模块 (待实现)
-    └── FileUploadService.java
+├── config/          # Spring 配置（Security/CORS/MyBatis-Plus/DataInit）
+├── common/          # 全局通用（Result 统一响应/ExceptionHandler/Health）
+├── auth/            # 认证模块（Controller + JwtProvider + JwtFilter + DTO）
+├── system/          # 系统管理（User CRUD, ADMIN 权限）
+├── spatial/         # 空间数据（SpatialData 动态CRUD + SpatialAnalysis JTS/pgRouting）
+├── geoserver/       # GeoServer 集成（最复杂模块）
+│   ├── config/      #   GeoServerProperties
+│   ├── client/      #   RestClient 封装（GET/POST/PUT/DELETE/XML）
+│   ├── service/     #   6 services: Workspace/DataStore/FeatureType/Layer/Upload/Style
+│   ├── style/       #   SldParser + SldModifier（DOM+XPath 增删改）
+│   ├── web/         #   GeoServerController + StyleController
+│   └── dto/         #   6 DTOs
+└── file/            # 文件上传（集成在 geoserver 模块中）
 ```
 
 ## 架构原则
@@ -75,16 +47,16 @@ backend/src/main/java/com/webgis/
 跨模块引用: system/service/UserService ← 被 auth 模块引用
 ```
 
-为什么不放一起：
+为什么不放在一起：
 
 - 模块多了之后扁平 controller/service/mapper 目录太深太长
-- 改用户功能要跳 contoller → service → mapper 三个目录
+- 改用户功能要跳 controller → service → mapper 三个目录
 - 模块化后要废弃用户模块直接删 `system/` 即可
 
 ### Controller → Service → Mapper 职责
 
 | 层 | 包名 | 职责 | 注解 |
-|-----------------|----------------------|-----------------|-----------------|
+|-----------------|---------------------|-----------------|-----------------|
 | Controller | `*.web/` | 接收 HTTP 请求、参数校验、调用 Service、返回 Result | `@RestController` |
 | Service | `*.service/` | 业务逻辑、事务管理、跨模块调用 | `@Service` |
 | Mapper | `*.mapper/` | 数据库操作、SQL 映射 | `@Mapper extends BaseMapper<T>` |
@@ -101,21 +73,29 @@ backend/src/main/java/com/webgis/
 
 ```
 认证 (无需鉴权):
-  POST /api/auth/login          # 登录 → JWT
-  POST /api/auth/register       # 注册
+  POST /api/auth/login         # 登录 → JWT
+  POST /api/auth/register      # 注册
+  GET  /api/auth/me            # 当前用户（需认证）
 
-空间数据 (USER 及以上):
-  GET  /api/spatial/layers      # 图层列表
-  POST /api/spatial/query       # 空间查询
-  GET  /api/spatial/features/{layer}
+空间数据 CRUD (当前公开, /api/spatial/data/*):
+  查询: tables/fields/page   行操作: save/update/delete
 
-文件 (USER 及以上):
-  POST /api/files/upload/shp
-  POST /api/files/upload/geojson
+空间分析 (当前公开, /api/spatial/analysis/*):
+  buffer/intersection/union/difference/symdiff — 几何运算
+  relation/distance/area/length/centroid      — 量算
+  shortest-path                                — pgRouting 最短路径
+
+GeoServer 管理 (当前公开, /api/geoserver/*):
+  资源生命周期: workspaces → datastores → feature-types → layers
+  上传: upload (Shapefile/GeoJSON)
+  样式: styles CRUD + SLD XML 读写 + 可编辑值查询/更新
 
 系统管理 (ADMIN):
-  GET  /api/system/users        # 用户列表
+  GET  /api/system/users
   PUT  /api/system/users/{id}/status
+
+健康检查:
+  GET  /api/health
 ```
 
 ## JWT 认证流程
@@ -129,7 +109,7 @@ backend/src/main/java/com/webgis/
 
 ## 数据库
 
-- PostgreSQL :5432, 数据库名 `webgis`
+- PostgreSQL :5432, 数据库名 `webgistest`
 - Flyway 管理表结构，迁移脚本在 `resources/db/migration/`
 - 两个 schema: `business_data` (用户/日志) + `spatial_data` (图层/空间数据)
 - 首次启动 `DataInitializer` 自动创建 admin/admin123
@@ -160,3 +140,9 @@ GeoTools 发布在 OSGeo 仓库（非 Maven Central），pom.xml 已配置:
 1. **GeoTools 版本**: 必须 35.x (`jakarta.*`)，34.x 用 `javax.*` 与 SB 3.5 冲突
 2. **MyBatis-Plus**: 用 `mybatis-plus-spring-boot3-starter`，不能用普通版本（javax）
 3. **PostGIS 空间字段**: MyBatis-Plus 无 Hibernate Spatial 支持，需手写 TypeHandler 处理 Geometry 类型
+4. **SQL 别名引号**: PG 无引号别名转小写，`SELECT col AS camelCase` 在 Java Map get("camelCase") 拿不到 → 加双引号 `AS "camelCase"`
+5. **SERIAL PK 排除**: INSERT 时不能列出自增主键，`INSERT INTO t (gid, name) VALUES (null, 'x')` 违反 NOT NULL → 字段列表排除 `gid`
+6. **Flyway checksum**: 已执行的迁移文件不可修改内容，否则启动报 checksum mismatch → 追加新版本 V3，不改 V1/V2
+7. **GeoServer 中文 SLD**: 发中文 XML body 用 `xmlBody.getBytes(StandardCharsets.UTF_8)` + `MediaType.APPLICATION_XML.withCharset("UTF-8")`，String 默认 ISO-8859-1 会乱码
+8. **GeoServer Content-Type**: Style 端点极敏感，SLD 创建/更新用 `application/vnd.ogc.sld+xml`，别用 `application/xml`（报 No such style handler）
+9. **pgRouting 列映射**: `pgr_dijkstra` 需 `id, source, target, cost` 四列；pgr 结果和路网表同名列需别名区分；路径拼接用 PostGIS `ST_LineMerge(ST_Collect(...))`，不要 Java 手拼 WKT

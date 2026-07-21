@@ -1,70 +1,6 @@
-# 原则
-
-## 1. 编码前思考
-
-**不要假设，不要隐藏困惑，呈现权衡**
-
-在实现之前：
-
-- 明确陈述你的假设，如果不确定，请提问
-- 如果存在多种解读，把它们都列出来，不要默默选择其一
-- 如果有更简单的方案，就指出来，在必要时提出反对意见
-- 如果有不清楚的地方，停下来，说出哪里让你困惑，然后提问
-
-## 2. 简洁优先
-
-**用最少的代码解决问题，不要过度推测**
-
-- 不要添加要求之外的功能
-- 不要为一次性代码创建抽象
-- 不要添加未要求的 "灵活性" 或 "可配置性"
-- 不要为不可能发生的场景做错误处理
-- 如果 200 行代码可以写成 50 行，重写它
-
-**检验标准：** 资深工程师会觉得这过于复杂吗？如果是，简化
-
-## 3. 精准修改
-
-**只碰必须碰的，只清理自己造成的混乱**
-
-编辑现有代码时：
-
-- 别删掉别人写的注释！
-- 不要 "改进" 相邻的代码、注释或格式
-- 不要重构没坏的东西
-- 匹配现有风格，即使你更倾向于不同的写法
-- 如果注意到无关的死代码，提一下，不要删除它
-
-当你的改动产生孤儿代码时：
-
-- 删除因你的改动而变得无用的导入、变量或函数
-- 不要删除预先存在的死代码，除非被要求
-
-**检验标准：** 每一行修改都应该能直接追溯到用户的请求
-
-## 4. 目标驱动执行
-
-**定义成功标准，循环验证直到达成**
-
-将指令式任务转化为可验证的目标：
-
-"添加验证" → "为无效输入编写测试，然后让它们通过"
-"修复 bug" → "编写重现 bug 的测试，然后让它通过"
-"重构 X" → "确保重构前后测试都能通过"
-
-对于多步骤任务，说明一个简短的计划：
-
-```
-1. [步骤] → 验证: [检查]
-2. [步骤] → 验证: [检查]
-3. [步骤] → 验证: [检查]
-```
-
-明确有力的成功标准能让你独立循环推进，模糊的标准（"让它工作"）只会不断需要澄清
-
 # 命令
 
-```bash
+``` bash
 npm run dev      # 启动开发服务器 :5173
 npm run build    # 类型检查 + 生产构建
 npm run preview  # 预览构建产物
@@ -72,27 +8,55 @@ npm run preview  # 预览构建产物
 
 # 技术栈
 
-Vue 3.5 + TypeScript + Vite 7 + Element Plus + OpenLayers + CesiumJS
+| 组件 | 版本 | 备注 |
+|------|------|------|
+| Vue | ^3.5.32 | Composition API + setup |
+| TypeScript | ~5.9.3 | strict 模式 |
+| Vite | ^7.3.1 | proxy /api → :8080, /geoserver → :8081 |
+| Element Plus | ^2.13.1 | 中文 locale，暗黑 `html.dark` |
+| OpenLayers | ^10.9.0 | 2D 地图 |
+| CesiumJS | ^1.142.0 | 3D 地球（自托管，无 Ion token） |
+| ECharts | ^6.1.0 | 图表 |
+| Pinia | ^3.0.4 | 状态管理 |
+| axios | ^1.13.2 | 拦截器 code===200 判成功 |
 
 # 目录结构
 
 ```
 src/
-├── api/          # 接口请求
-├── router/       # 路由表 + 守卫
-├── stores/       # Pinia 状态管理
-├── layout/       # 布局组件
+├── api/          # HTTP 请求
+├── router/       # 路由表 + 守卫（hash 模式）
+├── stores/       # Pinia（app/user）
+├── layout/       # MainLayout 含侧边栏菜单
+├── components/   # 可复用组件
 ├── composables/  # 组合式函数
-├── utils/        # 工具函数
-├── styles/       # SCSS 样式
-├── pages/        # 页面
-└── assets/       # 静态资源
+├── utils/        # 底图配置、localStorage 等
+├── styles/       # SCSS + CSS 变量
+├── pages/        # 页面视图
+├── plugins/      # 插件注册
+├── assets/       # 静态资源
+└── types/        # TS 定义
 ```
 
-# 本项目定制
+# 路由与页面
 
-- **Mock 登录**: `vite.config.ts` 中的 `mockPlugin()` 拦截 `/api/auth/*`，无需后端即可登录
-- **响应码**: axios 拦截器以 `code === 200` 为成功
-- **Vite 代理**: 开发时 `/api` → `localhost:8080`, `/geoserver` → `localhost:8081`
-- **侧边栏菜单**: 定义在 `layout/MainLayout.vue` 的 `menuList` 数组中
-- **主题切换**: Element Plus 原生暗黑模式，`html.dark` class 控制
+Hash 路由，守卫检查 localStorage token 控制登录态。
+
+| 路由 | 页面 | 说明 |
+|------|------|------|
+| `/login` | 登录页 | mock 插件可离线登录 |
+| `/dashboard` | 首页 |  |
+| `/demo/element-plus` | 组件示例 |  |
+| `/ol-frontend-demo/*` | 6 个页面 | 底图切换、基础工具、加载数据、图层控制、地图设置、echart图表使用 |
+| `/ol-backend-demo/*` | 6 个页面 | GeoServer 加载、WFS CRUD、空间编辑器、数据管理、样式管理、空间分析 |
+| `/cesium-demo/*` | 3 个页面 | 场景入门、坐标方位、事件监听 |
+| `/:pathMatch(.*)` | 404 |  |
+
+**项目特色**：mock 插件拦截 `/api/auth/*` 离线登录；7 种 OL 底图（`utils/basemaps.ts`）；14 种 Cesium 底图（`utils/cesium-basemaps.ts`）；侧边栏菜单在 `MainLayout.vue` 的 `menuList` 中定义。
+
+# 技术笔记
+
+- **OL 对象**：禁止 `ref()`，用 `shallowRef`（跨函数共享）或 `let`（局部/频繁创建）
+- **Cesium 底图**：`ImageryLayer.fromWorldImagery()`，不用 `createWorldImageryAsync()`
+- **Cesium 地形**：1.142 用 `CesiumTerrainProvider.fromUrl()`，构造函数已不支持 `url` 参数
+- **图层清理**：`layer.set("_tag", "xxx")` 打标签，删除时遍历 `map.getLayers()` 按标签过滤，不用 `===` 引用比对
