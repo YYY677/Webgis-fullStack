@@ -145,6 +145,18 @@ const routes: RouteRecordRaw[] = [
             name: "CesiumEvents",
             component: () => import("@/pages/cesium-frontend-demo/03-cesium-events.vue"),
             meta: { title: "03-事件监听" },
+          },
+          {
+            path: "entity",
+            name: "CesiumEntity",
+            component: () => import("@/pages/cesium-frontend-demo/04-cesium-entity.vue"),
+            meta: { title: "04-Entity" },
+          },
+          {
+            path: "primitive",
+            name: "CesiumPrimitive",
+            component: () => import("@/pages/cesium-frontend-demo/05-cesium-primitive.vue"),
+            meta: { title: "05-Primitive" },
           }
         ]
       }

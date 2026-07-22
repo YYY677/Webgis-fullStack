@@ -49,7 +49,7 @@ Hash 路由，守卫检查 localStorage token 控制登录态。
 | `/demo/element-plus` | 组件示例 |  |
 | `/ol-frontend-demo/*` | 6 个页面 | 底图切换、基础工具、加载数据、图层控制、地图设置、echart图表使用 |
 | `/ol-backend-demo/*` | 6 个页面 | GeoServer 加载、WFS CRUD、空间编辑器、数据管理、样式管理、空间分析 |
-| `/cesium-demo/*` | 3 个页面 | 场景入门、坐标方位、事件监听 |
+| `/cesium-frontend-demo/*` | 3 个页面 | 场景入门、坐标方位、事件监听 |
 | `/:pathMatch(.*)` | 404 |  |
 
 **项目特色**：mock 插件拦截 `/api/auth/*` 离线登录；7 种 OL 底图（`utils/basemaps.ts`）；14 种 Cesium 底图（`utils/cesium-basemaps.ts`）；侧边栏菜单在 `MainLayout.vue` 的 `menuList` 中定义。
