@@ -157,6 +157,24 @@ const routes: RouteRecordRaw[] = [
             name: "CesiumPrimitive",
             component: () => import("@/pages/cesium-frontend-demo/05-cesium-primitive.vue"),
             meta: { title: "05-Primitive" },
+          },
+          {
+            path: "data",
+            name: "CesiumData",
+            component: () => import("@/pages/cesium-frontend-demo/06-cesium-data.vue"),
+            meta: { title: "06-数据加载" },
+          },
+          {
+            path: "3dtiles",
+            name: "Cesium3DTiles",
+            component: () => import("@/pages/cesium-frontend-demo/07-cesium-3dtiles.vue"),
+            meta: { title: "07-3D Tiles深入" },
+          },
+          {
+            path: "timeline",
+            name: "CesiumTimeline",
+            component: () => import("@/pages/cesium-frontend-demo/08-cesium-timeline.vue"),
+            meta: { title: "08-时间动态轨迹" },
           }
         ]
       }
