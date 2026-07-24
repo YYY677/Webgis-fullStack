@@ -29,21 +29,6 @@
             <el-button size="small" :loading="loadingOblique" @click="loadOblique">加载倾斜摄影</el-button>
           </div>
 
-          <div v-if="tilesetReady" class="debug-row">
-            <div class="toggle-item">
-              <el-switch v-model="debugColorize" size="small" @change="setDebug" />
-              <span class="toggle-label">瓦片着色</span>
-            </div>
-            <div class="toggle-item">
-              <el-switch v-model="debugBV" size="small" @change="setDebug" />
-              <span class="toggle-label">包围盒</span>
-            </div>
-            <div class="toggle-item">
-              <el-switch v-model="debugCBV" size="small" @change="setDebug" />
-              <span class="toggle-label">内容包围盒</span>
-            </div>
-          </div>
-
           <div v-if="loadedInfo" class="info-box">{{ loadedInfo }}</div>
         </el-card>
 
@@ -72,7 +57,7 @@
           <div v-if="activeStyle" class="info-box">
             样式：{{ activeStyle }}
             <span v-if="activeStyle !== '默认'" style="margin-left:8px;font-size:11px;color:var(--el-text-color-secondary)">
-              （点击右上角回退按钮取消）
+              点击「默认」按钮恢复
             </span>
           </div>
         </el-card>
@@ -116,6 +101,12 @@
             <span class="slider-val">{{ editTy }}m</span>
           </div>
           <div class="slider-group">
+            <label class="sgl">Z 偏移</label>
+            <el-slider v-model="editTz" :min="-200" :max="200" :step="1"
+              :disabled="!tilesetReady" @update:model-value="applyTransform" />
+            <span class="slider-val">{{ editTz }}m</span>
+          </div>
+          <div class="slider-group">
             <label class="sgl">旋转</label>
             <el-slider v-model="editHeading" :min="0" :max="360" :step="1"
               :disabled="!tilesetReady" @update:model-value="applyTransform" />
@@ -154,6 +145,7 @@ import {
   Matrix3,
   Matrix4,
   Transforms,
+  ScreenSpaceEventHandler,
   ScreenSpaceEventType,
   HeadingPitchRange,
 } from "cesium"
@@ -171,11 +163,6 @@ const currentLabel = ref("")
 const loadingBuildings = ref(false)
 const loadingOblique = ref(false)
 
-// 调试开关
-const debugColorize = ref(false)
-const debugBV = ref(false)
-const debugCBV = ref(false)
-
 // 样式
 const activeStyle = ref("")
 
@@ -185,6 +172,7 @@ const featureProps = ref<Record<string, any> | null>(null)
 // 编辑
 const editTx = ref(0)
 const editTy = ref(0)
+const editTz = ref(0)
 const editHeading = ref(0)
 const editScale = ref(1)
 
@@ -197,9 +185,13 @@ const propsAvailable = ref("")
 
 // ── Cesium 引用 ──
 let viewer: Viewer | null = null
+let pickHandler: ScreenSpaceEventHandler | null = null
 let currentTileset: Cesium3DTileset | null = null
 let lastFeature: any = null
 let isPickingEnabled = true
+
+// 存储 tileset 原始 root.transform（用于变换复位）
+let originalRootTransform: Matrix4 | null = null
 
 // ── 工具 ──
 
@@ -227,7 +219,6 @@ async function loadBuildings() {
   loadingBuildings.value = true
   try {
     await replaceTileset("/cesium-data/tiles-buildings/tileset.json")
-    loadedInfo.value = "建筑白模加载完成 | 属性: _id(1~5442), height(1~74m), 瓦片数: 1"
   } catch (e: any) {
     ElMessage.error(`加载失败: ${e.message}`)
   } finally {
@@ -240,7 +231,6 @@ async function loadOblique() {
   loadingOblique.value = true
   try {
     await replaceTileset("/cesium-data/tiles-oblique/tileset.json")
-    loadedInfo.value = "倾斜摄影加载完成 | 无属性(properties: null), 瓦片数: 2"
   } catch (e: any) {
     ElMessage.error(`加载失败: ${e.message}`)
   } finally {
@@ -263,12 +253,18 @@ async function replaceTileset(url: string) {
   currentTileset = tileset
   tilesetReady.value = true
 
-  // 提取属性信息
+  // 保存原始 root.transform 用于复位
+  originalRootTransform = tileset.root.transform.clone()
+
+  // 提取属性信息，信息存储于 tileset.json 元数据中。
   const props = tileset.properties
   if (props) {
+    // 获取props对象的所有属性名，并转换为数组
     const names = Object.keys(props)
+    // 将属性名数组用逗号和空格连接成字符串，并赋值给propsAvailable.value
     propsAvailable.value = names.join(", ")
-    loadedInfo.value = `属性: ${names.join(", ")}`
+    // 将属性名数组用逗号和空格连接成字符串，并添加"属性: "前缀，赋值给loadedInfo.value
+    loadedInfo.value = `数据加载完毕，属性: ${names.join(", ")}`
   } else {
     propsAvailable.value = ""
     loadedInfo.value = "该数据无属性，样式着色不可用"
@@ -277,24 +273,16 @@ async function replaceTileset(url: string) {
   // 重置 UI 状态
   clearPick()
   resetTransform()
-  debugColorize.value = false
-  debugBV.value = false
-  debugCBV.value = false
   activeStyle.value = ""
 
   // 飞入视角
+  // viewer.flyTo的使用对象包括：Entity、EntityCollection、Primitive、Cesium3DTileset、DataSource
   viewer.flyTo(tileset, {
-    offset: new HeadingPitchRange(0, CesiumMath.toRadians(-35), 1500),
+    // HeadingPitchRange这个主要用于：相机围绕目标观察（Camera Orbit）
+    // HeadingPitchRoll表示：一个物体自身的旋转姿态（orientation）
+    offset: new HeadingPitchRange(0, CesiumMath.toRadians(-35), 3500),
     duration: 1.0,
   })
-}
-
-// ── 调试开关 ──
-function setDebug() {
-  if (!currentTileset) return
-  currentTileset.debugColorizeTiles = debugColorize.value
-  currentTileset.debugShowBoundingVolume = debugBV.value
-  currentTileset.debugShowContentBoundingVolume = debugCBV.value
 }
 
 // ══════════════════════════════════════════
@@ -315,12 +303,7 @@ function applyStyle(type: string) {
 
   switch (type) {
     case "default": {
-      // 通过给空对象（{"color": "color()"}）来重置样式
-      // 直接设置 tileset.style = undefined 可能会保留上一次的状态
-      // 这里用透明样式强制刷新，然后置空
-      currentTileset.style = new Cesium3DTileStyle({
-        color: "color('#ffffff')",
-      })
+      // style = undefined 即可恢复默认外观
       currentTileset.style = undefined as any
       activeStyle.value = "默认"
       break
@@ -364,6 +347,7 @@ function applyStyle(type: string) {
     case "byId": {
       // 按 _id 奇偶分色 + 高度透明
       currentTileset.style = new Cesium3DTileStyle({
+        
         color: {
           conditions: [
             ["${_id} % 2 === 0", "color('#3498db', 0.9)"],
@@ -386,97 +370,163 @@ function clearPick() {
   if (lastFeature && currentTileset && !currentTileset.style) {
     try { (lastFeature as any).color = Color.WHITE } catch {}
   }
+  // lastFeature = 选中的要素
   lastFeature = null
+  // featureProps是选中要素的属性
   featureProps.value = null
 }
 
 function onPick(movement: any) {
   if (!viewer || !currentTileset || !isPickingEnabled) return
 
-  // drillPick 返回该像素下的所有对象，逐个检查是否为 tileset feature
-  const all = viewer.scene.drillPick(movement.position)
-  let pickedFeature: any = null
+  // 方法	                    用途
+  // scene.pick()	            拾取屏幕上的对象
+  // scene.drillPick()	      拾取多个对象
+  // camera.pickEllipsoid()	  拾取地球表面坐标，不包含高度。
+  // scene.pickPosition()	    拾取三维位置，包含高度（地形高度 + 模型高度）。
+  // globe.pick()	            拾取地形位置，包含地形高度。
+  const picked = viewer.scene.pick(movement.position)
+  if (!picked) { clearPick(); return }
 
-  for (const item of all) {
-    if (!item) continue
-    const candidates = [item, item.primitive, item.feature, item.content]
-    for (const c of candidates) {
-      if (c && typeof c.getPropertyNames === "function" && c.getPropertyNames().length > 0) {
-        pickedFeature = c
-        break
-      }
-    }
-    if (pickedFeature) break
-  }
+  console.log("Picked object:", picked)
 
-  if (!pickedFeature) { clearPick(); return }
+  // Cesium 1.142 中 getPropertyNames() 已改为 getPropertyIds()
+  // scene.pick 直接返回 Cesium3DTileFeature
+  const hasMethod = (obj: any, name: string) =>
+    obj && typeof obj[name] === "function"
 
-  // 恢复上次高亮
+  const idMethod = hasMethod(picked, "getPropertyIds")
+    ? "getPropertyIds"
+    : hasMethod(picked, "getPropertyNames")
+      ? "getPropertyNames"
+      : null
+
+  if (!idMethod) { clearPick(); return }
+
+  // 获取属性名列表
+  const names: string[] = picked[idMethod]()
+  if (!names || names.length === 0) { clearPick(); return }
+
+  // 将上次高亮的 feature 恢复为白色（默认）
+  // !currentTileset.style → 只有没开自定义样式时才尝试高亮，亮了才不会闪一下又消失
+  // Cesium3DTileStyle 每帧覆盖 feature.color，设了也白设。
   if (lastFeature && currentTileset && !currentTileset.style) {
     try { lastFeature.color = Color.WHITE } catch {}
   }
 
-  // 高亮当前（仅默认样式下有效）
+  // 高亮当前
   if (!currentTileset.style) {
-    try { pickedFeature.color = Color.CYAN } catch {}
+    try { picked.color = Color.CYAN } catch {}
   }
-  lastFeature = pickedFeature
+  lastFeature = picked
 
   // 提取属性
-  const names = pickedFeature.getPropertyNames()
   const props: Record<string, any> = {}
-  names.forEach((n: string) => { props[n] = pickedFeature.getProperty(n) })
+  names.forEach((n: string) => { props[n] = picked.getProperty(n) })
   featureProps.value = props
 }
 
 // ══════════════════════════════════════════
 // 卡片四：偏移编辑
+//  Cesium 处理地球空间模型编辑的经典方式：
+//  1. 根据模型的包围球中心建立局部东-北-上（ENU）坐标系
+//  2. 在局部ENU坐标系做平移/旋转/缩放
+//  3. 将局部ENU坐标系做逆矩阵变换转换回世界坐标系
+//  4. 赋值给 tileset.modelMatrix
+//  
+//  为什么这么麻烦？
+//  世界坐标example:(-2181734,4384314,4072670)
+//  东移100m、旋转30°、缩放2倍，这些操作天然属于局部坐标。
+//   
+//  关于Matrix3 和 Matrix4：
+//  Matrix3是3x3矩阵，主要用于旋转。因为旋转天然是3×3。
+//  Matrix4是4x4矩阵，包含旋转、缩放和平移。
 // ══════════════════════════════════════════
 
 function applyTransform() {
-  if (!currentTileset) return
+  if (!currentTileset || !originalRootTransform) return
 
-  // modelMatrix 叠加在 tileset.root.transform 之上。
-  // 为了在瓷砖集局部坐标系下做 T/R/S，需要:
-  // 1. 在瓷砖集世界中心建立 ENU（东-北-上）局部坐标系
-  // 2. 在 ENU 系中组合变换: T * R * S
-  // 3. 转回世界: enu * local * inv(enu)
+  // 每次从原始状态重新开始，避免累积误差
+  currentTileset.root.transform = originalRootTransform.clone()
+  // modelMatrix 是整个 tileset 的额外变换矩阵，先恢复为单位矩阵
+  currentTileset.modelMatrix = Matrix4.IDENTITY.clone()
+
+  // BoundingSphere = 用一个球把对象完全包住。center: 球心；radius: 半径
   const center = currentTileset.boundingSphere.center
-
-  // 用独立 result 矩阵避免引用别名字段
+  // 在 tileset 世界中心建立 东-北-上（ENU）局部坐标系 
+  // cesium默认世界坐标系是地心地固坐标系（ECEF），对于人来说不好操作。
+  // 所以在模型中心建立东-北-上局部坐标，旋转Z轴就是绕地面垂直方向旋转，符合人的直觉
   const enu = Transforms.eastNorthUpToFixedFrame(center)
-  const invEnu = new Matrix4()
+  const invEnu = new Matrix4() 
+  // 计算 enu 的逆矩阵，用于将局部 ENU 坐标系的变换转换回世界坐标系
   Matrix4.inverse(enu, invEnu)
 
-  // 局部变换: T * R * S
-  const t = Matrix4.fromTranslation(new Cartesian3(editTx.value, editTy.value, 0))
-  const r = Matrix4.fromRotation(
-    Matrix3.fromRotationZ(CesiumMath.toRadians(editHeading.value), new Matrix3()),
-    new Matrix4(),
-  )
+  // 创建平移矩阵，例如：东移100米 北移50米 z方向移动 20
+  // [ 1   0   0   100 ]
+  // [ 0   1   0    50 ]
+  // [ 0   0   1    20 ]
+  // [ 0   0   0     1 ]
+  const t = Matrix4.fromTranslation(new Cartesian3(editTx.value, editTy.value, editTz.value))
+  // 创建旋转矩阵，绕ENU的Z轴旋转，所以就是就是水平旋转。
+  // 假设绕Z轴旋转 θ 角度
+  // [ cos  -sin   0 ]
+  // [ sin   cos   0 ]
+  // [  0     0    1 ]
+  const rMat3 = Matrix3.fromRotationZ(CesiumMath.toRadians(editHeading.value), new Matrix3())
+  // 升维，Matrix3是3x3矩阵，Matrix4是4x4矩阵，旋转矩阵需要升维才能和平移矩阵相乘。
+  // [ cos  -sin   0   0 ]
+  // [ sin   cos   0   0 ]
+  // [  0     0    1   0 ]
+  // [  0     0    0   1 ]
+  const r = Matrix4.fromRotation(rMat3, new Matrix4()) 
+  // 创建缩放矩阵，X、Y、Z一起变化：均匀缩放。
+  // 假设：X方向缩放 2倍、Y方向缩放 3倍、Z方向缩放 0.5倍
+  // [ 2   0   0   0 ]
+  // [ 0   3   0   0 ]
+  // [ 0   0 0.5  0 ]
+  // [ 0   0   0   1 ]
   const s = Matrix4.fromScale(new Cartesian3(editScale.value, editScale.value, editScale.value))
 
+  // 组合 T R S，这个顺序最常见。TRS不是硬性标准，但它是3D行业最常见约定。
+  // 注意！：这里的顺序是先缩放，再旋转，最后平移。因为矩阵乘法是从右到左的。
+  // 矩阵顺序非常重要，顺序不一样会导致结果不一样。
   const tr = new Matrix4()
-  Matrix4.multiply(t, r, tr)
+  Matrix4.multiply(t, r, tr) // 得到 T * R
   const trs = new Matrix4()
-  Matrix4.multiply(tr, s, trs)
+  Matrix4.multiply(tr, s, trs) // 得到 T * R * S
 
-  // 世界变换: enu * trs * invEnu
+  // 局部ENU坐标系应用变换矩阵
   const temp = new Matrix4()
-  Matrix4.multiply(enu, trs, temp)
-  const world = new Matrix4()
-  Matrix4.multiply(temp, invEnu, world)
+  Matrix4.multiply(enu, trs, temp) // 得到 enu * trs
+  // 将局部ENU坐标系的变换转换回世界坐标系
+  const worldEdit = new Matrix4()
+  Matrix4.multiply(temp, invEnu, worldEdit) // 得到 enu * trs * invEnu
 
-  currentTileset.modelMatrix = world
+  // 你的TRS是在局部ENU做的。但是modelMatrix需要世界坐标。
+  currentTileset.modelMatrix = worldEdit
+
+  // 放松视锥体裁剪，防止旋转后包围盒被误裁
+  currentTileset.dynamicScreenSpaceError = true
+  currentTileset.dynamicScreenSpaceErrorDensity = 0.0001
 }
 
 function resetTransform() {
   editTx.value = 0
   editTy.value = 0
+  editTz.value = 0
   editHeading.value = 0
   editScale.value = 1
-  if (currentTileset) {
+  // 检查当前瓦片集(originalRootTransform)是否存在
+  if (currentTileset && originalRootTransform) {
+    // 将当前瓦片集的根变换设置为原始根变换的克隆
+    currentTileset.root.transform = originalRootTransform.clone()
+    // 将当前瓦片集的模型矩阵设置为单位矩阵的克隆
+    // modelMatrix是整个tileset额外的变换矩阵，这里使用单位矩阵表示没有额外变换
     currentTileset.modelMatrix = Matrix4.IDENTITY.clone()
+    // 禁用当前瓦片集的动态屏幕空间误差
+    // false：严格按照 tileset.json 里的 geometricError 走
+    // true：Cesium根据距离帮你“放宽标准”，减少加载量
+    currentTileset.dynamicScreenSpaceError = false
   }
 }
 
@@ -513,7 +563,7 @@ onMounted(() => {
     projectionPicker: false,
   })
 
-  const defaultItem = CESIUM_BASEMAP_LIST.find(i => i.id === "mars3d-terrain")!
+  const defaultItem = CESIUM_BASEMAP_LIST.find(i => i.id === "mars3d")!
   defaultItem.activate(viewer).then(() => {
     currentId.value = defaultItem.id
     currentLabel.value = defaultItem.label
@@ -524,14 +574,23 @@ onMounted(() => {
     orientation: { heading: 0, pitch: CesiumMath.toRadians(-90), roll: 0 },
   })
 
-  // 点击拾取：使用 Viewer 自带的 handler，避免与默认左键行为冲突
-  viewer.screenSpaceEventHandler.setInputAction(onPick, ScreenSpaceEventType.LEFT_CLICK)
+  // 参考项目做法：
+  // 1. 取消默认单击事件
+  // 2. 新建 ScreenSpaceEventHandler 绑定左键
+  if (viewer.cesiumWidget?.screenSpaceEventHandler) {
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK)
+    viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK)
+  }
+
+  pickHandler = new ScreenSpaceEventHandler(viewer.scene.canvas)
+  pickHandler.setInputAction(onPick, ScreenSpaceEventType.LEFT_CLICK)
 
   // 自动加载建筑白模
   loadBuildings()
 })
 
 onUnmounted(() => {
+  if (pickHandler) { pickHandler.destroy(); pickHandler = null }
   if (viewer) {
     if (currentTileset) {
       viewer.scene.primitives.remove(currentTileset)
@@ -631,28 +690,6 @@ onUnmounted(() => {
   font-size: 12px;
   padding: 8px 4px;
   min-width: 0;
-}
-
-/* ── 调试开关行 ── */
-.debug-row {
-  display: flex;
-  gap: 14px;
-  margin-top: 8px;
-  padding: 8px 10px;
-  background: var(--el-color-info-light-9);
-  border-radius: 6px;
-}
-
-.toggle-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.toggle-label {
-  font-size: 11px;
-  color: var(--el-text-color-secondary);
-  white-space: nowrap;
 }
 
 /* ── 信息框 ── */
