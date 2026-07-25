@@ -3,11 +3,7 @@
     <div v-if="panelOpen" class="panel-overlay" @click="panelOpen = false" />
 
     <div class="top-right-controls" @click.stop>
-      <CesiumBasemapSwitcher
-        :activate="switchBasemap"
-        :initial="currentId"
-        @toggle="(v: boolean) => panelOpen = v"
-      />
+      <CesiumBasemapSwitcher :activate="switchBasemap" :initial="currentId" @toggle="(v: boolean) => panelOpen = v" />
     </div>
 
     <div class="basemap-label">{{ currentLabel }}</div>
@@ -42,8 +38,8 @@
           </div>
 
           <div class="button-row">
-            <el-button size="small" type="primary" :disabled="!canStart" @click="startAnimation">
-              🚀 起飞
+            <el-button size="small" type="primary" :disabled="hasAnimation" @click="startAnimation">
+              🚀 创建
             </el-button>
             <el-button size="small" type="danger" plain :disabled="!hasAnimation" @click="clearAnimation">
               清除
@@ -64,8 +60,8 @@
 
           <!-- 播放/暂停 -->
           <div class="play-row">
-            <el-button size="small" :type="isPlaying ? 'warning' : 'success'"
-              :disabled="!hasAnimation" @click="togglePlay">
+            <el-button size="small" :type="isPlaying ? 'warning' : 'success'" :disabled="!hasAnimation"
+              @click="togglePlay">
               {{ isPlaying ? '⏸ 暂停' : '▶ 播放' }}
             </el-button>
             <el-button size="small" :disabled="!hasAnimation" @click="resetAnimation">
@@ -77,8 +73,7 @@
           <div class="speed-row">
             <span class="speed-label">速度</span>
             <div class="speed-btns">
-              <el-button v-for="s in speedOptions" :key="s"
-                size="small" :type="speed === s ? 'primary' : ''"
+              <el-button v-for="s in speedOptions" :key="s" size="small" :type="speed === s ? 'primary' : ''"
                 :disabled="!hasAnimation" @click="setSpeed(s)">
                 {{ s }}×
               </el-button>
@@ -88,8 +83,7 @@
           <!-- 进度条 -->
           <div class="progress-row">
             <span class="progress-label">进度</span>
-            <el-slider v-model="progress" :disabled="!hasAnimation"
-              :format-tooltip="formatProgress"
+            <el-slider v-model="progress" :disabled="!hasAnimation" :format-tooltip="formatProgress"
               @update:model-value="onSeek" />
           </div>
 
@@ -100,7 +94,7 @@
             <span class="time-total">{{ totalStr }}</span>
             <span class="time-clock">🕐 {{ simTimeStr }}</span>
           </div>
-          <div v-else class="card-hint">点击「起飞」开始动画</div>
+          <div v-else class="card-hint">点击「创建」开始动画</div>
         </el-card>
 
         <!-- ════════════ 卡片三：相机模式 ════════════ -->
@@ -112,27 +106,24 @@
           </p>
 
           <div class="button-row">
-            <el-button size="small"
-              :type="cameraMode === 'free' ? 'primary' : ''"
-              :disabled="!hasAnimation" @click="setCameraMode('free')">
+            <el-button size="small" :type="cameraMode === 'free' ? 'primary' : ''" :disabled="!hasAnimation"
+              @click="setCameraMode('free')">
               🆓 自由
             </el-button>
-            <el-button size="small"
-              :type="cameraMode === 'follow' ? 'primary' : ''"
-              :disabled="!hasAnimation" @click="setCameraMode('follow')">
+            <el-button size="small" :type="cameraMode === 'follow' ? 'primary' : ''" :disabled="!hasAnimation"
+              @click="setCameraMode('follow')">
               👀 跟随
             </el-button>
-            <el-button size="small"
-              :type="cameraMode === 'overlook' ? 'primary' : ''"
-              :disabled="!hasAnimation" @click="setCameraMode('overlook')">
+            <el-button size="small" :type="cameraMode === 'overlook' ? 'primary' : ''" :disabled="!hasAnimation"
+              @click="setCameraMode('overlook')">
               🛰️ 俯瞰
             </el-button>
           </div>
 
           <div v-if="hasAnimation" class="info-box">
             {{ cameraMode === 'free' ? '自由视角 — 可手动操作相机' :
-               cameraMode === 'follow' ? '跟随视角 — 相机跟随模型侧后方' :
-               '俯瞰视角 — 相机从正上方跟踪模型' }}
+              cameraMode === 'follow' ? '跟随视角 — 相机跟随模型侧后方' :
+                '俯瞰视角 — 相机从正上方跟踪模型' }}
           </div>
         </el-card>
 
@@ -156,9 +147,8 @@ import {
   PolylineGlowMaterialProperty,
   Entity,
   ConstantProperty,
+  ClockRange,
   Math as CesiumMath,
-  ScreenSpaceEventHandler,
-  ScreenSpaceEventType,
 } from "cesium"
 import "cesium/Build/Cesium/Widgets/widgets.css"
 
@@ -174,22 +164,22 @@ const PATH_PRESETS: Record<string, { name: string; points: PathPoint[] }> = {
   beijing: {
     name: "北京环飞",
     points: [
-      { t: 0,   lon: 115.5, lat: 39.5, alt: 1500 },
-      { t: 10,  lon: 115.8, lat: 39.7, alt: 2000 },
-      { t: 20,  lon: 116.2, lat: 39.9, alt: 2500 },
-      { t: 30,  lon: 116.6, lat: 40.0, alt: 3000 },
-      { t: 40,  lon: 117.0, lat: 39.8, alt: 2500 },
-      { t: 50,  lon: 117.3, lat: 39.5, alt: 2000 },
-      { t: 60,  lon: 117.0, lat: 39.2, alt: 1500 },
-      { t: 70,  lon: 116.5, lat: 39.0, alt: 1000 },
-      { t: 80,  lon: 116.0, lat: 39.0, alt: 800 },
-      { t: 90,  lon: 115.5, lat: 39.5, alt: 1500 },
+      { t: 0, lon: 115.5, lat: 39.5, alt: 1500 },
+      { t: 10, lon: 115.8, lat: 39.7, alt: 2000 },
+      { t: 20, lon: 116.2, lat: 39.9, alt: 2500 },
+      { t: 30, lon: 116.6, lat: 40.0, alt: 3000 },
+      { t: 40, lon: 117.0, lat: 39.8, alt: 2500 },
+      { t: 50, lon: 117.3, lat: 39.5, alt: 2000 },
+      { t: 60, lon: 117.0, lat: 39.2, alt: 1500 },
+      { t: 70, lon: 116.5, lat: 39.0, alt: 1000 },
+      { t: 80, lon: 116.0, lat: 39.0, alt: 800 },
+      { t: 90, lon: 115.5, lat: 39.5, alt: 1500 },
     ],
   },
   straight: {
     name: "直线往返",
     points: [
-      { t: 0,  lon: 115.0, lat: 40.0, alt: 3000 },
+      { t: 0, lon: 115.0, lat: 40.0, alt: 3000 },
       { t: 20, lon: 117.0, lat: 40.0, alt: 3000 },
       { t: 40, lon: 115.0, lat: 40.0, alt: 3000 },
       { t: 60, lon: 117.0, lat: 40.0, alt: 3000 },
@@ -198,33 +188,35 @@ const PATH_PRESETS: Record<string, { name: string; points: PathPoint[] }> = {
 }
 
 const MODEL_CONFIGS: Record<string, { path: string; scale: number; label: string }> = {
-  feiji:   { path: "/cesium-data/models/feiji.glb",   scale: 100,  label: "客机" },
-  missile: { path: "/cesium-data/models/missile/scene.gltf", scale: 5, label: "导弹" },
-  dji:     { path: "/cesium-data/models/dji_tello/scene.gltf", scale: 100, label: "无人机" },
+  feiji: { path: "/cesium-data/models/feiji.glb", scale: 3, label: "客机" },
+  missile: { path: "/cesium-data/models/missile/scene.gltf", scale: 100, label: "导弹" },
+  dji: { path: "/cesium-data/models/dji_tello/scene.gltf", scale: 100, label: "无人机" },
 }
 
 // ── UI 状态 ──
-const panelOpen = ref(false)
-const currentId = ref("")
-const currentLabel = ref("")
+const panelOpen = ref(false) // 底图面板展开/收起
+const currentId = ref("") // 当前底图 ID
+const currentLabel = ref("") // 当前底图中文名
 
-const selectedModel = ref("feiji")
-const selectedPath = ref("beijing")
-const isPlaying = ref(false)
-const speed = ref(10)
-const speedOptions = [1, 2, 5, 10, 50]
-const progress = ref(0)
-const cameraMode = ref<"free" | "follow" | "overlook">("free")
-const hasAnimation = ref(false)
-const animInfo = ref("")
+const selectedModel = ref("feiji") // 选中模型 feiji/missile/dji
+const selectedPath = ref("beijing") // 选中路径 beijing/straight
+const isPlaying = ref(false) // 是否正在播放
+const speed = ref(5) // 播放倍速
+const speedOptions = [1, 2, 5, 10, 50] // 可选倍速列表
+const progress = ref(0) // 进度条百分比 0-100
+const cameraMode = ref<"free" | "follow" | "overlook">("free") // 相机模式
+const hasAnimation = ref(false) // 是否有活跃的飞行动画
+const animInfo = ref("") // 动画摘要文字，如：客机 · 北京环飞 · 90s
 
+// 已过时间（MM:SS），tick 中随 clock.currentTime 更新
 const elapsedStr = ref("00:00")
+// 总时长（MM:SS），创建动画时由 pathCfg 总秒数决定
 const totalStr = ref("00:00")
+// 仿真时钟当前时刻（yyyy-MM-dd HH:mm:ss），tick 中每帧刷新
 const simTimeStr = ref("")
 
 // ── Cesium 引用 ──
 let viewer: Viewer | null = null
-let handler: ScreenSpaceEventHandler | null = null
 let flightEntity: Entity | null = null
 let clockRemoveTick: (() => void) | null = null
 
@@ -232,14 +224,12 @@ let clockRemoveTick: (() => void) | null = null
 let animStart: JulianDate | null = null
 let animStop: JulianDate | null = null
 
-// ── 计算 ──
-const canStart = computed(() => !hasAnimation.value)
-
 // ── 工具 ──
 
 function formatSeconds(sec: number): string {
   const m = Math.floor(sec / 60)
   const s = Math.floor(sec % 60)
+  // 将分钟数 m 和秒数 s 转换成字符串，并在左侧用 "0" 补齐，确保总长度至少为 2 位。
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
 }
 
@@ -251,7 +241,12 @@ function formatProgress(val: number): string {
 // 卡片一：飞行路径
 // ══════════════════════════════════════════
 
+// typeof PATH_PRESETS["beijing"] 就是 { name: string; points: PathPoint[] }，
+// 也就是 Record 的 value 类型。正规写法应该是另设一个interface，这里算是偷懒了。
 function buildPathPosition(preset: typeof PATH_PRESETS["beijing"], start: JulianDate): SampledPositionProperty {
+  // SampledPositionProperty 是 Cesium Entity 系统里用于描述随时间变化的位置的属性。
+  // 他是“一串带时间的位置采样点”，Cesium 根据时间自动计算对象在哪里。
+  // 断掉的部分会自动插值。
   const prop = new SampledPositionProperty()
   preset.points.forEach(p => {
     const time = JulianDate.addSeconds(start, p.t, new JulianDate())
@@ -263,6 +258,8 @@ function buildPathPosition(preset: typeof PATH_PRESETS["beijing"], start: Julian
 
 function startAnimation() {
   if (!viewer) return
+
+  // 清除已有动画
   if (hasAnimation.value) clearAnimation()
 
   const modelCfg = MODEL_CONFIGS[selectedModel.value]
@@ -271,6 +268,7 @@ function startAnimation() {
 
   // 时间范围
   const base = JulianDate.fromIso8601("2026-07-22T00:00:00Z")
+  // t是路径点的时间偏移量，单位是秒。取最后一个点的 t 作为总时长。
   const totalSec = pathCfg.points[pathCfg.points.length - 1].t
   animStart = base
   animStop = JulianDate.addSeconds(base, totalSec, new JulianDate())
@@ -281,17 +279,22 @@ function startAnimation() {
   // 创建飞行 entity
   flightEntity = viewer.entities.add({
     position,
+    // VelocityOrientationProperty 会根据位置采样自动计算姿态（航向、俯仰、滚转），无需手动设置。
     orientation: new VelocityOrientationProperty(position),
     model: {
       uri: modelCfg.path,
       scale: modelCfg.scale,
-      minimumPixelSize: 64,
+      minimumPixelSize: 64, // 模型在屏幕上最小显示多少像素。
     },
+    // PathGraphics 用于在模型后面绘制路径轨迹。
     path: new PathGraphics({
-      resolution: 1,
+      // 轨迹采样间隔。1就是每秒采样一次，0.1就是每0.1秒采样一次。
+      // 采样越密，轨迹越平滑，但性能开销也越大。
+      resolution: 0.1,
+      // material 是轨迹材质，这里使用发光材质，glowPower 控制发光强度，color 控制颜色。
       material: new PolylineGlowMaterialProperty({ glowPower: 0.1, color: Color.CYAN }),
       width: 3,
-      leadTime: 0,
+      leadTime: 0, // 显示未来轨迹多久。
       trailTime: Math.min(totalSec, 60),
     }),
   })
@@ -299,10 +302,12 @@ function startAnimation() {
   // 配置时钟
   viewer.clock.startTime = animStart
   viewer.clock.stopTime = animStop
-  viewer.clock.currentTime = animStart
-  viewer.clock.multiplier = speed.value
-  viewer.clock.shouldAnimate = false
-  viewer.clock.loop = true
+  viewer.clock.currentTime = animStart // ← 时钟从 base 开始，绝对仿真时刻。
+  viewer.clock.multiplier = speed.value // 默认是5
+  viewer.clock.shouldAnimate = false // 控制动画播放，默认不自动播放，点击「播放」后才开始
+  // 设置了 ClockRange.LOOPED 后，当仿真时间到达终点时，Cesium 会自动将时钟时间重置回起点，
+  // 模型会瞬间回到路径起始位置并继续飞行，从而实现无限循环飞行的效果。
+  viewer.clock.clockRange = ClockRange.LOOP_STOP
 
   isPlaying.value = false
   hasAnimation.value = true
@@ -311,23 +316,42 @@ function startAnimation() {
   totalStr.value = formatSeconds(totalSec)
   elapsedStr.value = "00:00"
 
-  animInfo.value = `${modelCfg.label} · ${pathCfg.name} · ${totalSec}s`
+  animInfo.value = `${modelCfg.label} · ${pathCfg.name} · ${totalSec}s` // 如：客机 · 北京环飞 · 90s
 
   // 飞入初始视角
   const first = pathCfg.points[0]
   viewer.camera.flyTo({
-    destination: Cartesian3.fromDegrees(first.lon - 0.3, first.lat - 0.2, first.alt + 5000),
-    orientation: { heading: 0, pitch: CesiumMath.toRadians(-30), roll: 0 },
+    destination: Cartesian3.fromDegrees(first.lon-0.02, first.lat-0.03, first.alt + 5000),
+    orientation: { heading: 0, pitch: CesiumMath.toRadians(-60), roll: 0 },
     duration: 1.0,
   })
 
   // 注册时钟 tick
+  // onTick 会在每一帧渲染时被调用，更新 elapsedStr、simTimeStr、progress 等 UI 状态。
+  // clock.onTick.addEventListener() 返回的是一个移除函数，调用它可以取消注册。
   clockRemoveTick = viewer.clock.onTick.addEventListener(onTick)
 }
+
+/**
+| 方法                                    | 返回清除函数？ | 删除方式            |
+| ------------------------------------- | ------- | ---------------------------|
+| `Event.addEventListener()`            | ✅       | 调用返回函数              |
+| `clock.onTick.addEventListener()`     | ✅       | `remove()`               |
+| `camera.changed.addEventListener()`   | ✅       | `remove()`               |
+| `scene.postRender.addEventListener()` | ✅       | `remove()`               |
+| `setInputAction()`                    | ❌       | `removeInputAction()`    |
+| `entities.add()`                      | ❌       | `entities.remove()`      |
+| `primitives.add()`                    | ❌       | `primitives.remove()`    |
+| `imageryLayers.add()`                 | ❌       | `imageryLayers.remove()` |
+| `readyPromise.then()`                 | ❌       | Promise无法取消（通常）    |
+ */
 
 function clearAnimation() {
   if (!viewer) return
 
+  // 清除时钟 tick。Cesium 的 Event.addEventListener() 返回的是移除函数。
+  // 调用 clockRemoveTick() → 通知 Cesium：移除这个监听器
+  // clockRemoveTick = null → 清 JS 变量引用
   if (clockRemoveTick) { clockRemoveTick(); clockRemoveTick = null }
 
   if (flightEntity) {
@@ -335,6 +359,8 @@ function clearAnimation() {
     flightEntity = null
   }
 
+  // 设置查看器的时钟动画状态为停止
+  // shouldAnimate属性用于控制查看器是否自动播放动画
   viewer.clock.shouldAnimate = false
 
   isPlaying.value = false
@@ -385,7 +411,9 @@ function resetAnimation() {
 function onTick(clock: any) {
   if (!animStart || !animStop) return
 
+  // 总时间
   const total = JulianDate.secondsDifference(animStop, animStart)
+  // 已过时间 = 当前时刻 - 起始时刻，单位：秒
   const elapsed = JulianDate.secondsDifference(clock.currentTime, animStart)
 
   // 进度
@@ -393,11 +421,13 @@ function onTick(clock: any) {
 
   // 时间显示
   elapsedStr.value = formatSeconds(Math.max(0, elapsed))
+  // viewer.clock.currentTime = animStart = base，此处currentTime绑定了base时间。
   simTimeStr.value = JulianDate.toDate(clock.currentTime).toISOString().replace("T", " ").slice(0, 19)
 }
 
 // ══════════════════════════════════════════
 // 卡片三：相机模式
+// 使用 viewer.trackedEntity 绑定相机跟随的 entity。
 // ══════════════════════════════════════════
 
 function setCameraMode(mode: "free" | "follow" | "overlook") {
@@ -411,14 +441,14 @@ function setCameraMode(mode: "free" | "follow" | "overlook") {
     return
   }
 
-  // 设置 viewFrom 偏移量（单位：米，在 entity 局部坐标系中）
-  // x=右, y=前, z=上（相对于 entity 自身朝向）
+  // 重新绑定 trackedEntity，使新的 viewFrom 生效
+  viewer.trackedEntity = undefined as any
+
+  // viewFrom 偏移量（单位：米，entity 局部坐标系：x=右, y=前, z=上）
   if (mode === "overlook") {
-    // 正上方 8km
-    flightEntity.viewFrom = new ConstantProperty(new Cartesian3(0, 0, 8000))
+    flightEntity.viewFrom = new ConstantProperty(new Cartesian3(0, 0, 10000))       // 正上方 8km
   } else {
-    // 后上方：后方 3km + 上方 1.5km
-    flightEntity.viewFrom = new ConstantProperty(new Cartesian3(0, -3000, 1500))
+    flightEntity.viewFrom = new ConstantProperty(new Cartesian3(-600, -300, 10000))  // 后上方 3km + 上 10km
   }
 
   viewer.trackedEntity = flightEntity
@@ -457,21 +487,20 @@ onMounted(() => {
     projectionPicker: false,
   })
 
-  const defaultItem = CESIUM_BASEMAP_LIST.find(i => i.id === "mars3d-terrain")!
+  const defaultItem = CESIUM_BASEMAP_LIST.find(i => i.id === "mars3d")!
   defaultItem.activate(viewer).then(() => {
     currentId.value = defaultItem.id
     currentLabel.value = defaultItem.label
   })
 
   viewer.camera.setView({
-    destination: Cartesian3.fromDegrees(116.39, 39.91, 20000000),
+    destination: Cartesian3.fromDegrees(116.39, 39.91, 15000000),
     orientation: { heading: 0, pitch: CesiumMath.toRadians(-90), roll: 0 },
   })
 })
 
 onUnmounted(() => {
   if (clockRemoveTick) { clockRemoveTick(); clockRemoveTick = null }
-  if (handler) { handler.destroy(); handler = null }
   if (viewer) {
     if (flightEntity) viewer.entities.remove(flightEntity)
     viewer.destroy()
@@ -494,8 +523,13 @@ onUnmounted(() => {
   z-index: 99;
 }
 
-:deep(.cesium-viewer-bottom) { display: none !important; }
-:deep(.cesium-viewer-toolbar) { display: none !important; }
+:deep(.cesium-viewer-bottom) {
+  display: none !important;
+}
+
+:deep(.cesium-viewer-toolbar) {
+  display: none !important;
+}
 
 .top-right-controls {
   position: absolute;
@@ -666,9 +700,19 @@ onUnmounted(() => {
   font-family: monospace;
 }
 
-.time-elapsed { color: var(--el-color-primary); font-weight: 600; }
-.time-sep { color: var(--el-text-color-placeholder); }
-.time-total { color: var(--el-text-color-secondary); }
+.time-elapsed {
+  color: var(--el-color-primary);
+  font-weight: 600;
+}
+
+.time-sep {
+  color: var(--el-text-color-placeholder);
+}
+
+.time-total {
+  color: var(--el-text-color-secondary);
+}
+
 .time-clock {
   margin-left: auto;
   color: var(--el-text-color-secondary);
