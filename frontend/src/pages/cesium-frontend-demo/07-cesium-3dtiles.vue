@@ -126,6 +126,42 @@
           </div>
         </el-card>
 
+        <!-- 性能补充：保留前四张卡片内容，仅追加可控实验 -->
+        <el-card shadow="never" class="panel-card">
+          <template #header>⚡ 性能取舍 · <code>maximumScreenSpaceError</code></template>
+
+          <p class="card-desc">
+            屏幕空间误差（SSE）是 3D Tiles 最常用的清晰度/加载量平衡杆：值越小越清晰，也越可能增加请求、显存和帧耗时。
+          </p>
+          <div class="slider-group">
+            <label class="sgl">最大 SSE</label>
+            <el-slider v-model="maximumScreenSpaceError" :min="1" :max="64" :step="1"
+              :disabled="!tilesetReady" @update:model-value="applyPerformanceSettings" />
+            <span class="slider-val">{{ maximumScreenSpaceError }}</span>
+          </div>
+
+          <div class="switch-row">
+            <el-switch v-model="skipLevelOfDetail" :disabled="!tilesetReady" @change="applyPerformanceSettings" />
+            <span><code>skipLevelOfDetail</code>：跳过中间 LOD（取决于数据的层级结构）</span>
+          </div>
+          <div class="switch-row">
+            <el-switch v-model="dynamicScreenSpaceError" :disabled="!tilesetReady" @change="applyPerformanceSettings" />
+            <span><code>dynamicScreenSpaceError</code>：远景放宽误差</span>
+          </div>
+          <div class="switch-row">
+            <el-switch v-model="showRenderingStats" :disabled="!tilesetReady" @change="applyPerformanceSettings" />
+            <span>显示渲染统计与 FPS</span>
+          </div>
+          <div class="switch-row">
+            <el-switch v-model="showMemoryStats" :disabled="!tilesetReady" @change="applyPerformanceSettings" />
+            <span>显示瓦片显存估算</span>
+          </div>
+
+          <div class="card-warn">
+            建议先只调 SSE，再用统计信息观察请求、显存和帧率。后两个 LOD 开关不是普适优化；扁平或层级较少的数据集可能几乎没有差异。
+          </div>
+        </el-card>
+
       </el-scrollbar>
     </div>
   </div>
@@ -182,6 +218,13 @@ const loadedInfo = ref("")
 // tileset 就绪状态（用于模板响应）
 const tilesetReady = ref(false)
 const propsAvailable = ref("")
+
+// 性能：先掌握 maximumScreenSpaceError，其他选项仅作为受控实验
+const maximumScreenSpaceError = ref(16)
+const skipLevelOfDetail = ref(false)
+const dynamicScreenSpaceError = ref(false)
+const showRenderingStats = ref(false)
+const showMemoryStats = ref(false)
 
 // ── Cesium 引用 ──
 let viewer: Viewer | null = null
@@ -252,6 +295,7 @@ async function replaceTileset(url: string) {
   viewer.scene.primitives.add(tileset)
   currentTileset = tileset
   tilesetReady.value = true
+  syncPerformanceSettings()
 
   // 保存原始 root.transform 用于复位
   originalRootTransform = tileset.root.transform.clone()
@@ -527,7 +571,30 @@ function resetTransform() {
     // false：严格按照 tileset.json 里的 geometricError 走
     // true：Cesium根据距离帮你“放宽标准”，减少加载量
     currentTileset.dynamicScreenSpaceError = false
+    dynamicScreenSpaceError.value = false
   }
+}
+
+// ──────────────────── 性能补充 ────────────────────
+
+function syncPerformanceSettings() {
+  if (!currentTileset) return
+  maximumScreenSpaceError.value = currentTileset.maximumScreenSpaceError
+  skipLevelOfDetail.value = currentTileset.skipLevelOfDetail
+  dynamicScreenSpaceError.value = currentTileset.dynamicScreenSpaceError
+  showRenderingStats.value = currentTileset.debugShowRenderingStatistics
+  showMemoryStats.value = currentTileset.debugShowMemoryUsage
+  if (viewer) viewer.scene.debugShowFramesPerSecond = showRenderingStats.value
+}
+
+function applyPerformanceSettings() {
+  if (!currentTileset || !viewer) return
+  currentTileset.maximumScreenSpaceError = maximumScreenSpaceError.value
+  currentTileset.skipLevelOfDetail = skipLevelOfDetail.value
+  currentTileset.dynamicScreenSpaceError = dynamicScreenSpaceError.value
+  currentTileset.debugShowRenderingStatistics = showRenderingStats.value
+  currentTileset.debugShowMemoryUsage = showMemoryStats.value
+  viewer.scene.debugShowFramesPerSecond = showRenderingStats.value
 }
 
 // ══════════════════════════════════════════
@@ -765,4 +832,16 @@ onUnmounted(() => {
   font-family: monospace;
   color: var(--el-color-primary);
 }
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 7px 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--el-text-color-secondary);
+}
+
+.switch-row :deep(.el-switch) { flex-shrink: 0; }
 </style>

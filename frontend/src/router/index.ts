@@ -175,6 +175,24 @@ const routes: RouteRecordRaw[] = [
             name: "CesiumTimeline",
             component: () => import("@/pages/cesium-frontend-demo/08-cesium-timeline.vue"),
             meta: { title: "08-时间动态轨迹" },
+          },
+          {
+            path: "draw-measure",
+            name: "CesiumDrawMeasure",
+            component: () => import("@/pages/cesium-frontend-demo/09-cesium-draw-measure.vue"),
+            meta: { title: "09-绘制与量算" },
+          },
+          {
+            path: "terrain-analysis",
+            name: "CesiumTerrainAnalysis",
+            component: () => import("@/pages/cesium-frontend-demo/10-cesium-terrain-analysis.vue"),
+            meta: { title: "10-地形与剖面" },
+          },
+          {
+            path: "material-effects",
+            name: "CesiumMaterialEffects",
+            component: () => import("@/pages/cesium-frontend-demo/11-cesium-material-effects.vue"),
+            meta: { title: "11-动态材质" },
           }
         ]
       }
