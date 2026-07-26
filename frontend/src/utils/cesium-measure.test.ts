@@ -5,6 +5,15 @@ import {
   formatArea,
   formatDistance,
 } from "./cesium-measure";
+/**
+关键字	           作用
+describe	        组织测试的分组容器。把相关的测试用例包在一个"套件"里，输出时能看到层级。
+it	              定义一个具体的测试用例。第一个参数是描述文字，第二个参数是执行这个测试的函数。
+expect	          断言函数，返回一个"断言对象"，上面挂了一堆匹配方法。
+toBeCloseTo	      比较浮点数近似相等（第二个参数是小数精度位数），避免 JS 浮点精度问题。
+toBeGreaterThan	  大于某个值。
+toBeLessThan	    小于某个值。
+ */
 
 describe("Cesium 量算工具", () => {
   it("按地表弧线计算折线距离", () => {

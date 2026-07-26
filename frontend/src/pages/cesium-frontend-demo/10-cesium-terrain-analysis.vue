@@ -2,7 +2,8 @@
   <div id="cesiumContainer" class="map-container">
     <div v-if="panelOpen" class="panel-overlay" @click="panelOpen = false" />
     <div class="top-right-controls" @click.stop>
-      <CesiumBasemapSwitcher :activate="switchBasemap" :initial="currentId" @toggle="(value: boolean) => (panelOpen = value)" />
+      <CesiumBasemapSwitcher :activate="switchBasemap" :initial="currentId"
+        @toggle="(value: boolean) => (panelOpen = value)" />
     </div>
     <div class="basemap-label">{{ currentLabel }}</div>
 
@@ -12,9 +13,12 @@
           <template #header>10 · 地形采样与分析</template>
           <p class="card-desc">本页使用地形服务，而不是把椭球面高度当作真实高程。所有采样都是异步请求。</p>
           <div class="button-grid">
-            <el-button :type="mode === 'elevation' ? 'primary' : 'default'" :loading="loading" @click="start('elevation')">点高程</el-button>
-            <el-button :type="mode === 'profile' ? 'primary' : 'default'" :loading="loading" @click="start('profile')">地形剖面</el-button>
-            <el-button :type="mode === 'sight' ? 'primary' : 'default'" :loading="loading" @click="start('sight')">通视判断</el-button>
+            <el-button :type="mode === 'elevation' ? 'primary' : 'default'" :loading="loading"
+              @click="start('elevation')">点高程</el-button>
+            <el-button :type="mode === 'profile' ? 'primary' : 'default'" :loading="loading"
+              @click="start('profile')">地形剖面</el-button>
+            <el-button :type="mode === 'sight' ? 'primary' : 'default'" :loading="loading"
+              @click="start('sight')">通视判断</el-button>
           </div>
           <div class="status-box">{{ hint }}</div>
           <el-button size="small" plain type="danger" class="clear-button" @click="clearAll">清空分析</el-button>
@@ -29,7 +33,8 @@
             <span>剖面范围</span><strong>{{ profileSummary }}</strong>
           </div>
           <div v-if="sightResult" class="result-box" :class="sightResult.visible ? 'visible' : 'blocked'">
-            <span>通视结论</span><strong>{{ sightResult.visible ? '可通视' : `被地形遮挡（第 ${sightResult.blockedAt} 个采样点）` }}</strong>
+            <span>通视结论</span><strong>{{ sightResult.visible ? '可通视' : `被地形遮挡（第 ${sightResult.blockedAt} 个采样点）`
+              }}</strong>
           </div>
           <div v-if="!elevationResult && !profileSummary && !sightResult" class="empty-hint">选择工具并在地图上完成操作。</div>
         </el-card>
@@ -312,26 +317,147 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.map-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
-.panel-overlay { position: absolute; inset: 0; z-index: 99; }
-:deep(.cesium-viewer-bottom), :deep(.cesium-viewer-toolbar) { display: none !important; }
-.top-right-controls { position: absolute; top: 12px; right: 12px; z-index: 100; }
-.basemap-label { position: absolute; bottom: 16px; left: 16px; z-index: 100; padding: 4px 12px; border-radius: 4px; color: #fff; background: rgba(0, 0, 0, 0.55); font-size: 12px; pointer-events: none; }
-.left-panel { position: absolute; top: 12px; left: 12px; z-index: 100; width: 360px; }
-.panel-card { --el-card-padding: 12px; margin-bottom: 8px; }
-.panel-card :deep(.el-card__header) { padding: 10px 14px; font-size: 13px; font-weight: 600; }
-.panel-card :deep(.el-card__body) { padding: 12px; }
-.card-desc, .tip { margin: 0 0 10px; color: var(--el-text-color-secondary); font-size: 12px; line-height: 1.65; }
-.tip { margin: 10px 0 0; font-size: 11px; }
-.button-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.status-box { margin-top: 10px; padding: 8px; border-radius: 4px; color: var(--el-color-primary); background: var(--el-color-primary-light-9); font-size: 12px; line-height: 1.5; }
-.clear-button { width: 100%; margin-top: 10px; }
-.result-box { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; padding: 8px; border-radius: 4px; background: var(--el-fill-color-light); font-size: 12px; }
-.result-box strong { color: var(--el-color-primary); text-align: right; }
-.result-box.visible strong { color: var(--el-color-success); }
-.result-box.blocked strong { color: var(--el-color-danger); }
-.sample-list { display: grid; gap: 3px; max-height: 190px; overflow: auto; }
-.sample-row { display: flex; justify-content: space-between; padding: 5px 7px; border-bottom: 1px solid var(--el-border-color-lighter); font: 11px Consolas, monospace; }
-.sample-row strong { color: var(--el-color-primary); }
-.empty-hint { color: var(--el-text-color-placeholder); font-size: 12px; text-align: center; }
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 99;
+}
+
+:deep(.cesium-viewer-bottom),
+:deep(.cesium-viewer-toolbar) {
+  display: none !important;
+}
+
+.top-right-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+}
+
+.basemap-label {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 100;
+  padding: 4px 12px;
+  border-radius: 4px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.left-panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  width: 360px;
+}
+
+.panel-card {
+  --el-card-padding: 12px;
+  margin-bottom: 8px;
+}
+
+.panel-card :deep(.el-card__header) {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel-card :deep(.el-card__body) {
+  padding: 12px;
+}
+
+.card-desc,
+.tip {
+  margin: 0 0 10px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.tip {
+  margin: 10px 0 0;
+  font-size: 11px;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.status-box {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.clear-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.result-box {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--el-fill-color-light);
+  font-size: 12px;
+}
+
+.result-box strong {
+  color: var(--el-color-primary);
+  text-align: right;
+}
+
+.result-box.visible strong {
+  color: var(--el-color-success);
+}
+
+.result-box.blocked strong {
+  color: var(--el-color-danger);
+}
+
+.sample-list {
+  display: grid;
+  gap: 3px;
+  max-height: 190px;
+  overflow: auto;
+}
+
+.sample-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 7px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  font: 11px Consolas, monospace;
+}
+
+.sample-row strong {
+  color: var(--el-color-primary);
+}
+
+.empty-hint {
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+  text-align: center;
+}
 </style>

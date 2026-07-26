@@ -2,7 +2,8 @@
   <div id="cesiumContainer" class="map-container">
     <div v-if="panelOpen" class="panel-overlay" @click="panelOpen = false" />
     <div class="top-right-controls" @click.stop>
-      <CesiumBasemapSwitcher :activate="switchBasemap" :initial="currentId" @toggle="(value: boolean) => (panelOpen = value)" />
+      <CesiumBasemapSwitcher :activate="switchBasemap" :initial="currentId"
+        @toggle="(value: boolean) => (panelOpen = value)" />
     </div>
     <div class="basemap-label">{{ currentLabel }}</div>
 
@@ -29,8 +30,8 @@
           <template #header><code>Material</code> 与 <code>MaterialProperty</code></template>
           <div class="compare-row"><code>Material</code><span>描述 Fabric / GLSL 与 uniform 的形状，交给 GPU 渲染。</span></div>
           <div class="compare-row"><code>MaterialProperty</code><span>在每个时间点返回材质类型和 uniform 值，供 Entity 更新。</span></div>
-          <pre class="code-note">getType()  → "DemoFlowLine"
-getValue(time) → { color, speed, time }</pre>
+          <pre class="code-note">getType() → "DemoFlowLine"
+    getValue(time) → { color, speed, time }</pre>
         </el-card>
 
         <el-card shadow="never" class="panel-card">
@@ -95,7 +96,7 @@ class FlowLineMaterialProperty {
   readonly isConstant = false;
   private readonly startTime = JulianDate.now();
 
-  constructor(public color: Color, public speed: number) {}
+  constructor(public color: Color, public speed: number) { }
 
   getType() {
     return FLOW_LINE_TYPE;
@@ -233,26 +234,158 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.map-container { position: relative; width: 100%; height: 100%; overflow: hidden; }
-.panel-overlay { position: absolute; inset: 0; z-index: 99; }
-:deep(.cesium-viewer-bottom), :deep(.cesium-viewer-toolbar) { display: none !important; }
-.top-right-controls { position: absolute; top: 12px; right: 12px; z-index: 100; }
-.basemap-label { position: absolute; bottom: 16px; left: 16px; z-index: 100; padding: 4px 12px; border-radius: 4px; color: #fff; background: rgba(0, 0, 0, 0.55); font-size: 12px; pointer-events: none; }
-.left-panel { position: absolute; top: 12px; left: 12px; z-index: 100; width: 370px; }
-.panel-card { --el-card-padding: 12px; margin-bottom: 8px; }
-.panel-card :deep(.el-card__header) { padding: 10px 14px; font-size: 13px; font-weight: 600; }
-.panel-card :deep(.el-card__body) { padding: 12px; }
-.card-desc, .tip { margin: 0 0 10px; color: var(--el-text-color-secondary); font-size: 12px; line-height: 1.65; }
-.tip { margin: 10px 0 0; font-size: 11px; }
-.slider-row { display: grid; grid-template-columns: 64px 1fr 48px; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; }
-.slider-row strong { color: var(--el-color-primary); font: 11px Consolas, monospace; text-align: right; }
-.reset-button { margin-left: 12px; }
-.compare-row { display: grid; grid-template-columns: 118px 1fr; gap: 8px; margin-bottom: 8px; color: var(--el-text-color-secondary); font-size: 12px; line-height: 1.55; }
-.compare-row code { color: var(--el-color-primary); }
-.code-note { margin: 10px 0 0; padding: 8px; overflow: auto; border-radius: 4px; color: var(--el-text-color-secondary); background: var(--el-fill-color-light); font: 11px/1.5 Consolas, monospace; }
-.effect-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; color: var(--el-text-color-secondary); font-size: 12px; }
-.effect-list li { display: flex; align-items: center; gap: 7px; }
-.line-icon, .wall-icon, .ring-icon { display: inline-block; width: 18px; height: 4px; background: #00e5ff; }
-.wall-icon { height: 12px; background: #a0ff00; }
-.ring-icon { width: 12px; height: 12px; border: 2px solid #1677ff; border-radius: 50%; background: transparent; }
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panel-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 99;
+}
+
+:deep(.cesium-viewer-bottom),
+:deep(.cesium-viewer-toolbar) {
+  display: none !important;
+}
+
+.top-right-controls {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 100;
+}
+
+.basemap-label {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 100;
+  padding: 4px 12px;
+  border-radius: 4px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.left-panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  width: 370px;
+}
+
+.panel-card {
+  --el-card-padding: 12px;
+  margin-bottom: 8px;
+}
+
+.panel-card :deep(.el-card__header) {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel-card :deep(.el-card__body) {
+  padding: 12px;
+}
+
+.card-desc,
+.tip {
+  margin: 0 0 10px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.tip {
+  margin: 10px 0 0;
+  font-size: 11px;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 48px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.slider-row strong {
+  color: var(--el-color-primary);
+  font: 11px Consolas, monospace;
+  text-align: right;
+}
+
+.reset-button {
+  margin-left: 12px;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 118px 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.compare-row code {
+  color: var(--el-color-primary);
+}
+
+.code-note {
+  margin: 10px 0 0;
+  padding: 8px;
+  overflow: auto;
+  border-radius: 4px;
+  color: var(--el-text-color-secondary);
+  background: var(--el-fill-color-light);
+  font: 11px/1.5 Consolas, monospace;
+}
+
+.effect-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.effect-list li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.line-icon,
+.wall-icon,
+.ring-icon {
+  display: inline-block;
+  width: 18px;
+  height: 4px;
+  background: #00e5ff;
+}
+
+.wall-icon {
+  height: 12px;
+  background: #a0ff00;
+}
+
+.ring-icon {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #1677ff;
+  border-radius: 50%;
+  background: transparent;
+}
 </style>

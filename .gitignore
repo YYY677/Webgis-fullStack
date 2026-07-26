@@ -52,3 +52,4 @@ __screenshots__/
 # ── Project specific ──
 # Cesium 静态文件体积大，已提交不需要忽略（若后续改用 CDN 可取消注释）
 # frontend/public/Cesium/
+.worktrees/

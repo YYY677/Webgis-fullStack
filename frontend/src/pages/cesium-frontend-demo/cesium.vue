@@ -9,7 +9,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 
 onMounted(() => {
   const token = import.meta.env.VITE_CESIUM_TOKEN
-  Ion.defaultAccessToken = token || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkY2MzMTFiMi00MmJhLTQ4NzEtYTEwYi05MGI0NzdkMTY1ZDkiLCJpZCI6MjE2ODA3LCJzdWIiOiJZWVk2NzciLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoiVW50aXRsZWQiLCJpYXQiOjE3ODA5MjI1OTN9.7kj5EnRQOLO4PvM65nVpx3sszLKEiAqWEXkopX9f540"
+  Ion.defaultAccessToken = token
   new Viewer("cesiumContainer", {
     navigationHelpButton: false,
     timeline: false,

@@ -67,6 +67,15 @@ cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=dev  # 开发模式
 docker-compose up -d
 ```
 
+## Agent 工作方式
+
+- 默认直接在当前工作区开发。
+- 仅当当前工作区有需要保护的未提交改动、需要并行维护多个任务，或用户明确要求时，才创建 Git worktree。
+- 创建 worktree 前必须说明原因并获得用户确认。
+- 已合并的 worktree 不自动删除；仅在用户明确确认后清理。
+- `docs/superpowers/` 下的设计与计划文档可提交、可推送，作为学习阶段的过程留痕。
+- 提交前必须在对话中展示文件级变更摘要。
+
 <!-- superpowers-zh:begin (do not edit between these markers) -->
 
 # Superpowers-ZH 中文增强版

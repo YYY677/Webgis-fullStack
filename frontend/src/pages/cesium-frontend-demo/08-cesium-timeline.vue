@@ -277,6 +277,10 @@ function startAnimation() {
   const position = buildPathPosition(pathCfg, base)
 
   // 创建飞行 entity
+  // entity与cesium时钟系统绑定并不明显：flightEntity 不需要手动绑定时钟——Cesium 的 
+  // time-dynamic property 系统会自动读取 viewer.clock.currentTime 来插值计算位置。
+  // SampledPositionProperty 采样点有时间戳，Cesium 会根据当前时刻自动计算出模型位置。
+  // 这也是为什么改了 clock.currentTime（比如拖进度条）模型位置立刻跳变。
   flightEntity = viewer.entities.add({
     position,
     // VelocityOrientationProperty 会根据位置采样自动计算姿态（航向、俯仰、滚转），无需手动设置。
