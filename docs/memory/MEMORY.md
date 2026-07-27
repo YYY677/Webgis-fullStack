@@ -1,0 +1,13 @@
+- [SQL Alias 引号陷阱](sql-alias-quoting.md) — PG 无引号别名转小写，Java Map get 不到值
+- [空间图层清除策略](spatial-layer-cleanup.md) — 遍历全删比 ref 追踪更可靠；ref === 比对不可靠，用标签查找
+- [pgRouting 常见坑](pgrouting-pitfalls.md) — 列名映射、cost 歧义、别手动拼 WKT
+- [自增主键 INSERT 排除](serial-pk-insert.md) — SERIAL 列不放 INSERT 字段列表
+- [SRID 4326 存储约定](srid-4326-convention.md) — 项目所有空间数据存 4326，前端转 3857
+- [Flyway 迁移校验和](flyway-migration-checksum.md) — 已执行迁移不可改内容
+- [GeoServer UTF-8 Body](geoserver-utf8-body.md) — 中文 SLD 需 byte[] + charset UTF-8
+- [GeoServer Content-Type](geoserver-content-type.md) — Style 端点 Content-Type 极敏感
+- [OL 对象 ref 禁用规则](ol-ref-pattern.md) — OL 对象统一用 shallowRef 或 let，禁用 ref
+- [Cesium 底图加载 API 选择](cesium-imagery-layer-pattern.md) — 默认底图用 ImageryLayer.fromWorldImagery()，工厂接口用 activate(viewer) 而非 create() => ImageryProvider
+- [Cesium 地形 API 版本变迁](cesium-terrain-provider-evolution.md) — Cesium 1.142 用 CesiumTerrainProvider.fromUrl() 而非构造函数传 url
+- [3D Tiles 常见坑](cesium-3dtiles-pitfalls.md) — 响应式变量、getPropertyIds、modelMatrix 裁剪、Matrix4 版本差异
+- [Cesium 相机姿态滑块](cesium-camera-orientation.md) — Roll 回读范围归一化；避开近垂直 Pitch 下 Heading/Roll 的欧拉角耦合

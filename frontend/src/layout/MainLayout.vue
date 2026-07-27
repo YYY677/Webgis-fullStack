@@ -284,6 +284,10 @@ if (savedTheme === "dark") {
 
   .sidebar-logo {
     height: 60px;
+    // 菜单内容再高也不能压缩 Logo；超出的部分由下方菜单滚动承载。
+    // flex-grow: 0、 flex-shrink: 0、flex-basis: 60px → flex: 0 0 60px 
+    // 元素始终占 60px，打死也不变。有多余空间不拉伸，空间不足不压缩。
+    flex: 0 0 60px;
     display: flex;
     align-items: center;
     padding: 0 18px;
@@ -302,7 +306,10 @@ if (savedTheme === "dark") {
   }
 
   .sidebar-menu {
+    // 允许菜单收缩到侧栏剩余高度，并在展开项过多时独立纵向滚动。
     flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     border-right: none;
   }
 }

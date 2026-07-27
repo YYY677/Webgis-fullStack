@@ -28,7 +28,7 @@
 
           <div class="slider-row">
             <label>Pitch</label>
-            <el-slider v-model="pitch" :min="-90" :max="90" :step="0.1"
+            <el-slider v-model="pitch" :min="-87" :max="87" :step="0.1"
               @update:modelValue="applyCameraOrientation" />
             <span class="slider-val">{{ pitch.toFixed(1) }}°</span>
           </div>
@@ -122,7 +122,9 @@ const currentLabel = ref("")
 
 // ── 相机姿态（绑定滑块） ──
 const heading = ref(0)
-const pitch = ref(-90)
+// Cesium 在接近 ±90° 时将 Heading 与 Roll 视为不可唯一表示，限制到 ±87°。
+const pitch = ref(-87)
+// UI 用有符号 Roll 表示左/右滚转；Cesium 回读时再从 [0°, 360°] 转换回来。
 const roll = ref(0)
 
 // ── 相机坐标显示 ──
@@ -149,9 +151,6 @@ const clickInfo = ref<ClickPickInfo | null>(null)
 let viewer: Viewer | null = null
 let clickHandler: ScreenSpaceEventHandler | null = null
 
-// ── 防循环守卫：滑块 → 相机 → camera.changed → ref，防止来回触发 ──
-let updatingFromCamera = false
-
 // ── 辅助：Cartesian3 → 可读字符串 ──
 function formatCart(c: any): string {
   if (!c) return "无数据"
@@ -170,23 +169,29 @@ function formatDeg(c: any): string {
   }
 }
 
+// Cesium API 用 [0°, 360°] 表示 Roll；UI 保持 [-180°, 180°]，让负值直观表示左滚转。
+function toSignedRollDegrees(rollRadians: number): number {
+  const degrees = CesiumMath.toDegrees(rollRadians)
+  const signedDegrees = degrees > 180 ? degrees - 360 : degrees
+  return Math.abs(signedDegrees) < 0.05 ? 0 : +signedDegrees.toFixed(1)
+}
+
 // ── 每帧同步：相机状态 → UI refs（用于坐标和滑块回显） ──
 function syncCameraToUI() {
-  if (!viewer || updatingFromCamera) return
-  updatingFromCamera = true
+  if (!viewer) return
 
   const camera = viewer.camera
 
   // ── 三个姿态角 ──
   // Heading（偏航角/方位角）：绕向上轴（Z）旋转，0=正北，90=正东，顺时针递增，范围 [0, 360)
   //   飞机比喻：机头左右摆动，即"航向"
-  // Pitch（俯仰角）：绕横向轴（X）旋转，0=水平，-90=垂直地面，范围 [-90, 90]
+  // Pitch（俯仰角）：绕横向轴（X）旋转，0=水平，负值向下俯视，范围 [-87, 87]
   //   飞机比喻：机头上下摆动，即"俯仰"
   // Roll（滚转角）：绕纵向轴（Y）旋转，0=水平，正=向右倾斜，范围 [-180, 180]
   //   飞机比喻：机身绕中轴线旋转，即"横滚"
   heading.value = +CesiumMath.toDegrees(camera.heading).toFixed(1)
   pitch.value = +CesiumMath.toDegrees(camera.pitch).toFixed(1)
-  roll.value = +CesiumMath.toDegrees(camera.roll).toFixed(1)
+  roll.value = toSignedRollDegrees(camera.roll)
 
   // ── 三种坐标系（同一空间点的三种数学表达） ──
   const carto = camera.positionCartographic // 拿到的是 Cartographic 弧度坐标系
@@ -216,14 +221,12 @@ function syncCameraToUI() {
   const wc = camera.positionWC
   cartesianStr.value = `(${wc.x.toFixed(2)}, ${wc.y.toFixed(2)}, ${wc.z.toFixed(2)})`
 
-  updatingFromCamera = false
 }
 
 // ── 应用滑块值到相机 ──
 function applyCameraOrientation() {
-  if (!viewer || updatingFromCamera) return
+  if (!viewer) return
   viewer.camera.setView({
-    destination: viewer.camera.position,
     orientation: {
       heading: CesiumMath.toRadians(heading.value),
       pitch: CesiumMath.toRadians(pitch.value),
@@ -235,7 +238,7 @@ function applyCameraOrientation() {
 // ── 预设视角 ──
 function resetView() {
   heading.value = 0
-  pitch.value = -90
+  pitch.value = -87
   roll.value = 0
   applyCameraOrientation()
 }
@@ -330,7 +333,7 @@ onMounted(() => {
     destination: Cartesian3.fromDegrees(116.39, 39.91, 20000000),
     orientation: {
       heading: CesiumMath.toRadians(0),
-      pitch: CesiumMath.toRadians(-90),
+      pitch: CesiumMath.toRadians(-87),
       roll: 0,
     },
   })

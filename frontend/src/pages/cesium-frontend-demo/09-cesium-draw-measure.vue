@@ -108,9 +108,6 @@ let activePositions: Cartesian3[] = [];
 let cursorPosition: Cartesian3 | undefined;
 // 为面板结果生成稳定的 v-for key。
 let measurementId = 0;
-// 仅影响标记显示高度，不影响 activePositions 中用于量算的真实地表坐标。
-const MARKER_HEIGHT_OFFSET_METERS = 20;
-
 // 根据绘制模式动态给出下一步操作提示。
 const drawHint = computed(() => {
   if (drawMode.value === "point") return "点击地图放置点位。";
@@ -154,28 +151,22 @@ function pickWorldPosition(windowPosition: Cartesian2) {
   return viewer.camera.pickEllipsoid(windowPosition, scene.globe.ellipsoid);
 }
 
-/** 保持量算坐标不变，仅将视觉标记沿法线方向抬高，避免被地形深度裁掉。 */
-function createMarkerPosition(groundPosition: Cartesian3) {
-  // Cartesian3 是以地心为原点的 x/y/z 坐标；其中 z 指向全球北极，
-  // 不是当前位置的“垂直向上”。因此不能直接给 groundPosition.z 加高度。
-  // 先转成经纬度和椭球高，才能只修改当前位置的高度值。
-  const cartographic = Cartographic.fromCartesian(groundPosition);
-  return Cartesian3.fromRadians(
-    cartographic.longitude,
-    cartographic.latitude,
-    // 仅抬高视觉用的白色顶点；groundPosition 原坐标仍用于最终图形和量算。
-    cartographic.height + MARKER_HEIGHT_OFFSET_METERS,
-  );
-}
-
 /**
  * 为一次“尚未完成”的线/面绘制增加白色顶点标记。
  * 该标记用于反馈用户已经点击过哪里；它与 activePositions 一一对应，以便取消或去重时删除。
  */
 function addVertex(position: Cartesian3) {
   const vertex = viewer?.entities.add({
-    position: createMarkerPosition(position),
-    point: { pixelSize: 8, color: Color.WHITE, outlineColor: Color.fromCssColorString("#1677ff"), outlineWidth: 2 },
+    // 标记与真实量算坐标重合；禁用深度检测后，点不会被它所在的地形表面裁掉。
+    position,
+    point: {
+      pixelSize: 8,
+      color: Color.WHITE,
+      outlineColor: Color.fromCssColorString("#1677ff"),
+      outlineWidth: 2,
+      // Infinity 表示任意镜头距离都不与地形进行深度比较，适用于交互顶点提示。
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
   });
   if (vertex) activeVertexEntities.push(vertex);
 }
@@ -205,6 +196,7 @@ function createPreview() {
   // 若已有预览 Entity，或当前模式为点位，则不再创建新的预览。
   if (!viewer || previewEntity || drawMode.value === "point") return;
 
+  // 线模式
   if (drawMode.value === "line") {
     previewEntity = viewer.entities.add({
       polyline: {
@@ -223,7 +215,7 @@ function createPreview() {
     });
     return;
   }
-
+  // 面模式
   previewEntity = viewer.entities.add({
     polygon: {
       hierarchy: new CallbackProperty(
@@ -256,9 +248,15 @@ function startDrawing(mode: Exclude<DrawMode, "none">) {
 function addPointMeasurement(position: Cartesian3) {
   const point = toGeographicPoints([position])[0];
   viewer?.entities.add({
-    // 数据仍使用 position 换算经纬度；这里只抬高显示 Entity，避免影响量算结果。
-    position: createMarkerPosition(position),
-    point: { pixelSize: 11, color: Color.fromCssColorString("#ff4d4f"), outlineColor: Color.WHITE, outlineWidth: 2 },
+    // 显示与量算均使用同一个地面坐标，避免视觉位置与数据位置分离。
+    position,
+    point: {
+      pixelSize: 11,
+      color: Color.fromCssColorString("#ff4d4f"),
+      outlineColor: Color.WHITE,
+      outlineWidth: 2,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
     label: {
       text: `${point.longitude.toFixed(5)}°, ${point.latitude.toFixed(5)}°`,
       font: "12px sans-serif",
@@ -267,6 +265,8 @@ function addPointMeasurement(position: Cartesian3) {
       outlineWidth: 3,
       style: LabelStyle.FILL_AND_OUTLINE,
       pixelOffset: new Cartesian2(0, -24),
+      // 标签也作为交互信息提示，始终显示在地形前方。
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
   });
   measurements.value.unshift({

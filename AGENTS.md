@@ -12,7 +12,7 @@
 Webgis-fullStack/
 ├── frontend/                # Vue 3 + Vite 前端 → 详见 frontend/AGENTS.md
 ├── backend/                 # Spring Boot 3.5 后端 → 详见 backend/AGENTS.md
-├── .Codex/                 # Codex skills 配置
+├── .agents/                # 项目级 agent skills 配置
 ├── .env                     # 环境变量（待创建）
 └── AGENTS.md               # 本文件 — 项目整体级上下文
 ```
@@ -34,7 +34,7 @@ Webgis-fullStack/
 
 ## 关键架构约定
 
-- **后端分层**: 模块化 + 内部三层（详见 backend/AGENTS.md）
+- **后端分层**: 模块化 + 内部三层（详见 backend/CLAUDE.md）
 - **前端分层**: 标准 Vue 项目结构，composables/componets/views/stores/api（详见 frontend/AGENTS.md）
 - **API 规范**: RESTful，统一响应体 `{code, message, data}`
 - **认证**: JWT 无状态，前端 Header `Authorization: Bearer <token>`
@@ -75,6 +75,20 @@ docker-compose up -d
 - 已合并的 worktree 不自动删除；仅在用户明确确认后清理。
 - `docs/superpowers/` 下的设计与计划文档可提交、可推送，作为学习阶段的过程留痕。
 - 提交前必须在对话中展示文件级变更摘要。
+
+## 项目经验记忆
+
+- 涉及 Cesium、OpenLayers、GeoServer、PostGIS、pgRouting、Flyway 或相关排障时，先阅读 `docs/memory/MEMORY.md`，再按索引打开相关经验记录。
+- 仅将已验证、可复用且与本项目相关的经验补充到 `docs/memory/`；保持 `MEMORY.md` 索引与文件同步。
+- 当用户说“记录到 memory / 记忆 / 经验”时，均指项目目录 `docs/memory/`：新增或更新对应专题文件，并同步更新 `docs/memory/MEMORY.md` 索引。
+- `docs/memory/` 是项目的持久经验库；不得用 Agent 会话临时缓存、工具状态或口头承诺代替写入。
+
+## 测试与界面验证策略
+
+- 业务逻辑、数据转换、接口、权限、状态管理及可复现的功能缺陷：编写能验证用户可见行为的自动化测试。
+- 既有页面的纯 CSS、布局、文案等低风险展示修改：不新增单元测试或源码正则断言，不制作临时原型；直接实现，由 Agent 判断改动风险并完成构建验证，用户在真实页面中确认效果。
+- 核心交互、复杂响应式布局或高风险视觉回归：优先浏览器端行为测试或视觉回归测试，不以检查源码字符串替代实际渲染验证。
+- 新建页面或开发新界面：仅在视觉方向未确定、存在多个布局方案，或用户明确要求时制作模拟展示；其余情况直接实现并在真实页面验证。
 
 <!-- superpowers-zh:begin (do not edit between these markers) -->
 
