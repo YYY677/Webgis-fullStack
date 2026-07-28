@@ -116,14 +116,21 @@ materialCache.addMaterial(FLOW_LINE_TYPE, {
     uniforms: { color: Color.CYAN, speed: 1, time: 0 },
     /**
      * source 是 GPU 上执行的 GLSL 片段着色器。Cesium 会让 polyline / wall 的每一个像素各执行一次
-     * czm_getMaterial，并根据返回的 material 绘制该像素。
-     *
+     * 
+     * czm_getMaterial方法名是Fabric 材质的入口函数，固定不能改，Cesium 生成材质 shader 时会调用它。
+     * 
+     * czm_material：Cesium 的“通用材质结果”结构体，Fabric 使用它描述 diffuse、alpha 等基础材质属性。
+     * 
+     * czm_materialInput：Cesium 传给 Fabric 的材质输入结构体，
+     * 包含纹理坐标等数据，例如示例中的 materialInput.st.s。
+     * 
      * 这段代码的目标是做出“只有一小段发亮、并且不断沿图形移动”的效果：
      *
      * 1. materialInput.st.s 是当前像素位于图形展开方向的相对位置：起点约为 0，终点约为 1。
      * 2. time * speed 是持续增长的移动进度；减去 s 后，每个位置得到不同进度。
      * 3. fract 将进度折回 0~1。这个数相当于“当前像素是否正好被亮带扫到”。
-     * 4. head 和 tail 分别做亮带的淡入、淡出区间；两者相乘后，亮带外的 alpha 为 0，
+     * 4. smoothstep(a, b, x)，x 从 a 到 b 时，结果平滑从 0 变 1
+     * 5. head 和 tail 分别做亮带的淡入、淡出区间；两者相乘后，亮带外的 alpha 为 0，
      *    亮带中间的 alpha 接近 color.a。因此颜色不突变，看起来像一段光在流动。
      *
      * direction 由 `time * speed - s` 中的减号决定；改成 `time * speed + s`，流动方向会反过来。

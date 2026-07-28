@@ -193,6 +193,24 @@ const routes: RouteRecordRaw[] = [
             name: "CesiumMaterialEffects",
             component: () => import("@/pages/cesium-frontend-demo/11-cesium-material-effects.vue"),
             meta: { title: "11-动态材质" },
+          },
+          {
+            path: "custom-shader",
+            name: "CesiumCustomShader",
+            component: () => import("@/pages/cesium-frontend-demo/12-cesium-custom-shader.vue"),
+            meta: { title: "12-CustomShader" },
+          },
+          {
+            path: "custom-appearance",
+            name: "CesiumCustomAppearance",
+            component: () => import("@/pages/cesium-frontend-demo/13-cesium-custom-appearance.vue"),
+            meta: { title: "13-自定义 Appearance" },
+          },
+          {
+            path: "scene-environment",
+            name: "CesiumSceneEnvironment",
+            component: () => import("@/pages/cesium-frontend-demo/14-cesium-scene-environment.vue"),
+            meta: { title: "14-场景环境与出图" },
           }
         ]
       }

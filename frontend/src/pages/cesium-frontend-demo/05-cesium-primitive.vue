@@ -251,6 +251,20 @@ function addBoxPrimitive() {
     },
   })
   const appearance = new PerInstanceColorAppearance({ translucent: true })
+  // GeometryInstance：画什么、画在哪里、每个对象携带什么数据
+  // Appearance：用什么 shader 和渲染状态把它画出来
+  // Primitive
+  // ├─ geometryInstances
+  // │  └─ GeometryInstance × N
+  // │     ├─ geometry
+  // │     ├─ modelMatrix
+  // │     ├─ attributes
+  // │     └─ id
+  // └─ appearance
+  //    ├─ vertex shader
+  //    ├─ fragment shader
+  //    ├─ renderState
+  //    └─ 材质/渲染相关选项
   const primitive = new Primitive({ geometryInstances: instance, appearance })
   viewer.scene.primitives.add(primitive)
   card1Primitives.push(primitive)
