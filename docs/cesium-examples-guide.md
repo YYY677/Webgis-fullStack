@@ -1,10 +1,26 @@
-# Cesium 示例项目参考指南
+# Cesium HTML 示例项目参考指南
 
-> 源项目：`Cesium-Examples-main/examples/cesiumEx`（作者：jiawanlong） 本指南对该项目中 150+ 个 HTML 示例进行系统化归纳，便于查阅和学习引用。
+> 源项目：`Cesium-Examples-main/examples/cesiumEx`（作者：jiawanlong）。本指南归纳其 150+ 个 HTML 示例，用于定位实现思路和学习入口，不作为可直接复制的生产代码。
 
-暂时的位置在：C:\Users\YU\Desktop\Cesium-Examples-main\examples\cesiumEx
+- 源码位置：`C:\Users\YU\Desktop\Cesium-Examples-main\examples\cesiumEx`
+- 参考项目主版本：Cesium `1.98`；物理模拟部分为 Cesium `1.72`。
+- 当前项目基线：Vue 3 + TypeScript + Vite + Cesium `1.142.0`。
 
-------------------------------------------------------------------------
+## 如何使用本指南
+
+先按主题定位示例，再从“迁移规则”判断能否落地。单文件示例适合验证算法、交互和视觉效果；正式功能必须拆入本项目的页面、composable、图层服务或工具模块，并补齐生命周期清理、错误处理和资源配置。
+
+| 标识 | 含义 | 处理方式 |
+| --- | --- | --- |
+| 可借鉴 | API 概念和交互流程稳定 | 在当前类型定义下重写。 |
+| 需迁移 | 依赖旧版 API 或外部资源 | 先按本项目版本规则替换并验证。 |
+| 仅作思路 | Demo 为快速演示而设计 | 提炼算法或视觉思路，不复制结构和配置。 |
+
+## 版本边界
+
+文档后续章节中的文件和主题均来自参考项目；其中的构造方式、外部底图、Token、CDN 和脚本加载方式不代表当前项目的推荐实现。尤其不要直接复制 `imageryProvider`、旧地形构造函数、同步脚本引入或临时调试开关。
+
+---
 
 ## 目录总览
 
@@ -37,18 +53,18 @@
 
 **核心模式：**
 
-``` js
+```ts
 const viewer = new Cesium.Viewer('map', {
-  imageryProvider: false,
+  baseLayer: false,
   baseLayerPicker: false,
-});
-var xyz = new Cesium.UrlTemplateImageryProvider({
-  url: '//data.mars3d.cn/tile/img/{z}/{x}/{y}.jpg'
+})
+const xyz = new Cesium.UrlTemplateImageryProvider({
+  url: '//data.mars3d.cn/tile/img/{z}/{x}/{y}.jpg',
 });
 viewer.imageryLayers.addImageryProvider(xyz);
 ```
 
-> 几乎所有示例共用同一套底图（Mars3D 免费切片）和 Cesium 1.98 版本。
+> 这是按当前 Cesium `1.142.0` 改写后的最小模式。参考项目原本的 `imageryProvider` 配置属于旧版本写法；默认全球底图优先使用 `ImageryLayer.fromWorldImagery()`，复杂底图切换应使用 `activate(viewer)` 一类的图层激活接口。
 
 ------------------------------------------------------------------------
 
@@ -521,26 +537,41 @@ viewer.imageryLayers.addImageryProvider(xyz);
 
 ------------------------------------------------------------------------
 
-## 学习路径建议
+## 项目迁移规则
 
-按学习阶段排列：
+| 主题 | 参考项目中的常见做法 | 当前项目的落地规则 |
+| --- | --- | --- |
+| Viewer 与底图 | 旧版 `imageryProvider`、公共免费切片 | 使用 `baseLayer` 或 `imageryLayers`；默认底图优先 `ImageryLayer.fromWorldImagery()`；服务地址与密钥从配置注入。 |
+| 地形 | `new CesiumTerrainProvider({ url })` | Cesium `1.142.0` 使用 `await CesiumTerrainProvider.fromUrl(url)`；确认数据是 quantized-mesh，不把它误当成 3D Tiles 地形。 |
+| 坐标与相机 | 演示中可直接写经纬度与 HPR | 业务数据遵守项目 SRID `4326` 存储、前端按需转换 `3857` 的约定；相机 HPR 是局部 ENU 参考系，Pitch 不应逼近 `±90°`。 |
+| 3D Tiles | 直接写属性表达式或改 `modelMatrix` | 先检查 `tileset.properties`；新版属性名使用 `getPropertyIds()`；每次变换从原始 `root.transform` 恢复，避免旋转后被错误裁剪。 |
+| 高亮和样式 | 直接覆写 `feature.color` | 无样式时可用；存在 `Cesium3DTileStyle` 时改用描边或明确不高亮，否则无法恢复到样式色。 |
+| 分析与特效 | 单 HTML + 全局变量 + 远程脚本 | 提炼核心算法，封装为可销毁模块；移除事件处理器、Primitive、PostProcessStage 和定时器。 |
+| 第三方库 | 页面中直接引入 Ammo.js、Three.js、ECharts 等 | 先判断是否为产品需求，再通过包管理和按需加载接入；禁止复制外部 Token、CDN 或未知许可资源。 |
 
+## 推荐学习与落地路径
+
+```text
+Viewer 生命周期与坐标拾取
+  → Entity / CustomDataSource 绘制
+  → 影像、地形、GeoJSON 与 WMS/WFS 数据接入
+  → 3D Tiles 加载、属性、样式与拾取
+  → 量算、可视域、淹没等可复用分析工具
+  → Fabric Material、PostProcessStage、粒子等视觉效果
+  → Primitive、CustomShader、DrawCommand 等底层渲染
 ```
-新手入门 → 第 0 章 → 1.1~1.6（基础 API）
-基础图形 → 2.3 Entity → 2.4 模型加载
-数据服务 → 2.1 影像 → 2.2 地形 → 2.3.7 GeoJSON
-3D 数据 → 第 3 章 3D Tiles
-空间分析 → 第 4 章 分析工具
-场景美化 → 5.1 环境特效 → 5.4 粒子
-材质系统 → 7.1 Fabric 材质 → 7.2 CustomShader
-数据可视化 → 第 8 章 热力/风场/体渲染
-底层渲染 → 第 9 章 Primitive/DrawCommand
-```
 
-## 注意事项
+功能定位建议：
 
-1. **Cesium 版本**：大多数示例基于 **Cesium 1.98**，部分物理模拟示例使用 **1.72**（`ammolibs` 兼容性）
-2. **底图服务**：统一使用 `//data.mars3d.cn/tile/img/{z}/{x}/{y}.jpg`（Mars3D 免费服务，国内网络友好）
-3. **代码风格**：所有示例均为单 HTML 文件，JS 写在 `<script>` 标签中，外部依赖用 `<script src>` 引入
-4. **文件命名**：中文文件名，章节号用 `、`（顿号）分隔，如 `2.3.1、entity点.html`
-5. **项目来源**：作者 jiawanlong，项目名为 11i（见 examples.html 导航标题）
+- 业务地图、标绘和服务图层优先看第 1、2、4 章；实现时与 OpenLayers 图层和后端 GeoServer 服务保持同一数据语义。
+- 倾斜摄影、BIM 或城市模型优先看第 3 章，并先对照 `docs/memory/cesium-3dtiles-pitfalls.md`。
+- 视觉增强优先看第 5、7、8 章；先验证帧率、显存与降级方案，再加入产品页面。
+- 第 6、9、10 章属于进阶专题。物理模拟与双引擎渲染只有在明确业务价值时再引入。
+
+## 参考项目限制
+
+1. **版本差异：** 大多数示例基于 Cesium `1.98`，部分物理示例使用 `1.72`；任何 API 都以当前 `1.142.0` 的类型定义和运行结果为准。
+2. **外部服务：** Mars3D 免费切片适合学习，不是稳定的生产依赖；不得把服务 URL、访问密钥或 CDN 假设写死进业务代码。
+3. **代码组织：** 参考项目采用单 HTML 文件和 `<script>` 标签，便于教学但没有组件边界、资源回收或错误边界，不能直接迁入 Vue 页面。
+4. **命名与索引：** 中文文件名和 `、` 分隔的章节号仅用于快速定位，如 `2.3.1、entity点.html`；正式模块使用本项目既有英文文件命名规范。
+5. **来源：** 作者 jiawanlong，项目导航标题为 11i。复用任何源码、素材或数据前需单独确认其许可证与来源。
