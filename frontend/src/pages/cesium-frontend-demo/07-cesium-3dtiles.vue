@@ -219,11 +219,31 @@ const loadedInfo = ref("")
 const tilesetReady = ref(false)
 const propsAvailable = ref("")
 
+
+// maximumScreenSpaceError：控制“清不清楚”。
+// cacheBytes：控制“最多缓存多少”。
+// dynamicScreenSpaceError：控制“远处别太清楚”。近处保持细节，远处降低细节。
+// cullRequestsWhileMoving：控制“移动时别乱请求”。
+// foveatedScreenSpaceError：控制“先加载视野中心”。
+// skipLevelOfDetail：控制“中间层能不能跳过”。
+
 // 性能：先掌握 maximumScreenSpaceError，其他选项仅作为受控实验
+// 最大屏幕空间误差，调低更清晰但请求/显存/帧耗时增加，单位为像素，使用场景大致如下：
+// |         值 | 效果    | 适用场景       |
+// | --------: | ----- | ---------- |
+// |   `2 ~ 4` | 很精细   | 近景展示、模型审查  |
+// |       `8` | 较清晰   | 普通建筑白模     |
+// |      `16` | 默认常用  | 大多数场景      |
+// | `24 ~ 32` | 更快但粗糙 | 城市级浏览、移动端  |
+// |     `64+` | 很粗    | 大范围概览、性能优先 |
 const maximumScreenSpaceError = ref(16)
+// 跳过中间 LOD 层级，直接加载高细节瓦片
 const skipLevelOfDetail = ref(false)
+// 动态 SSE，远处放宽误差减少加载
 const dynamicScreenSpaceError = ref(false)
+// 屏幕左下角显示瓦片数、请求数、FPS
 const showRenderingStats = ref(false)
+// 显示瓦片显存估算
 const showMemoryStats = ref(false)
 
 // ── Cesium 引用 ──
