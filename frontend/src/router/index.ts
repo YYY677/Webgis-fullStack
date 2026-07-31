@@ -1,6 +1,9 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
+import { getCesiumLessonTitle } from "@/pages/cesium-frontend-demo/cesium-learning-catalog";
 import { getToken } from "@/utils/localStorage";
+
+const cesiumLessonMeta = (path: string) => ({ title: getCesiumLessonTitle(path) });
 
 const routes: RouteRecordRaw[] = [
   {
@@ -78,7 +81,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "ol-backend-demo",
         name: "OlBackendDemo",
-        redirect: "/ol-backend-demo/basemap", 
+        redirect: "/ol-backend-demo/geoserver-load", 
         meta: { title: "全栈 OL Demo", icon: "Platform" },
         children: [
           {
@@ -125,92 +128,116 @@ const routes: RouteRecordRaw[] = [
       {
         path: "cesium-demo",
         name: "CesiumDemo",
-        redirect: "/cesium-demo/cesium-entry",
+        redirect: "/cesium-demo",
         meta: { title: "Cesium Demo", icon: "Camera" },
         children:[
+          {
+            path: "",
+            name: "CesiumLearningHome",
+            component: () => import("@/pages/cesium-frontend-demo/index.vue"),
+            meta: { title: "Cesium 学习首页" },
+          },
           {
             path: "cesium-entry",
             name: "CesiumEntry",
             component: () => import("@/pages/cesium-frontend-demo/01-cesium-entry.vue"),
-            meta: { title: "01-初识Cesium" },
+            meta: cesiumLessonMeta("/cesium-demo/cesium-entry"),
           },
           {
             path: "coordinates",
             name: "CesiumCoordinates",
             component: () => import("@/pages/cesium-frontend-demo/02-cesium-coordinates.vue"),
-            meta: { title: "02-坐标与方位角" },
+            meta: cesiumLessonMeta("/cesium-demo/coordinates"),
           },
           {
             path: "events",
             name: "CesiumEvents",
             component: () => import("@/pages/cesium-frontend-demo/03-cesium-events.vue"),
-            meta: { title: "03-事件监听" },
+            meta: cesiumLessonMeta("/cesium-demo/events"),
           },
           {
             path: "entity",
             name: "CesiumEntity",
             component: () => import("@/pages/cesium-frontend-demo/04-cesium-entity.vue"),
-            meta: { title: "04-Entity" },
+            meta: cesiumLessonMeta("/cesium-demo/entity"),
           },
           {
             path: "primitive",
             name: "CesiumPrimitive",
             component: () => import("@/pages/cesium-frontend-demo/05-cesium-primitive.vue"),
-            meta: { title: "05-Primitive" },
+            meta: cesiumLessonMeta("/cesium-demo/primitive"),
           },
           {
             path: "data",
             name: "CesiumData",
             component: () => import("@/pages/cesium-frontend-demo/06-cesium-data.vue"),
-            meta: { title: "06-数据加载" },
+            meta: cesiumLessonMeta("/cesium-demo/data"),
           },
           {
             path: "3dtiles",
             name: "Cesium3DTiles",
             component: () => import("@/pages/cesium-frontend-demo/07-cesium-3dtiles.vue"),
-            meta: { title: "07-3D Tiles深入" },
+            meta: cesiumLessonMeta("/cesium-demo/3dtiles"),
           },
           {
             path: "timeline",
             name: "CesiumTimeline",
             component: () => import("@/pages/cesium-frontend-demo/08-cesium-timeline.vue"),
-            meta: { title: "08-时间动态轨迹" },
+            meta: cesiumLessonMeta("/cesium-demo/timeline"),
           },
           {
             path: "draw-measure",
             name: "CesiumDrawMeasure",
             component: () => import("@/pages/cesium-frontend-demo/09-cesium-draw-measure.vue"),
-            meta: { title: "09-绘制与量算" },
+            meta: cesiumLessonMeta("/cesium-demo/draw-measure"),
           },
           {
             path: "terrain-analysis",
             name: "CesiumTerrainAnalysis",
             component: () => import("@/pages/cesium-frontend-demo/10-cesium-terrain-analysis.vue"),
-            meta: { title: "10-地形与剖面" },
+            meta: cesiumLessonMeta("/cesium-demo/terrain-analysis"),
           },
           {
             path: "material-effects",
             name: "CesiumMaterialEffects",
             component: () => import("@/pages/cesium-frontend-demo/11-cesium-material-effects.vue"),
-            meta: { title: "11-动态材质" },
+            meta: cesiumLessonMeta("/cesium-demo/material-effects"),
           },
           {
             path: "custom-shader",
             name: "CesiumCustomShader",
             component: () => import("@/pages/cesium-frontend-demo/12-cesium-custom-shader.vue"),
-            meta: { title: "12-CustomShader" },
+            meta: cesiumLessonMeta("/cesium-demo/custom-shader"),
           },
           {
             path: "custom-appearance",
             name: "CesiumCustomAppearance",
             component: () => import("@/pages/cesium-frontend-demo/13-cesium-custom-appearance.vue"),
-            meta: { title: "13-自定义 Appearance" },
+            meta: cesiumLessonMeta("/cesium-demo/custom-appearance"),
           },
           {
             path: "scene-environment",
             name: "CesiumSceneEnvironment",
             component: () => import("@/pages/cesium-frontend-demo/14-cesium-scene-environment.vue"),
-            meta: { title: "14-场景环境与出图" },
+            meta: cesiumLessonMeta("/cesium-demo/scene-environment"),
+          },
+          {
+            path: "layer-management",
+            name: "CesiumLayerManagement",
+            component: () => import("@/pages/cesium-frontend-demo/15-cesium-layer-management.vue"),
+            meta: cesiumLessonMeta("/cesium-demo/layer-management"),
+          },
+          {
+            path: "annotation-edit",
+            name: "CesiumAnnotationEdit",
+            component: () => import("@/pages/cesium-frontend-demo/16-cesium-annotation-edit.vue"),
+            meta: cesiumLessonMeta("/cesium-demo/annotation-edit"),
+          },
+          {
+            path: "performance-lifecycle",
+            name: "CesiumPerformanceLifecycle",
+            component: () => import("@/pages/cesium-frontend-demo/17-cesium-performance-lifecycle.vue"),
+            meta: cesiumLessonMeta("/cesium-demo/performance-lifecycle"),
           }
         ]
       }

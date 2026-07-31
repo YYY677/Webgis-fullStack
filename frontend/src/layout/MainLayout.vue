@@ -3,6 +3,7 @@ import { ref, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { setCssVar } from "@/utils/css"
 import { routes } from "@/router"
+import { cesiumLessons } from "@/pages/cesium-frontend-demo/cesium-learning-catalog"
 // 把 Store 的定义（蓝图/构造函数） 拉进来，此时内存里什么都没有。
 import { useAppStore } from "@/stores/app"
 import { useUserStore } from "@/stores/user"
@@ -12,12 +13,28 @@ const appStore = useAppStore() // “运行”这个工厂函数。如果只导�
 const userStore = useUserStore()
 
 const sidebarWidth = computed(() => appStore.sidebarOpened ? "220px" : "64px")
+const sidebarActivePath = computed(() => route.path)
 
 // 菜单 = 路由表 / 的子路由中 meta.hidden 不为 true 的那些
 const menuList = computed(() => {
   const root = routes.find(r => r.path === "/")
   const items = root?.children?.filter(r => !r.meta?.hidden) ?? []
   return items.map(r => {
+    // Cesium 章节的菜单、首页卡片和路由标题统一由 catalog.ts 管理，
+    // 因此这里不能直接复用通用的 r.children，避免出现顺序或标题不一致。
+    if (r.name === "CesiumDemo") {
+      return {
+        title: r.meta?.title as string,
+        icon: r.meta?.icon as string,
+        children: [
+          { path: "/cesium-demo", title: "Cesium 学习首页" },
+          ...cesiumLessons.map(lesson => ({
+            path: lesson.path,
+            title: lesson.title,
+          })),
+        ],
+      }
+    }
     if (!r.children) {
       // 叶子菜单（无子路由）
       return { path: "/" + r.path, title: r.meta?.title as string, icon: r.meta?.icon as string }
@@ -130,7 +147,7 @@ if (savedTheme === "dark") {
         router启用 Vue Router 模式，点击菜单项时会自动调用 router.push()，根据 index 属性进行路由跳转
       -->
       <el-menu
-        :default-active="route.path"
+        :default-active="sidebarActivePath"
         :collapse="!appStore.sidebarOpened"
         :router="true"
         class="sidebar-menu"
@@ -150,7 +167,9 @@ if (savedTheme === "dark") {
             </template>
             <!-- menu-item的index绑定路由路径，参与路由跳转 + 高亮匹配 -->
             <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
-              {{ child.title }}
+              <el-tooltip :content="child.title" placement="right" :show-after="250">
+                <span class="sidebar-menu-title">{{ child.title }}</span>
+              </el-tooltip>
             </el-menu-item>
           </el-sub-menu>
           <el-menu-item v-else :index="item.path">
@@ -185,7 +204,7 @@ if (savedTheme === "dark") {
               filter 是 JavaScript 的数组方法，用来筛选符合条件的元素。
               结合上面的路由例子，面包屑导航就是：用户管理 › 用户列表
             -->
-            <el-breadcrumb-item v-for="item in route.matched.filter(r => r.meta?.title)" :key="item.path">
+            <el-breadcrumb-item v-for="item in route.matched.filter(r => r.meta?.title)" :key="String(item.name || item.path)">
               {{ item.meta?.title }}
             </el-breadcrumb-item>
           </el-breadcrumb>
@@ -311,6 +330,13 @@ if (savedTheme === "dark") {
     min-height: 0;
     overflow-y: auto;
     border-right: none;
+
+    .sidebar-menu-title {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }
 
