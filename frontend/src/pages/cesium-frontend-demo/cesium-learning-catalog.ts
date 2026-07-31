@@ -113,21 +113,21 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     path: "/cesium-demo/layer-management",
     summary: "用前端图层树组织影像、数据源、Entity 与 3D Tiles。",
     api: "ImageryLayerCollection · DataSourceCollection · PrimitiveCollection",
-    thumbnail: "/cesium-data/lesson-thumbnails/placeholder.svg",
+    thumbnail: "/cesium-data/lesson-thumbnails/15-layer-management.png",
   },
   {
     title: "16-前端标绘编辑与 GeoJSON 导出",
     path: "/cesium-demo/annotation-edit",
     summary: "创建并编辑点线面，在浏览器中导出标准 GeoJSON。",
     api: "Entity · ScreenSpaceEventHandler · GeoJSON",
-    thumbnail: "/cesium-data/lesson-thumbnails/placeholder.svg",
+    thumbnail: "/cesium-data/lesson-thumbnails/16-annotation-edit.png",
   },
   {
     title: "17-性能优化与资源生命周期",
     path: "/cesium-demo/performance-lifecycle",
     summary: "用按需渲染、事件清理和销毁顺序治理前端场景。",
     api: "Scene.requestRenderMode · Viewer.destroy",
-    thumbnail: "/cesium-data/lesson-thumbnails/placeholder.svg",
+    thumbnail: "/cesium-data/lesson-thumbnails/17-performance-lifecycle.png",
   },
 ]
 
