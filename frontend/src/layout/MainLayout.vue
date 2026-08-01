@@ -3,7 +3,6 @@ import { ref, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { setCssVar } from "@/utils/css"
 import { routes } from "@/router"
-import { cesiumLessons } from "@/pages/cesium-frontend-demo/cesium-learning-catalog"
 // 把 Store 的定义（蓝图/构造函数） 拉进来，此时内存里什么都没有。
 import { useAppStore } from "@/stores/app"
 import { useUserStore } from "@/stores/user"
@@ -20,21 +19,6 @@ const menuList = computed(() => {
   const root = routes.find(r => r.path === "/")
   const items = root?.children?.filter(r => !r.meta?.hidden) ?? []
   return items.map(r => {
-    // Cesium 章节的菜单、首页卡片和路由标题统一由 catalog.ts 管理，
-    // 因此这里不能直接复用通用的 r.children，避免出现顺序或标题不一致。
-    if (r.name === "CesiumDemo") {
-      return {
-        title: r.meta?.title as string,
-        icon: r.meta?.icon as string,
-        children: [
-          { path: "/cesium-demo", title: "Cesium 学习首页" },
-          ...cesiumLessons.map(lesson => ({
-            path: lesson.path,
-            title: lesson.title,
-          })),
-        ],
-      }
-    }
     if (!r.children) {
       // 叶子菜单（无子路由）
       return { path: "/" + r.path, title: r.meta?.title as string, icon: r.meta?.icon as string }
@@ -44,7 +28,7 @@ const menuList = computed(() => {
       title: r.meta?.title as string,
       icon: r.meta?.icon as string,
       children: r.children.map(c => ({
-        path: "/" + r.path + "/" + c.path,
+        path: c.path ? `/${r.path}/${c.path}` : `/${r.path}`,
         title: c.meta?.title as string
       }))
     }

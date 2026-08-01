@@ -13,7 +13,9 @@ import java.util.*;
 /**
  * 空间分析 — JTS 几何运算 + pgRouting 最短路径
  * <p>
- * 所有几何输入输出格式为 WKT（EPSG:4326）。
+ * 所有几何输入输出格式均为 WKT。JTS 将坐标按平面坐标处理，不识别或转换坐标参考系；
+ * 调用方必须保证每次运算的输入处于同一投影坐标系。
+ * 当前 OL 页面中的常规分析使用 EPSG:3857，最短路径接口单独使用 EPSG:4326。
  */
 @Service
 public class SpatialAnalysisService {

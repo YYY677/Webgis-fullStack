@@ -157,6 +157,15 @@
   </div>
 </template>
 
+<script lang="ts">
+export type AnalysisResultMode = "normal" | "path"
+
+/** 常规 JTS 分析返回 EPSG:3857，pgRouting 从 PostGIS 返回 EPSG:4326。 */
+export function getResultDataProjection(mode: AnalysisResultMode): "EPSG:3857" | "EPSG:4326" {
+  return mode === "path" ? "EPSG:4326" : "EPSG:3857"
+}
+</script>
+
 <script setup lang="ts">
 /**
  * 06-spatial-analysis — 空间分析
@@ -498,7 +507,7 @@ async function doAnalysis() {
  *  @param mode 'normal' | 'path'
  *  @param resultIndex 指定哪个是结果（默认最后一个，-1 表示没有结果几何）
  */
-function drawResult(wkts: string[], mode: "normal" | "path" = "normal") {
+function drawResult(wkts: string[], mode: AnalysisResultMode = "normal") {
   cleanupResultLayer()
   if (!map.value) return
 
@@ -509,7 +518,7 @@ function drawResult(wkts: string[], mode: "normal" | "path" = "normal") {
     if (!wkt) return null
     try {
       return wktFormat.readFeature(wkt, {
-        dataProjection: "EPSG:3857",
+        dataProjection: getResultDataProjection(mode),
         featureProjection: "EPSG:3857",
       })
     } catch { return null }

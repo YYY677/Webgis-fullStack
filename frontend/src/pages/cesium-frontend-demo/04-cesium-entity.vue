@@ -113,6 +113,52 @@
           </div>
         </el-card>
 
+        <!-- ════════════ 卡片五：点聚合 ════════════ -->
+        <el-card shadow="never" class="panel-card">
+          <template #header>🔗 点聚合 — DataSource.clustering</template>
+
+          <p class="card-desc">
+            可视化聚合通过 <code>EntityCluster</code> 实现，将屏幕邻近的 Entity
+            合并为单个标记数字；无内置算法，判断仅依赖屏幕像素距离。
+          </p>
+
+          <div class="button-row">
+            <el-button size="small" :disabled="clusterActive" @click="generateClusterPoints">
+              生成 500 个随机点
+            </el-button>
+            <el-button size="small" :type="clusterEnabled ? 'primary' : 'default'"
+              :disabled="!clusterActive" @click="toggleClustering">
+              {{ clusterEnabled ? '关闭聚合' : '开启聚合' }}
+            </el-button>
+          </div>
+          <div class="toolbar-row">
+            <el-button size="small" type="danger" plain :disabled="!clusterActive"
+              @click="clearCluster">
+              清除聚合点
+            </el-button>
+          </div>
+
+          <div v-if="clusterActive" class="slider-row" style="margin-top: 8px;">
+            <label>像素范围</label>
+            <el-slider v-model="clusterPixelRange" :min="10" :max="120" :step="5"
+              @update:modelValue="updateClusterRange" />
+            <span class="slider-val">{{ clusterPixelRange }}px</span>
+          </div>
+
+          <div v-if="clusterActive" class="slider-row">
+            <label>聚合阈值</label>
+            <el-slider v-model="clusterMinSize" :min="1" :max="10" :step="1"
+              @update:modelValue="updateClusterMinSize" />
+            <span class="slider-val">{{ clusterMinSize }} 个</span>
+          </div>
+
+          <p class="card-desc" style="margin-top: 4px; margin-bottom: 0;">
+            ⚠️ <code>EntityCluster</code> 是 Cesium 唯一的官方聚类 API，仅对
+            Entity（Billboard / Label / Point）生效。Primitive 数据没有内置聚类，
+            海量 Primitive 场景需自行实现视域裁剪与点抽稀。
+          </p>
+        </el-card>
+
       </el-scrollbar>
     </div>
   </div>
@@ -133,6 +179,7 @@ import {
   VerticalOrigin,
   LabelStyle,
   Math as CesiumMath,
+  CustomDataSource,
 } from "cesium"
 import "cesium/Build/Cesium/Widgets/widgets.css"
 
@@ -166,6 +213,24 @@ let pointEntity: Entity | null = null
 let polygonEntity: Entity | null = null
 /** 当前正在编辑的 entity */
 const editingEntity = ref<Entity | null>(null)
+
+// ── 聚合 ──
+let clusterDataSource: CustomDataSource | null = null
+// 是否已生成聚合点数据源：未生成时无法开启聚合
+const clusterActive = ref(false)
+// 是否启用聚合：关闭时所有点显示单个标记，开启后屏幕邻近的点会被聚合为一个圆圈
+const clusterEnabled = ref(true)
+// 聚合像素范围：当两个点在屏幕上距离小于该值时，会被聚合为一个圆圈
+const clusterPixelRange = ref(30)
+// 聚合阈值：当聚合的点数量小于该值时，不显示聚合圆圈，而是显示单个点
+const clusterMinSize = ref(2)
+
+const CLUSTER_COLOR_STEPS = [
+  { num: 50, size: 30, color: "#e6a23c" },
+  { num: 30, size: 28, color: "#f56c6c" },
+  { num: 10, size: 26, color: "#67c23a" },
+  { num: 5, size: 24, color: "#1c86d1" },
+]
 
 // ── 工具 ──
 
@@ -445,6 +510,96 @@ function updateSize(val: number) {
 }
 
 // ══════════════════════════════════════════
+// 卡片五：点聚合
+// ══════════════════════════════════════════
+
+function generateClusterPoints() {
+  if (!viewer) return
+  // 清理旧数据
+  clearCluster()
+
+  clusterDataSource = new CustomDataSource("cluster-points")
+  // EntityCluster 是 DataSource 级别的聚合，不是 Entity 属性
+  clusterDataSource.clustering.enabled = true
+  clusterDataSource.clustering.pixelRange = clusterPixelRange.value
+  // minimumClusterSize 为 1，保证单个未聚合的点也有圆圈图标
+  // clusterDataSource.clustering.minimumClusterSize = 1
+
+  // 每次聚合状态变化时回调：用 point（彩色圆）+ label（数字）组合出分级标记，
+  // 全部是 Cesium 原生图形，无需 Canvas 绘制图片
+  clusterDataSource.clustering.clusterEvent.addEventListener(
+    (clusteredEntities, cluster) => {
+      const count = clusteredEntities.length
+      // 找到数量对应的颜色分级（数量超过 num 时使用该级）
+      const step = CLUSTER_COLOR_STEPS.find(s => count > s.num) ?? CLUSTER_COLOR_STEPS[CLUSTER_COLOR_STEPS.length - 1]
+
+      // 彩色圆底（Point 图形）
+      cluster.point.show = true
+      cluster.point.pixelSize = step.size
+      cluster.point.color = Color.fromCssColorString(step.color)
+      cluster.point.outlineColor = Color.WHITE
+      cluster.point.outlineWidth = 2
+      // 白色数字居中（Label 图形，默认 text 已是数量）
+      cluster.label.show = true
+      cluster.label.font = "bold 13px sans-serif"
+      cluster.label.fillColor = Color.WHITE
+      cluster.label.style = LabelStyle.FILL
+      cluster.label.verticalOrigin = VerticalOrigin.CENTER
+      cluster.label.pixelOffset = { x: -5, y: 0 } as any
+    },
+  )
+
+  const baseLon = 116.39
+  const baseLat = 39.91
+  const count = 500
+  for (let i = 0; i < count; i++) {
+    clusterDataSource.entities.add({
+      position: Cartesian3.fromDegrees(
+        baseLon + (Math.random() - 0.5) * 0.06,
+        baseLat + (Math.random() - 0.5) * 0.06,
+      ),
+      // 这里使用 billboard 作为单个点的样式，图片为自定义图标
+      billboard: {
+        image: "/icons/icon-1.png",
+        scale: 0.6,
+        verticalOrigin: VerticalOrigin.BOTTOM,
+      },
+    })
+  }
+
+  viewer.dataSources.add(clusterDataSource)
+  clusterActive.value = true
+  viewer.camera.flyTo({
+    destination: Cartesian3.fromDegrees(baseLon-0.02, baseLat, 12000),
+    orientation: { heading: 0, pitch: CesiumMath.toRadians(-90), roll: 0 },
+    duration: 1.0,
+  })
+}
+
+function toggleClustering() {
+  if (!clusterDataSource) return
+  clusterDataSource.clustering.enabled = !clusterDataSource.clustering.enabled
+  clusterEnabled.value = clusterDataSource.clustering.enabled
+}
+
+function updateClusterRange(val: number) {
+  if (clusterDataSource) clusterDataSource.clustering.pixelRange = val
+}
+
+function updateClusterMinSize(val: number) {
+  if (clusterDataSource) clusterDataSource.clustering.minimumClusterSize = val
+}
+
+function clearCluster() {
+  if (!viewer || !clusterDataSource) return
+  viewer.dataSources.remove(clusterDataSource, true)
+  clusterDataSource = null
+  clusterActive.value = false
+  clusterEnabled.value = false
+  resetToDefaultView()
+}
+
+// ══════════════════════════════════════════
 // 底图切换
 // ══════════════════════════════════════════
 
@@ -497,6 +652,11 @@ onUnmounted(() => {
   pointEntity = null
   polygonEntity = null
   editingEntity.value = null
+  // 清理聚合数据源
+  if (viewer && clusterDataSource) {
+    viewer.dataSources.remove(clusterDataSource, true)
+    clusterDataSource = null
+  }
   if (viewer) { viewer.destroy(); viewer = null }
 })
 </script>

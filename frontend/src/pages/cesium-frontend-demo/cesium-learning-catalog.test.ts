@@ -4,8 +4,8 @@ import {
 } from "./cesium-learning-catalog"
 
 describe("Cesium learning catalog", () => {
-  it("keeps all seventeen lessons in existing file order", () => {
-    expect(cesiumLessons).toHaveLength(17)
+  it("keeps all nineteen lessons in existing file order", () => {
+    expect(cesiumLessons).toHaveLength(19)
     expect(cesiumLessons.map((lesson) => lesson.path)).toEqual([
       "/cesium-demo/cesium-entry",
       "/cesium-demo/coordinates",
@@ -24,6 +24,8 @@ describe("Cesium learning catalog", () => {
       "/cesium-demo/layer-management",
       "/cesium-demo/annotation-edit",
       "/cesium-demo/performance-lifecycle",
+      "/cesium-demo/particle-system",
+      "/cesium-demo/clipping-flood",
     ])
   })
 
@@ -61,17 +63,26 @@ describe("Cesium learning catalog", () => {
       "/cesium-data/lesson-thumbnails/12-custom-shader.png",
       "/cesium-data/lesson-thumbnails/13-primitive-appearance.png",
       "/cesium-data/lesson-thumbnails/14-scene-environment.png",
-      "/cesium-data/lesson-thumbnails/placeholder.svg",
+      "/cesium-data/lesson-thumbnails/15-layer-management.png",
+      "/cesium-data/lesson-thumbnails/16-annotation-edit.png",
+      "/cesium-data/lesson-thumbnails/17-performance-lifecycle.png",
       "/cesium-data/lesson-thumbnails/placeholder.svg",
       "/cesium-data/lesson-thumbnails/placeholder.svg",
     ])
   })
 
   it("adds layer management, annotation editing, and lifecycle as consecutive front-end lessons", () => {
-    expect(cesiumLessons.slice(-3)).toMatchObject([
+    expect(cesiumLessons.slice(14, 17)).toMatchObject([
       { title: "15-图层体系与图层树管理", api: "ImageryLayerCollection · DataSourceCollection · PrimitiveCollection" },
       { title: "16-前端标绘编辑与 GeoJSON 导出", api: "Entity · ScreenSpaceEventHandler · GeoJSON" },
       { title: "17-性能优化与资源生命周期", api: "Scene.requestRenderMode · Viewer.destroy" },
+    ])
+  })
+
+  it("adds particle system and clipping as the final two lessons", () => {
+    expect(cesiumLessons.slice(-2)).toMatchObject([
+      { title: "18-粒子系统", api: "ParticleSystem · ParticleEmitter" },
+      { title: "19-裁剪与淹没分析", api: "ClippingPlaneCollection · CallbackProperty" },
     ])
   })
 })

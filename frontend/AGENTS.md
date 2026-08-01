@@ -48,7 +48,7 @@ Hash 路由，守卫检查 localStorage token 控制登录态。
 | `/dashboard` | 首页 |  |
 | `/demo/element-plus` | 组件示例 |  |
 | `/ol-frontend-demo/*` | 6 个页面 | 底图切换、基础工具、加载数据、图层控制、地图设置、echart图表使用 |
-| `/ol-backend-demo/*` | 6 个页面 | GeoServer 加载、WFS CRUD、空间编辑器、数据管理、样式管理、空间分析 |
+| `/ol-fullstack-demo/*` | 6 个页面 | GeoServer 加载、WFS CRUD、空间编辑器、数据管理、样式管理、空间分析 |
 | `/cesium-frontend-demo/*` | 8 个页面 | 初识Cesium、坐标与方位角、事件监听、Entity、Primitive、数据加载、3D Tiles深入、时间动态轨迹 |
 | `/:pathMatch(.*)` | 404 |  |
 
@@ -60,3 +60,4 @@ Hash 路由，守卫检查 localStorage token 控制登录态。
 - **Cesium 底图**：`ImageryLayer.fromWorldImagery()`，不用 `createWorldImageryAsync()`
 - **Cesium 地形**：1.142 用 `CesiumTerrainProvider.fromUrl()`，构造函数已不支持 `url` 参数
 - **图层清理**：`layer.set("_tag", "xxx")` 打标签，删除时遍历 `map.getLayers()` 按标签过滤，不用 `===` 引用比对
+- **单页小逻辑**：只被一个 Vue 页面使用的少量纯逻辑不要单独拆 TS 工具文件；若需 Vitest 回归测试，可在同一 SFC 的普通 `<script lang="ts">` 导出，并由 `<script setup>` 直接使用。

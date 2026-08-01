@@ -23,6 +23,8 @@ describe("Cesium nested routes", () => {
       "CesiumLayerManagement",
       "CesiumAnnotationEdit",
       "CesiumPerformanceLifecycle",
+      "CesiumParticleSystem",
+      "CesiumClippingFlood",
     ]))
   })
 
