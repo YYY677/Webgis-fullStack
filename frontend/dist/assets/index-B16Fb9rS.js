@@ -1,1 +1,0 @@
-import{L as e}from"./LearningCatalogHome-JA9hY7Ee.js";import{d as o,n,g as s,o as r,G as t}from"./index-Dz6SQmg0.js";import"./_plugin-vue_export-helper-DlAUqK2U.js";const _=o({__name:"index",setup(a){return(i,l)=>(r(),n(e,{eyebrow:"OPENLAYERS FRONTEND LAB",title:"静态 OL Demo",description:"从底图、图层到交互与数据可视化，所有示例都在浏览器端完成。",lessons:s(t)},null,8,["lessons"]))}});export{_ as default};
