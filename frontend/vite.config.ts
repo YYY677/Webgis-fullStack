@@ -56,6 +56,8 @@ function mockPlugin(): Plugin {
 }
 
 export default defineConfig({
+  base: "/Webgis-fullStack/",
+  
   resolve: {
     alias: {
       "@": resolve(__dirname, "src")
