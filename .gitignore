@@ -11,7 +11,7 @@ target/
 
 # ── Node / Vite ──
 node_modules/
-dist/
+# dist/
 dist-ssr/
 *.tsbuildinfo
 .eslintcache

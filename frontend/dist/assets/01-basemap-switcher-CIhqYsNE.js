@@ -1,0 +1,3 @@
+import{u as s,B as a,a as o}from"./BasemapSwitcher-UqSTSycc.js";import{d as t,o as r,c,e as n,b as m,g as p}from"./index-Dz6SQmg0.js";import{_ as i}from"./_plugin-vue_export-helper-DlAUqK2U.js";import"./Polygon-CYCrQap5.js";const _={id:"basemap-demo",class:"map-container",style:{position:"relative"}},l={class:"map-controls-right"},d=t({__name:"01-basemap-switcher",setup(B){const{setBaseLayer:e}=s("basemap-demo",{layers:[a[0].create()],centerLonLat:[110,35],view:{zoom:5}});return console.log(`BASEMAP_LIST[0].create()
+`,a[0].create()),console.log(`setBaseLayer
+`,e),(f,u)=>(r(),c("div",_,[n("div",l,[m(o,{"set-base-layer":p(e)},null,8,["set-base-layer"])])]))}}),S=i(d,[["__scopeId","data-v-1c505e2a"]]);export{S as default};

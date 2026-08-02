@@ -1,0 +1,1 @@
+import{_ as r}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as t,e as o,o as s}from"./index-Dz6SQmg0.js";const c={},n={class:"app-container"};function a(l,e){return s(),t("div",n,[...e[0]||(e[0]=[o("h2",null,"欢迎使用 WebGIS 全栈平台",-1),o("p",{style:{color:"var(--el-text-color-secondary)"}},"使用侧边栏导航访问地图功能和组件示例。",-1)])])}const i=r(c,[["render",a]]);export{i as default};

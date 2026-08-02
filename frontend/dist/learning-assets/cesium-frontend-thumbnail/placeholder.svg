@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Cesium lesson placeholder">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12294c" /><stop offset="1" stop-color="#071425" /></linearGradient>
+    <radialGradient id="glow" cx="72%" cy="30%" r="55%"><stop offset="0" stop-color="#3d92e5" stop-opacity=".72" /><stop offset="1" stop-color="#3d92e5" stop-opacity="0" /></radialGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#background)" /><rect width="1280" height="720" fill="url(#glow)" />
+  <circle cx="875" cy="365" r="210" fill="none" stroke="#78b7ed" stroke-opacity=".62" stroke-width="2" /><ellipse cx="875" cy="365" rx="210" ry="76" fill="none" stroke="#78b7ed" stroke-opacity=".4" stroke-width="2" /><path d="M665 365h420M875 155v420" stroke="#78b7ed" stroke-opacity=".28" stroke-width="2" />
+  <text x="112" y="304" fill="#eaf5ff" font-family="Arial, sans-serif" font-size="54" font-weight="700">CESIUM</text><text x="112" y="364" fill="#90c8f7" font-family="Arial, sans-serif" font-size="27" letter-spacing="6">NEW LESSON</text><text x="112" y="430" fill="#bdd3e7" font-family="Arial, sans-serif" font-size="22">Replace with your own screenshot</text>
+</svg>
