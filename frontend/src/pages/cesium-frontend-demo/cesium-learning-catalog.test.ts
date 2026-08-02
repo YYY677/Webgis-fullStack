@@ -34,7 +34,7 @@ describe("Cesium learning catalog", () => {
       {
         title: "11-Entity 动态材质",
         api: "Entity · MaterialProperty",
-        thumbnail: "/cesium-data/lesson-thumbnails/11-entity-material.png",
+        thumbnail: "/learning-assets/cesium-frontend-thumbnail/11-entity-material.png",
       },
       {
         title: "12-Model 与 3D Tiles 的 CustomShader",
@@ -49,25 +49,25 @@ describe("Cesium learning catalog", () => {
 
   it("maps every lesson to its generated local thumbnail", () => {
     expect(cesiumLessons.map((lesson) => lesson.thumbnail)).toEqual([
-      "/cesium-data/lesson-thumbnails/01-viewer-scene.png",
-      "/cesium-data/lesson-thumbnails/02-coordinates-camera.png",
-      "/cesium-data/lesson-thumbnails/03-screen-space-events.png",
-      "/cesium-data/lesson-thumbnails/04-entity-graphics.png",
-      "/cesium-data/lesson-thumbnails/05-primitive-geometry.png",
-      "/cesium-data/lesson-thumbnails/06-data-3d.png",
-      "/cesium-data/lesson-thumbnails/07-3dtileset.png",
-      "/cesium-data/lesson-thumbnails/08-clock-trajectory.png",
-      "/cesium-data/lesson-thumbnails/09-entity-draw-measure.png",
-      "/cesium-data/lesson-thumbnails/10-terrain-analysis.png",
-      "/cesium-data/lesson-thumbnails/11-entity-material.png",
-      "/cesium-data/lesson-thumbnails/12-custom-shader.png",
-      "/cesium-data/lesson-thumbnails/13-primitive-appearance.png",
-      "/cesium-data/lesson-thumbnails/14-scene-environment.png",
-      "/cesium-data/lesson-thumbnails/15-layer-management.png",
-      "/cesium-data/lesson-thumbnails/16-annotation-edit.png",
-      "/cesium-data/lesson-thumbnails/17-performance-lifecycle.png",
-      "/cesium-data/lesson-thumbnails/placeholder.svg",
-      "/cesium-data/lesson-thumbnails/placeholder.svg",
+      "/learning-assets/cesium-frontend-thumbnail/01-viewer-scene.png",
+      "/learning-assets/cesium-frontend-thumbnail/02-coordinates-camera.png",
+      "/learning-assets/cesium-frontend-thumbnail/03-screen-space-events.png",
+      "/learning-assets/cesium-frontend-thumbnail/04-entity-graphics.png",
+      "/learning-assets/cesium-frontend-thumbnail/05-primitive-geometry.png",
+      "/learning-assets/cesium-frontend-thumbnail/06-data-3d.png",
+      "/learning-assets/cesium-frontend-thumbnail/07-3dtileset.png",
+      "/learning-assets/cesium-frontend-thumbnail/08-clock-trajectory.png",
+      "/learning-assets/cesium-frontend-thumbnail/09-entity-draw-measure.png",
+      "/learning-assets/cesium-frontend-thumbnail/10-terrain-analysis.png",
+      "/learning-assets/cesium-frontend-thumbnail/11-entity-material.png",
+      "/learning-assets/cesium-frontend-thumbnail/12-custom-shader.png",
+      "/learning-assets/cesium-frontend-thumbnail/13-primitive-appearance.png",
+      "/learning-assets/cesium-frontend-thumbnail/14-scene-environment.png",
+      "/learning-assets/cesium-frontend-thumbnail/15-layer-management.png",
+      "/learning-assets/cesium-frontend-thumbnail/16-annotation-edit.png",
+      "/learning-assets/cesium-frontend-thumbnail/17-performance-lifecycle.png",
+      "/learning-assets/cesium-frontend-thumbnail/18.png",
+      "/learning-assets/cesium-frontend-thumbnail/19.png",
     ])
   })
 

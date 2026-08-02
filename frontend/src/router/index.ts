@@ -61,10 +61,10 @@ const routes: RouteRecordRaw[] = [
 
 const router = createRouter({ history: createWebHashHistory(), routes })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to) => {
   const token = getToken()
-  if (to.path === "/login") token ? next("/") : next()
-  else token ? next() : next("/login")
+  if (to.path === "/login") return token ? "/" : true
+  return token ? true : "/login"
 })
 
 export default router

@@ -59,3 +59,39 @@ const r = Matrix4.fromRotation(rMat3, new Matrix4())
 - 有样式时做高亮，除非一直不清除，否则无法优雅恢复
 
 **结论**：无样式时用 `feature.color` 做高亮没问题（WHITE = 默认）。有样式时想要高亮应改用 `PostProcessStage` 描边，或不做高亮只看属性。
+
+## 8. 关闭裁剪时 `clippingPlanes = undefined` 报 `Cannot read properties of undefined (reading '_target')`
+
+关闭 3D Tiles 剖面（或 Globe 裁剪）时，若直接赋 `undefined` 会崩溃：
+
+```ts
+tileset.clippingPlanes = undefined  // ❌ 渲染停止：reading '_target'
+```
+
+**根因**（Cesium 1.142 源码）：`ClippingPlaneCollection.setOwner` 在赋新值时**立即 destroy 旧 collection**（`owner[key] = owner[key] && owner[key].destroy()`）。但 Model 的 draw command uniformMap 闭包仍持有旧 collection 引用，下一帧渲染时 `model_clippingPlanes` uniform 读 `clippingPlanes.texture` → 对象已销毁返回 undefined → `gl.bindTexture(v._target, ...)` 崩溃（createUniform.js 无空值保护）。
+
+**解决**：关闭时只禁用，不销毁：
+
+```ts
+if (collection) collection.enabled = false  // ✅ 保留对象引用，渲染帧安全
+```
+
+页面卸载时同样先 `enabled = false` 再 `viewer.destroy()`。collection 最终随 viewer 销毁。
+
+## 9. 建筑剖面（ClippingPlane）与"模型压平"是两回事
+
+参考项目 `3.1.7、模型压平` 用 CustomShader 把建筑压扁（挖填方），**不是** ClippingPlane。真正的 3D Tiles 剖面：
+
+```ts
+tileset.clippingPlanes = new ClippingPlaneCollection({
+  planes: [
+    new ClippingPlane(new Cartesian3(0, -1, 0), 15), // 模型局部坐标，Y 通常为北
+    new ClippingPlane(new Cartesian3(-1, 0, 0), 10),
+  ],
+  edgeWidth: 1.0,
+  edgeColor: Color.YELLOW,
+})
+clipCollection.unionClippingRegions = true // 并集：任一平面内即裁剪
+```
+
+本质：GPU 片元着色器 `discard` 掉 `n·p + distance ≤ 0` 的片元，不改模型数据、不增加顶点，对 tileset 属性无要求（`tiles-buildings` 白模直接可用）。`unionClippingRegions = true` 取并集（两个方向都切），默认 false 取交集。

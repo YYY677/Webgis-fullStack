@@ -9,5 +9,8 @@
 - [OL 对象 ref 禁用规则](ol-ref-pattern.md) — OL 对象统一用 shallowRef 或 let，禁用 ref
 - [Cesium 底图加载 API 选择](cesium-imagery-layer-pattern.md) — 默认底图用 ImageryLayer.fromWorldImagery()，工厂接口用 activate(viewer) 而非 create() => ImageryProvider
 - [Cesium 地形 API 版本变迁](cesium-terrain-provider-evolution.md) — Cesium 1.142 用 CesiumTerrainProvider.fromUrl() 而非构造函数传 url
-- [3D Tiles 常见坑](cesium-3dtiles-pitfalls.md) — 响应式变量、getPropertyIds、modelMatrix 裁剪、Matrix4 版本差异
+- [3D Tiles 常见坑](cesium-3dtiles-pitfalls.md) — 响应式变量、getPropertyIds、modelMatrix 裁剪、Matrix4 版本差异、关闭裁剪 _target 报错、建筑剖面本质
 - [Cesium 相机姿态滑块](cesium-camera-orientation.md) — Roll 回读范围归一化；避开近垂直 Pitch 下 Heading/Roll 的欧拉角耦合
+- [Cesium 粒子系统常见坑](cesium-particle-pitfalls.md) — 粒子不显示三要素：时钟未动画、尺寸过小、地形深度剔除
+- [地形开挖（Globe 裁剪）](cesium-globe-clipping-excavation.md) — 多边形竖直平面围坑算法 + "切掉上半球"错误教训
+- [Cesium GeoJSON 多面要素映射](cesium-geojson-entity-mapping.md) — MultiPolygon 会拆分 Entity；按业务键分组高亮，并额外绘制贴地边界

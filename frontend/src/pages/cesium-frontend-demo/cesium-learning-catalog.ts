@@ -12,7 +12,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./01-cesium-entry.vue"),
     summary: "创建 Viewer，配置场景与基础控件。",
     api: "Viewer · Scene",
-    thumbnail: "/cesium-data/lesson-thumbnails/01-viewer-scene.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/01-viewer-scene.png",
   },
   {
     routeName: "CesiumCoordinates",
@@ -21,7 +21,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./02-cesium-coordinates.vue"),
     summary: "在经纬度、笛卡尔坐标与相机方位之间转换。",
     api: "Cartesian3 · Camera",
-    thumbnail: "/cesium-data/lesson-thumbnails/02-coordinates-camera.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/02-coordinates-camera.png",
   },
   {
     routeName: "CesiumEvents",
@@ -30,7 +30,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./03-cesium-events.vue"),
     summary: "响应鼠标输入并获取场景交互结果。",
     api: "ScreenSpaceEventHandler",
-    thumbnail: "/cesium-data/lesson-thumbnails/03-screen-space-events.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/03-screen-space-events.png",
   },
   {
     routeName: "CesiumEntity",
@@ -39,7 +39,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./04-cesium-entity.vue"),
     summary: "用高层对象描述点、线、面与样式，含 EntityCluster 点聚合。",
     api: "Entity · Graphics · EntityCluster",
-    thumbnail: "/cesium-data/lesson-thumbnails/04-entity-graphics.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/04-entity-graphics.png",
   },
   {
     routeName: "CesiumPrimitive",
@@ -48,7 +48,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./05-cesium-primitive.vue"),
     summary: "理解 GeometryInstance 与 Primitive 的渲染组织。",
     api: "Primitive · GeometryInstance",
-    thumbnail: "/cesium-data/lesson-thumbnails/05-primitive-geometry.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/05-primitive-geometry.png",
   },
   {
     routeName: "CesiumData",
@@ -57,7 +57,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./06-cesium-data.vue"),
     summary: "加载 GeoJSON、CZML、glTF 模型和三维瓦片。",
     api: "DataSource · Model · Cesium3DTileset",
-    thumbnail: "/cesium-data/lesson-thumbnails/06-data-3d.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/06-data-3d.png",
   },
   {
     routeName: "Cesium3DTiles",
@@ -66,7 +66,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./07-cesium-3dtiles.vue"),
     summary: "浏览大规模三维瓦片，控制样式、拾取和性能。",
     api: "Cesium3DTileset · Cesium3DTileStyle",
-    thumbnail: "/cesium-data/lesson-thumbnails/07-3dtileset.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/07-3dtileset.png",
   },
   {
     routeName: "CesiumTimeline",
@@ -75,7 +75,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./08-cesium-timeline.vue"),
     summary: "让时钟驱动模型、轨迹和相机跟随。",
     api: "Clock · SampledPositionProperty",
-    thumbnail: "/cesium-data/lesson-thumbnails/08-clock-trajectory.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/08-clock-trajectory.png",
   },
   {
     routeName: "CesiumDrawMeasure",
@@ -84,7 +84,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./09-cesium-draw-measure.vue"),
     summary: "交互生成 Entity，并完成距离与面积量算。",
     api: "Entity · ScreenSpaceEventHandler",
-    thumbnail: "/cesium-data/lesson-thumbnails/09-entity-draw-measure.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/09-entity-draw-measure.png",
   },
   {
     routeName: "CesiumTerrainAnalysis",
@@ -93,7 +93,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./10-cesium-terrain-analysis.vue"),
     summary: "对地形进行高程、剖面、通视和坡度分析。",
     api: "sampleTerrainMostDetailed · Cartographic",
-    thumbnail: "/cesium-data/lesson-thumbnails/10-terrain-analysis.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/10-terrain-analysis.png",
   },
   {
     routeName: "CesiumMaterialEffects",
@@ -102,7 +102,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./11-cesium-material-effects.vue"),
     summary: "通过 Entity 的 material 属性构建流光、动态墙与扩散效果。",
     api: "Entity · MaterialProperty",
-    thumbnail: "/cesium-data/lesson-thumbnails/11-entity-material.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/11-entity-material.png",
   },
   {
     routeName: "CesiumCustomShader",
@@ -111,7 +111,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./12-cesium-custom-shader.vue"),
     summary: "为 glTF 模型和三维瓦片注入自定义着色逻辑。",
     api: "CustomShader · Model · Cesium3DTileset",
-    thumbnail: "/cesium-data/lesson-thumbnails/12-custom-shader.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/12-custom-shader.png",
   },
   {
     routeName: "CesiumCustomAppearance",
@@ -120,7 +120,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./13-cesium-custom-appearance.vue"),
     summary: "从几何属性到 GLSL，控制 Primitive 的渲染入口。",
     api: "Primitive · Appearance",
-    thumbnail: "/cesium-data/lesson-thumbnails/13-primitive-appearance.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/13-primitive-appearance.png",
   },
   {
     routeName: "CesiumSceneEnvironment",
@@ -129,7 +129,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./14-cesium-scene-environment.vue"),
     summary: "控制天空、雾效、场景模式与画布导出。",
     api: "Scene · SkyBox · Canvas",
-    thumbnail: "/cesium-data/lesson-thumbnails/14-scene-environment.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/14-scene-environment.png",
   },
   {
     routeName: "CesiumLayerManagement",
@@ -138,7 +138,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./15-cesium-layer-management.vue"),
     summary: "用前端图层树组织影像、数据源、Entity 与 3D Tiles。",
     api: "ImageryLayerCollection · DataSourceCollection · PrimitiveCollection",
-    thumbnail: "/cesium-data/lesson-thumbnails/15-layer-management.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/15-layer-management.png",
   },
   {
     routeName: "CesiumAnnotationEdit",
@@ -147,7 +147,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./16-cesium-annotation-edit.vue"),
     summary: "创建并编辑点线面，在浏览器中导出标准 GeoJSON。",
     api: "Entity · ScreenSpaceEventHandler · GeoJSON",
-    thumbnail: "/cesium-data/lesson-thumbnails/16-annotation-edit.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/16-annotation-edit.png",
   },
   {
     routeName: "CesiumPerformanceLifecycle",
@@ -156,7 +156,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./17-cesium-performance-lifecycle.vue"),
     summary: "用按需渲染、事件清理和销毁顺序治理前端场景。",
     api: "Scene.requestRenderMode · Viewer.destroy",
-    thumbnail: "/cesium-data/lesson-thumbnails/17-performance-lifecycle.png",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/17-performance-lifecycle.png",
   },
   {
     routeName: "CesiumParticleSystem",
@@ -165,7 +165,7 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./18-cesium-particle-system.vue"),
     summary: "火焰、烟雾、爆炸等粒子效果与四种内置发射器。",
     api: "ParticleSystem · ParticleEmitter",
-    thumbnail: "/cesium-data/lesson-thumbnails/placeholder.svg",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/18.png",
   },
   {
     routeName: "CesiumClippingFlood",
@@ -174,6 +174,6 @@ export const cesiumLessons: CesiumCatalogLesson[] = [
     component: () => import("./19-cesium-clipping-flood.vue"),
     summary: "裁剪平面透视地下与建筑剖面，交互式淹没模拟。",
     api: "ClippingPlaneCollection · CallbackProperty",
-    thumbnail: "/cesium-data/lesson-thumbnails/placeholder.svg",
+    thumbnail: "/learning-assets/cesium-frontend-thumbnail/19.png",
   },
 ]
