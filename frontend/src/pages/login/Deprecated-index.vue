@@ -1,3 +1,4 @@
+<!-- Deprecated：路由已改用 LoginAtlas.vue；保留此旧登录页仅供学习和对照。 -->
 <script lang="ts" setup>
 import { ref, reactive } from "vue"
 import { useRouter, useRoute } from "vue-router"
