@@ -23,10 +23,10 @@ const sidebarWidth = computed(() => (isCompactViewport.value || !appStore.sideba
 const sidebarActivePath = computed(() => route.path)
 type AtlasTheme = "night" | "day"
 
-// `atlas-theme` 是新主题开关；首次使用默认夜间主题，并兼容旧的 `theme=light` 选择。
+// `atlas-theme` 是新主题开关；首次使用默认白日主题，用户主动选择后再保存偏好。
 const savedTheme = localStorage.getItem("atlas-theme") as AtlasTheme | null
-// 默认黑色主题, 旧的 `theme=light` 选择会被视为白日主题，其他值或缺省都为夜间主题。
-const isDayTheme = ref(savedTheme === "day" || (!savedTheme && localStorage.getItem("theme") === "light"))
+// 只有明确保存为 night 时才显示夜间；没有记录时即为白日默认值。
+const isDayTheme = ref(savedTheme !== "night")
 const isThemeTransitioning = ref(false)
 const searchVisible = ref(false)
 const searchKeyword = ref("")
