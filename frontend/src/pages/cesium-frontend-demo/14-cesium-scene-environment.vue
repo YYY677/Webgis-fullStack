@@ -72,6 +72,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
+import { publicUrl } from "@/utils/public-url"
 
 type LocalSkyBoxMode = "tycho" | "classic" | "av9"
 type SkyBoxMode = "default" | LocalSkyBoxMode | "none"
@@ -89,19 +90,19 @@ const SKY_BOX_SOURCES: Record<LocalSkyBoxMode, SkyBoxSources> = {
   // Cesium 的 SkyBox API 固定使用 positive/negative X、Y、Z 这六个 key，不能改成 front、left 等名字。
   // Tycho 与 Cesium 内置默认天空使用同源贴图；保留它是为了演示“本地文件 SkyBox”的写法。
   tycho: {
-    positiveX: "/cesium-data/skybox/tycho2t3_80_px.jpg", negativeX: "/cesium-data/skybox/tycho2t3_80_mx.jpg",
-    positiveY: "/cesium-data/skybox/tycho2t3_80_py.jpg", negativeY: "/cesium-data/skybox/tycho2t3_80_my.jpg",
-    positiveZ: "/cesium-data/skybox/tycho2t3_80_pz.jpg", negativeZ: "/cesium-data/skybox/tycho2t3_80_mz.jpg",
+    positiveX: publicUrl("cesium-data/skybox/tycho2t3_80_px.jpg"), negativeX: publicUrl("cesium-data/skybox/tycho2t3_80_mx.jpg"),
+    positiveY: publicUrl("cesium-data/skybox/tycho2t3_80_py.jpg"), negativeY: publicUrl("cesium-data/skybox/tycho2t3_80_my.jpg"),
+    positiveZ: publicUrl("cesium-data/skybox/tycho2t3_80_pz.jpg"), negativeZ: publicUrl("cesium-data/skybox/tycho2t3_80_mz.jpg"),
   },
   classic: {
-    positiveX: "/cesium-data/skybox/Right.jpg", negativeX: "/cesium-data/skybox/Left.jpg",
-    positiveY: "/cesium-data/skybox/Up.jpg", negativeY: "/cesium-data/skybox/Down.jpg",
-    positiveZ: "/cesium-data/skybox/Front.jpg", negativeZ: "/cesium-data/skybox/Back.jpg",
+    positiveX: publicUrl("cesium-data/skybox/Right.jpg"), negativeX: publicUrl("cesium-data/skybox/Left.jpg"),
+    positiveY: publicUrl("cesium-data/skybox/Up.jpg"), negativeY: publicUrl("cesium-data/skybox/Down.jpg"),
+    positiveZ: publicUrl("cesium-data/skybox/Front.jpg"), negativeZ: publicUrl("cesium-data/skybox/Back.jpg"),
   },
   av9: {
-    positiveX: "/cesium-data/skybox/rightav9.jpg", negativeX: "/cesium-data/skybox/leftav9.jpg",
-    positiveY: "/cesium-data/skybox/topav9.jpg", negativeY: "/cesium-data/skybox/bottomav9.jpg",
-    positiveZ: "/cesium-data/skybox/frontav9.jpg", negativeZ: "/cesium-data/skybox/backav9.jpg",
+    positiveX: publicUrl("cesium-data/skybox/rightav9.jpg"), negativeX: publicUrl("cesium-data/skybox/leftav9.jpg"),
+    positiveY: publicUrl("cesium-data/skybox/topav9.jpg"), negativeY: publicUrl("cesium-data/skybox/bottomav9.jpg"),
+    positiveZ: publicUrl("cesium-data/skybox/frontav9.jpg"), negativeZ: publicUrl("cesium-data/skybox/backav9.jpg"),
   },
 }
 

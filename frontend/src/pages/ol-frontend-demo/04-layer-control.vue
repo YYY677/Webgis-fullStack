@@ -15,6 +15,7 @@ import { BASEMAP_LIST } from "@/utils/basemaps"
 import BasemapSwitcher from "@/components/BasemapSwitcher.vue"
 import BasicToolBox from "@/components/BasicToolBox.vue"
 import LayerControl from "@/components/LayerControl.vue"
+import { publicUrl } from "@/utils/public-url"
 import type { LayerInfo } from "@/components/LayerControl.vue"
 // OL 模块引入
 import GeoJSON from "ol/format/GeoJSON"
@@ -197,15 +198,15 @@ onMounted(async () => {
   const m = map.value! // 唯一的 !，后续用 m 不用再 ?./!
 
   // 加载城市点数据
-  const cityLayer = await loadGeoJSON(m, "/test_data/cities.geojson", cityStyle, 10)
+  const cityLayer = await loadGeoJSON(m, publicUrl("test_data/cities.geojson"), cityStyle, 10)
   layerInfos.value.push({ id: "cities", name: "省会城市", type: "vector", layer: cityLayer })
 
   // 加载重庆县域边界
-  const countyLayer = await loadGeoJSON(m, "/test_data/chongqing_county_border.geojson", countyStyle, 5)
+  const countyLayer = await loadGeoJSON(m, publicUrl("test_data/chongqing_county_border.geojson"), countyStyle, 5)
   layerInfos.value.push({ id: "county", name: "重庆县域边界", type: "vector", layer: countyLayer })
 
   // 加载大学热力图
-  const { layer: heatmapLayer } = await loadHeatmap(m, "/test_data/university.geojson", "")
+  const { layer: heatmapLayer } = await loadHeatmap(m, publicUrl("test_data/university.geojson"), "")
   layerInfos.value.push({ id: "university", name: "大学热力图", type: "vector", layer: heatmapLayer })
 
   // 大学名称弹窗（OL Overlay：浮在地图上的 DOM 元素）

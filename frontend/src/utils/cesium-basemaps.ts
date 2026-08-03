@@ -35,6 +35,7 @@ import {
   GeographicTilingScheme,
 } from "cesium"
 import type { Viewer } from "cesium"
+import { publicUrl } from "@/utils/public-url"
 
 // ── 类型 ──────────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ export const CESIUM_BASEMAP_LIST: CesiumBasemapItem[] = [
       clearLayers(viewer)
       viewer.imageryLayers.addImageryProvider(
         new SingleTileImageryProvider({
-          url: "/cesium-data/world_b.jpg",
+          url: publicUrl("cesium-data/world_b.jpg"),
           tileWidth: 8176,  // world_b.jpg 实际像素宽
           tileHeight: 4032, // world_b.jpg 实际像素高
         })

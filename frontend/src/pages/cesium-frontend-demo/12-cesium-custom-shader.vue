@@ -70,6 +70,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
+import { publicUrl } from "@/utils/public-url"
 
 // 这里切换的是同一份模型的“材质修改策略”，不是重新创建另一种几何。
 type ShaderEffect = "none" | "gradient" | "scan"
@@ -255,14 +256,14 @@ async function loadScene() {
   if (!viewer) return
   const [loadedModel, loadedTileset] = await Promise.all([
     Model.fromGltfAsync({
-      url: "/cesium-data/models/737/scene.gltf",
+      url: publicUrl("cesium-data/models/737/scene.gltf"),
       modelMatrix: Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(116.44, 39.93, 800)),
       scale: 10,
       minimumPixelSize: 80,
     }),
     // 该 tileset 的 tileset.json 已带有地理定位变换，不能再额外套 ENU modelMatrix，
     // 否则会把整套建筑平移到错误位置。
-    Cesium3DTileset.fromUrl("/cesium-data/tiles-buildings/tileset.json"),
+    Cesium3DTileset.fromUrl(publicUrl("cesium-data/tiles-buildings/tileset.json")),
   ])
   model = viewer.scene.primitives.add(loadedModel)
   tileset = viewer.scene.primitives.add(loadedTileset)

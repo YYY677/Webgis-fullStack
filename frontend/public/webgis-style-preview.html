@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGIS Atlas · Style Preview</title>
+  <style>
+    :root {
+      --ink: #07111f;
+      --ink-2: #0d1b2d;
+      --panel: rgba(15, 32, 52, .86);
+      --line: rgba(136, 191, 220, .22);
+      --muted: #8ea8bb;
+      --text: #eaf5fb;
+      --cyan: #55d6ff;
+      --amber: #f2b86b;
+      --green: #68e0ae;
+      --shadow: 0 24px 80px rgba(0, 0, 0, .36);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background: var(--ink);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--ink); }
+    button, input { font: inherit; }
+    .preview { padding: 28px; display: grid; gap: 28px; background:
+      radial-gradient(circle at 10% 0%, rgba(85, 214, 255, .12), transparent 32%),
+      radial-gradient(circle at 100% 100%, rgba(242, 184, 107, .08), transparent 28%), var(--ink); }
+    .eyebrow { color: var(--cyan); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
+    .sheet-title { display: flex; align-items: end; justify-content: space-between; gap: 24px; max-width: 1440px; width: 100%; margin: auto; }
+    .sheet-title h1 { margin: 5px 0 0; font-size: clamp(22px, 3vw, 36px); letter-spacing: -.04em; }
+    .sheet-title p { margin: 0; color: var(--muted); font-size: 13px; max-width: 420px; line-height: 1.6; }
+    .screens { width: 100%; max-width: 1440px; margin: auto; display: grid; grid-template-columns: minmax(300px, .78fr) minmax(560px, 1.22fr); gap: 20px; }
+    .screen { position: relative; min-height: 650px; overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: var(--ink-2); box-shadow: var(--shadow); }
+    .screen::before { content: ""; position: absolute; inset: 0; opacity: .36; pointer-events: none; background-image: linear-gradient(rgba(85, 214, 255, .12) 1px, transparent 1px), linear-gradient(90deg, rgba(85, 214, 255, .12) 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(circle at center, #000, transparent 80%); }
+    .screen::after { content: ""; position: absolute; width: 460px; height: 460px; right: -120px; bottom: -140px; border: 1px solid rgba(85, 214, 255, .26); border-radius: 50%; box-shadow: 0 0 0 28px rgba(85, 214, 255, .035), 0 0 0 58px rgba(85, 214, 255, .025); pointer-events: none; }
+    .login-screen { display: grid; align-content: center; padding: clamp(26px, 5vw, 70px); }
+    .brand-mark { width: 50px; height: 50px; display: grid; place-items: center; border: 1px solid rgba(85, 214, 255, .65); border-radius: 15px; color: var(--cyan); box-shadow: 0 0 30px rgba(85, 214, 255, .16); }
+    .brand-mark svg { width: 28px; }
+    .login-copy { position: relative; z-index: 1; margin: 28px 0 34px; }
+    .login-copy h2 { margin: 8px 0 12px; font-size: clamp(30px, 4vw, 48px); line-height: 1.02; letter-spacing: -.06em; }
+    .login-copy p { max-width: 300px; margin: 0; color: var(--muted); line-height: 1.7; font-size: 14px; }
+    .login-card { position: relative; z-index: 1; padding: 20px; border: 1px solid rgba(202, 230, 243, .28); border-radius: 18px; background: rgba(242, 248, 251, .96); color: var(--ink); }
+    .login-card label { display: block; margin-bottom: 8px; color: #547081; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .login-card input { width: 100%; height: 42px; margin-bottom: 14px; padding: 0 12px; border: 1px solid #cbdce4; border-radius: 9px; outline: 0; color: var(--ink); background: white; }
+    .login-card button { width: 100%; height: 44px; border: 0; border-radius: 9px; color: #04111c; font-weight: 750; background: var(--cyan); cursor: pointer; }
+    .login-foot { position: relative; z-index: 1; margin-top: 22px; color: #6e8998; font-size: 11px; }
+    .home-screen { padding: 0; }
+    .home-layout { position: relative; z-index: 1; display: grid; grid-template-columns: 182px 1fr; min-height: 650px; }
+    .side { padding: 24px 14px; border-right: 1px solid var(--line); background: rgba(3, 12, 23, .42); }
+    .side-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 44px; font-weight: 750; letter-spacing: -.02em; }
+    .tiny-mark { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid var(--cyan); border-radius: 8px; color: var(--cyan); font-size: 12px; }
+    .side-group { margin: 0 8px 12px; color: #6d8999; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; margin: 4px 0; padding: 11px 10px; border-radius: 9px; color: var(--muted); font-size: 13px; }
+    .nav-item.active { color: var(--text); background: rgba(85, 214, 255, .12); box-shadow: inset 2px 0 var(--cyan); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .home-main { padding: 28px 30px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding-bottom: 26px; }
+    .topbar h3 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
+    .topbar small { display: block; margin-top: 5px; color: var(--muted); }
+    .status { display: flex; align-items: center; gap: 7px; color: var(--green); font-size: 11px; }
+    .status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+    .map-stage { position: relative; min-height: 270px; overflow: hidden; padding: 26px; border: 1px solid rgba(85, 214, 255, .28); border-radius: 16px; background: linear-gradient(135deg, rgba(85, 214, 255, .11), transparent 48%), rgba(4, 18, 31, .76); }
+    .map-stage::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(85, 214, 255, .13) 1px, transparent 1px), linear-gradient(90deg, rgba(85, 214, 255, .13) 1px, transparent 1px); background-size: 32px 32px; opacity: .65; }
+    .contours { position: absolute; inset: 0; opacity: .7; background: radial-gradient(ellipse at 24% 60%, transparent 0 18%, rgba(85, 214, 255, .55) 18.2% 18.5%, transparent 18.7% 28%, rgba(85, 214, 255, .32) 28.2% 28.45%, transparent 28.7% 38%, rgba(85, 214, 255, .2) 38.2% 38.45%, transparent 38.7%); }
+    .map-copy { position: relative; z-index: 1; max-width: 300px; }
+    .map-copy span { color: var(--amber); font-size: 11px; letter-spacing: .12em; }
+    .map-copy h2 { margin: 9px 0 10px; font-size: 30px; letter-spacing: -.06em; }
+    .map-copy p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+    .coordinate { position: absolute; right: 22px; bottom: 18px; z-index: 1; color: rgba(234, 245, 251, .56); font: 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .module-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+    .module { min-height: 112px; padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: rgba(15, 32, 52, .7); transition: transform .2s, border-color .2s, background .2s; }
+    .module:hover { transform: translateY(-3px); border-color: rgba(85, 214, 255, .8); background: rgba(24, 54, 78, .86); }
+    .module .module-icon { color: var(--cyan); font-size: 18px; }
+    .module strong { display: block; margin-top: 14px; font-size: 13px; }
+    .module small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+    @media (max-width: 980px) { .screens { grid-template-columns: 1fr; } .screen { min-height: 560px; } .home-layout { min-height: 560px; } .module-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .preview { padding: 16px; } .sheet-title { display: block; } .sheet-title p { margin-top: 12px; } .home-layout { grid-template-columns: 64px 1fr; } .side { padding: 20px 8px; } .side-brand span, .side-group, .nav-item span { display: none; } .nav-item { justify-content: center; } .home-main { padding: 20px 16px; } .topbar h3 { font-size: 17px; } .map-stage { min-height: 250px; } }
+  </style>
+</head>
+<body>
+  <main class="preview">
+    <header class="sheet-title">
+      <div><div class="eyebrow">Visual direction / 01</div><h1>WebGIS Atlas · 深海测绘台</h1></div>
+      <p>独立预览：左侧是登录入口，右侧是首页中央渲染区。四个学习组只作为入口出现，不改变其内部页面。</p>
+    </header>
+    <section class="screens">
+      <article class="screen login-screen">
+        <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.7"/><path d="M3.7 12h16.6M12 3.3c2.4 2.4 3.5 5.3 3.5 8.7s-1.1 6.3-3.5 8.7c-2.4-2.4-3.5-5.3-3.5-8.7s1.1-6.3 3.5-8.7Z"/></svg></div>
+        <div class="login-copy"><div class="eyebrow">Spatial learning console</div><h2>把地图，<br><em>变成知识。</em></h2><p>从二维图层到三维场景，在一个安静、清晰的空间里继续你的 WebGIS 学习路径。</p></div>
+        <form class="login-card" onsubmit="return false"><label>Workspace account</label><input placeholder="用户名" value="admin"><label>Access key</label><input placeholder="密码" type="password" value="admin123"><button>进入学习空间</button></form>
+        <div class="login-foot">WEBGIS ATLAS / LOCAL DEVELOPMENT PREVIEW</div>
+      </article>
+      <article class="screen home-screen">
+        <div class="home-layout">
+          <aside class="side"><div class="side-brand"><div class="tiny-mark">◎</div><span>WebGIS Atlas</span></div><div class="side-group">Workspace</div><div class="nav-item active"><i class="dot"></i><span>总览首页</span></div><div class="nav-item"><i class="dot"></i><span>学习地图</span></div><div class="nav-item"><i class="dot"></i><span>资源中心</span></div><div class="side-group" style="margin-top:32px">System</div><div class="nav-item"><i class="dot"></i><span>主题设置</span></div></aside>
+          <section class="home-main"><div class="topbar"><div><h3>早上好，准备开始探索？</h3><small>今天从一个空间问题开始。</small></div><div class="status"><i></i>系统运行正常</div></div><div class="map-stage"><div class="contours"></div><div class="map-copy"><span>ACTIVE VIEW / 00.01</span><h2>Spatial command center</h2><p>你的四条学习路径已经准备好。选择一个模块，继续从数据、图层到三维场景的探索。</p></div><div class="coordinate">31°13' N&nbsp;&nbsp; 121°28' E&nbsp;&nbsp; ZOOM 08</div></div><div class="module-grid"><div class="module"><div class="module-icon">◈</div><strong>OpenLayers</strong><small>2D map foundations</small></div><div class="module"><div class="module-icon">⌁</div><strong>GeoServer</strong><small>Full-stack spatial data</small></div><div class="module"><div class="module-icon">◉</div><strong>Cesium</strong><small>3D globe exploration</small></div><div class="module"><div class="module-icon">▥</div><strong>Data Lab</strong><small>Analysis & visualization</small></div></div></section>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

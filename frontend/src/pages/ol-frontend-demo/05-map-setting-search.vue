@@ -19,6 +19,7 @@ import BasicToolBox from "@/components/BasicToolBox.vue";
 import LayerControl from "@/components/LayerControl.vue";
 import SearchBox from "@/components/SearchBox.vue";
 import MapSetting from "@/components/MapSetting.vue";
+import { publicUrl } from "@/utils/public-url"
 import type { LayerInfo } from "@/components/LayerControl.vue"
 import GeoJSON from "ol/format/GeoJSON"
 import { Vector as VectorSource } from "ol/source"
@@ -70,7 +71,7 @@ onMounted(async () => {
   const m = map.value!;
 
   // 加载大学数据
-  const res = await fetch("/test_data/university.geojson")
+  const res = await fetch(publicUrl("test_data/university.geojson"))
   const geojson = await res.json()
   const features = new GeoJSON().readFeatures(geojson, {
     featureProjection: "EPSG:3857",

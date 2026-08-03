@@ -13,6 +13,7 @@ import { useMap } from "@/composables/useMap"
 import { BASEMAP_LIST } from "@/utils/basemaps"
 import BasemapSwitcher from "@/components/BasemapSwitcher.vue"
 import BasicToolBox from "@/components/BasicToolBox.vue";
+import { publicUrl } from "@/utils/public-url"
 // OL模块引入
 import GeoJSON from "ol/format/GeoJSON"
 import { Overlay } from "ol"
@@ -188,11 +189,11 @@ onMounted(async () => {
   const m = map.value! // 唯一的 !，后续用 m 不用再 ?./!
 
   // 加载城市点数据
-  const cityLayer = await loadGeoJSON(m, "/test_data/cities.geojson", cityStyle, 10)
+  const cityLayer = await loadGeoJSON(m, publicUrl("test_data/cities.geojson"), cityStyle, 10)
   // 加载重庆县域边界
-  const countyLayer = await loadGeoJSON(m, "/test_data/chongqing_county_border.geojson", countyStyle, 5)
+  const countyLayer = await loadGeoJSON(m, publicUrl("test_data/chongqing_county_border.geojson"), countyStyle, 5)
   // 加载大学热力图
-  const { layer: heatmapLayer } = await loadHeatmap(m, "/test_data/university.geojson", "")
+  const { layer: heatmapLayer } = await loadHeatmap(m, publicUrl("test_data/university.geojson"), "")
 
   // 大学名称弹窗（OL Overlay：浮在地图上的 DOM 元素）
   // Overlay 帮你做了一件事：把地图坐标（经纬度）和 DOM 位置绑定起来，地图动它就动。 

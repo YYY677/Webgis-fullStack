@@ -190,6 +190,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
+import { publicUrl } from "@/utils/public-url"
 
 // ── UI 状态 ──
 const panelOpen = ref(false)
@@ -281,7 +282,7 @@ async function loadBuildings() {
   if (!viewer) return
   loadingBuildings.value = true
   try {
-    await replaceTileset("/cesium-data/tiles-buildings/tileset.json")
+    await replaceTileset(publicUrl("cesium-data/tiles-buildings/tileset.json"))
   } catch (e: any) {
     ElMessage.error(`加载失败: ${e.message}`)
   } finally {
@@ -293,7 +294,7 @@ async function loadOblique() {
   if (!viewer) return
   loadingOblique.value = true
   try {
-    await replaceTileset("/cesium-data/tiles-oblique/tileset.json")
+    await replaceTileset(publicUrl("cesium-data/tiles-oblique/tileset.json"))
   } catch (e: any) {
     ElMessage.error(`加载失败: ${e.message}`)
   } finally {

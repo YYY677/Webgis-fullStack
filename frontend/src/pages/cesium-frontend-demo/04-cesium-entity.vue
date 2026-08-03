@@ -186,6 +186,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
+import { publicUrl } from "@/utils/public-url"
 
 // ── UI 状态 ──
 const panelOpen = ref(false)
@@ -285,7 +286,7 @@ function addBillboard() {
     position: Cartesian3.fromDegrees(116.39, 39.91),
     // billboard和point的区别是，billboard可以使用图片作为标注，而point只能使用点
     // scale属性可以控制图片的缩放比例，2代表2倍大小，verticalOrigin属性可以控制图片的垂直对齐方式
-    billboard: { image: "/icons/icon-1.png", scale: 1, verticalOrigin: VerticalOrigin.BOTTOM },
+    billboard: { image: publicUrl("icons/icon-1.png"), scale: 1, verticalOrigin: VerticalOrigin.BOTTOM },
   })
   card1Entities.push(entity)
   viewer.camera.flyTo({
@@ -560,7 +561,7 @@ function generateClusterPoints() {
       ),
       // 这里使用 billboard 作为单个点的样式，图片为自定义图标
       billboard: {
-        image: "/icons/icon-1.png",
+        image: publicUrl("icons/icon-1.png"),
         scale: 0.6,
         verticalOrigin: VerticalOrigin.BOTTOM,
       },

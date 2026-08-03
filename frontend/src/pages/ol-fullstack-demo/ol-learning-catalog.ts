@@ -1,6 +1,7 @@
 import type { LearningCatalogLesson } from "@/types/learning-catalog"
+import { publicUrl } from "@/utils/public-url"
 
-const thumbnailBase = "/learning-assets/openlayers-fullstack-thumbnail"
+const thumbnailBase = publicUrl("learning-assets/openlayers-fullstack-thumbnail")
 
 export const olFullstackLessons: LearningCatalogLesson[] = [
   {

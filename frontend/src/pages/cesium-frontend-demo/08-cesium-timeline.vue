@@ -155,6 +155,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
+import { publicUrl } from "@/utils/public-url"
 
 // ── 路径预设 ──
 
@@ -188,9 +189,9 @@ const PATH_PRESETS: Record<string, { name: string; points: PathPoint[] }> = {
 }
 
 const MODEL_CONFIGS: Record<string, { path: string; scale: number; label: string }> = {
-  feiji: { path: "/cesium-data/models/feiji.glb", scale: 3, label: "客机" },
-  missile: { path: "/cesium-data/models/missile/scene.gltf", scale: 100, label: "导弹" },
-  dji: { path: "/cesium-data/models/dji_tello/scene.gltf", scale: 100, label: "无人机" },
+  feiji: { path: publicUrl("cesium-data/models/feiji.glb"), scale: 3, label: "客机" },
+  missile: { path: publicUrl("cesium-data/models/missile/scene.gltf"), scale: 100, label: "导弹" },
+  dji: { path: publicUrl("cesium-data/models/dji_tello/scene.gltf"), scale: 100, label: "无人机" },
 }
 
 // ── UI 状态 ──

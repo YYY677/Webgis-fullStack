@@ -24,6 +24,7 @@ import { useMap } from "@/composables/useMap"
 import { BASEMAP_LIST } from "@/utils/basemaps"
 import BasemapSwitcher from "@/components/BasemapSwitcher.vue"
 import MapSetting from "@/components/MapSetting.vue"
+import { publicUrl } from "@/utils/public-url"
 import GeoJSON from "ol/format/GeoJSON"
 import { Vector as VectorSource } from "ol/source"
 import { Vector as VectorLayer } from "ol/layer"
@@ -357,7 +358,7 @@ onMounted(async () => {
   const m = map.value!
 
   // 读取省份数据
-  const res = await fetch("/test_data/province_border.geojson")
+  const res = await fetch(publicUrl("test_data/province_border.geojson"))
   const geojson = await res.json()
   const features = new GeoJSON().readFeatures(geojson, {
     featureProjection: "EPSG:3857",

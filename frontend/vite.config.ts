@@ -55,8 +55,10 @@ function mockPlugin(): Plugin {
   }
 }
 
-export default defineConfig({
-  base: "/Webgis-fullStack/",
+export default defineConfig(({ command }) => ({
+  // command 是 Vite 的运行模式，值为 "serve" 或 "build"。
+  // GitHub Pages 部署时，Vite 的 base 配置必须是仓库名，否则资源路径会出错。
+  base: command === "build" ? "/Webgis-fullStack/" : "/",
   
   resolve: {
     alias: {
@@ -86,4 +88,4 @@ export default defineConfig({
     mockPlugin(),
     vue()
   ]
-})
+}))

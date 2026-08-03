@@ -180,6 +180,7 @@ import {
   type ImageryLayer,
 } from "cesium"
 import "cesium/Build/Cesium/Widgets/widgets.css"
+import { publicUrl } from "@/utils/public-url"
 
 type ManagedLayerHandle = {
   setVisible: (visible: boolean) => void
@@ -371,7 +372,7 @@ async function addBuildingTileset() {
   if (!viewer || handles.has("building-tiles") || loadingTiles.value) return
   loadingTiles.value = true
   try {
-    const tileset = await Cesium3DTileset.fromUrl("/cesium-data/tiles-buildings/tileset.json", {
+    const tileset = await Cesium3DTileset.fromUrl(publicUrl("cesium-data/tiles-buildings/tileset.json"), {
       maximumScreenSpaceError: 16,
     })
     if (!pageActive || !viewer || handles.has("building-tiles")) {

@@ -131,6 +131,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
+import { publicUrl } from "@/utils/public-url"
 
 // ── UI 状态 ──
 const panelOpen = ref(false)
@@ -182,13 +183,13 @@ async function loadGeoJSON(type: "cities" | "chongqing" | "province") {
   if (!viewer) return
   const cfgs: Record<string, { url: string; style: any; view: [number, number, number]; loading: typeof loadingGeo1 }> = {
     cities: {
-      url: "/test_data/cities.geojson",
+      url: publicUrl("test_data/cities.geojson"),
       // Point → billboard（运行时生成圆形贴图）
       style: { markerColor: Color.RED, markerSize: 12 },
       view: [105, 36, 6000000], loading: loadingGeo1,
     },
     chongqing: {
-      url: "/test_data/chongqing_county_border.geojson",
+      url: publicUrl("test_data/chongqing_county_border.geojson"),
       // Polygon → entity.polygon
       // Cesium 在 GeoJsonDataSource 源码里写了硬编码的映射逻辑
       //   fill   → polygon.material（填充色）
@@ -198,7 +199,7 @@ async function loadGeoJSON(type: "cities" | "chongqing" | "province") {
       view: [105, 30, 2000000], loading: loadingGeo2,
     },
     province: {
-      url: "/test_data/province_border.geojson",
+      url: publicUrl("test_data/province_border.geojson"),
       style: { stroke: Color.CYAN, strokeWidth: 1.5, fill: Color.CYAN.withAlpha(0.03) },
       view: [105, 35, 7000000], loading: loadingGeo3,
     },
@@ -256,8 +257,8 @@ function clearCard1() {
 async function loadTileset(type: "buildings" | "oblique") {
   if (!viewer) return
   const url = type === "buildings"
-    ? "/cesium-data/tiles-buildings/tileset.json"
-    : "/cesium-data/tiles-oblique/tileset.json"
+    ? publicUrl("cesium-data/tiles-buildings/tileset.json")
+    : publicUrl("cesium-data/tiles-oblique/tileset.json")
   const loading = type === "buildings" ? loadingTiles1 : loadingTiles2
   loading.value = true
   try {
@@ -299,12 +300,12 @@ function addModel(type: string) {
   // 模型沿同一纬度（40.0）排成一行，间距约 0.6°，浮空 500m
   // scale 倍数：每个模型原始文件的设计尺寸不同，需要单独调整使它们视觉上大小相近
   const configs: Record<string, { path: string; pos: [number, number, number]; scale: number; label: string }> = {
-    feiji: { path: "/cesium-data/models/feiji.glb", pos: [115.5, 40.0, 50000], scale: 100, label: "客机" },
-    man: { path: "/cesium-data/models/Man.glb", pos: [116.1, 40.0, 50000], scale: 8000, label: "人物" },
-    wajueji: { path: "/cesium-data/models/wajueji.glb", pos: [116.7, 40.0, 50000], scale: 8000, label: "挖掘机" },
-    weixin: { path: "/cesium-data/models/weixin.gltf", pos: [117.3, 40.0, 50000], scale: 800, label: "卫星" },
+    feiji: { path: publicUrl("cesium-data/models/feiji.glb"), pos: [115.5, 40.0, 50000], scale: 100, label: "客机" },
+    man: { path: publicUrl("cesium-data/models/Man.glb"), pos: [116.1, 40.0, 50000], scale: 8000, label: "人物" },
+    wajueji: { path: publicUrl("cesium-data/models/wajueji.glb"), pos: [116.7, 40.0, 50000], scale: 8000, label: "挖掘机" },
+    weixin: { path: publicUrl("cesium-data/models/weixin.gltf"), pos: [117.3, 40.0, 50000], scale: 800, label: "卫星" },
     // 文件夹格式 gltf：路径指向 scene.gltf，Cesium 自动加载同目录的 .bin 和 textures/
-    su7: { path: "/cesium-data/models/su7/scene.gltf", pos: [117.9, 40.0, 50000], scale: 8000, label: "SU7" },
+    su7: { path: publicUrl("cesium-data/models/su7/scene.gltf"), pos: [117.9, 40.0, 50000], scale: 8000, label: "SU7" },
   }
   const c = configs[type]
   if (!c) return
@@ -340,7 +341,7 @@ async function addModelPrimitive() {
     const position = Cartesian3.fromDegrees(118.2, 40.0, 50000)
     // Primitive 没有 position，用 modelMatrix 把模型从原点平移到目标位置
     const model = await Model.fromGltfAsync({
-      url: "/cesium-data/models/feiji.glb",
+      url: publicUrl("cesium-data/models/feiji.glb"),
       modelMatrix: Matrix4.fromTranslation(position),
       scale: 100,
     })
@@ -409,7 +410,7 @@ async function loadCZML() {
     // viewer.clock.currentTime = 2023-05-10  // CZML currentTime
     // viewer.clock.multiplier = 60           // 60 倍速播放
 
-    const ds = await CzmlDataSource.load("/cesium-data/wx.czml")
+    const ds = await CzmlDataSource.load(publicUrl("cesium-data/wx.czml"))
     viewer.dataSources.add(ds)
     card4DataSources.push(ds)
     // shouldAnimate = true 让仿真时间自动向前走，卫星沿轨道运动

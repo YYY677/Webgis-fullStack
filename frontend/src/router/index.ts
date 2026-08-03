@@ -25,7 +25,6 @@ const routes: RouteRecordRaw[] = [
     redirect: "/dashboard",
     children: [
       { path: "dashboard", name: "Dashboard", component: () => import("@/pages/dashboard/index.vue"), meta: { title: "首页", icon: "HomeFilled", affix: true } },
-      { path: "demo/element-plus", name: "ElementPlus", component: () => import("@/pages/demo/element-plus/index.vue"), meta: { title: "组件示例", icon: "Grid" } },
       {
         path: "ol-frontend-demo", name: "OlFrontendDemo", redirect: "/ol-frontend-demo", meta: { title: "静态 OL Demo", icon: "MapLocation" },
         children: [

@@ -214,6 +214,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css"
 import { CESIUM_BASEMAP_LIST } from "@/utils/cesium-basemaps"
 import type { CesiumBasemapItem } from "@/utils/cesium-basemaps"
 import CesiumBasemapSwitcher from "@/components/CesiumBasemapSwitcher.vue"
+import { publicUrl } from "@/utils/public-url"
 
 // ── UI 状态 ──
 const panelOpen = ref(false)
@@ -372,7 +373,7 @@ async function loadBuildings() {
   if (!viewer) return
   tilesLoading.value = true
   try {
-    buildingTileset = await Cesium3DTileset.fromUrl("/cesium-data/tiles-buildings/tileset.json")
+    buildingTileset = await Cesium3DTileset.fromUrl(publicUrl("cesium-data/tiles-buildings/tileset.json"))
     viewer.scene.primitives.add(buildingTileset)
     tilesReady.value = true
     viewer.flyTo(buildingTileset, { duration: 1.5 })
