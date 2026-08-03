@@ -1,5 +1,7 @@
 import { createApp } from "vue"
 import { createPinia } from "pinia"
+// 注册 v-motion 指令；登录页和 Dashboard 用它声明入场、悬停、按压动画。
+import { MotionPlugin } from "@vueuse/motion"
 // 注册了 Element Plus 的插件系统（指令、配置等）
 import ElementPlus from "element-plus"
 import zhCn from "element-plus/es/locale/lang/zh-cn"
@@ -29,4 +31,6 @@ installElementPlusIcons(app)
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus, { locale: zhCn })
+// 全局安装后，任意页面模板都可以使用 v-motion。
+app.use(MotionPlugin)
 app.mount("#app")

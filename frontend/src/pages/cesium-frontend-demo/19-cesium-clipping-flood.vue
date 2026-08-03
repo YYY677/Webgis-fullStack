@@ -116,6 +116,7 @@ import {
   Material,
   Plane,
   buildModuleUrl,
+  DirectionalLight,
 } from "cesium"
 
 /** 地形开挖区域的四个角点（逆时针：西南 → 东南 → 东北 → 西北） */
@@ -166,7 +167,6 @@ export function createExcavationPlanes(corners: [number, number][]): ClippingPla
 }
 
 /**
- * 生成参考项目 4.1.10 风格的 Water fabric 材质配置。
  * 关键：baseWaterColor/blendColor 的 alpha 必须为 1（不透明）——
  * Entity polygon 走半透明混合管线会压暗颜色，Primitive + EllipsoidSurfaceAppearance
  * 直接输出材质色，颜色才亮。
@@ -598,6 +598,19 @@ onMounted(() => {
   viewer.camera.setView({
     destination: Cartesian3.fromDegrees(116.39, 39.91, 10000),
   })
+
+  // 换掉整个光源,光源影响到地形和建筑的渲染效果，默认光源是随时间变化的太阳光，
+  // 设置固定方向的光源可以让场景在不同时间下保持一致的照明效果
+  viewer.scene.light = new DirectionalLight({
+  // hader 里用的光照方向（朝向光源）= -direction。所以 DirectionalLight.direction 
+  // 的语义是光线的行进方向（从光源射向场景），不是"光源所在方向"。 
+  // 顺带说下对跖点怎么算：经度 ± 180°，纬度取反。
+  // 以北京(116.39, 23.44)为例: 116.39 + 180 = 296.39（等价 -63.61），23.44 → -23.44。
+  direction: Cartesian3.fromDegrees(-63.61, -23.44), 
+  color: Color.WHITE,
+  intensity: 2.0, // 对齐 SunLight 默认强度；不够亮就再往上调
+})
+
 })
 
 onUnmounted(() => {

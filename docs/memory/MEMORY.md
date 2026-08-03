@@ -12,5 +12,6 @@
 - [3D Tiles 常见坑](cesium-3dtiles-pitfalls.md) — 响应式变量、getPropertyIds、modelMatrix 裁剪、Matrix4 版本差异、关闭裁剪 _target 报错、建筑剖面本质
 - [Cesium 相机姿态滑块](cesium-camera-orientation.md) — Roll 回读范围归一化；避开近垂直 Pitch 下 Heading/Roll 的欧拉角耦合
 - [Cesium 粒子系统常见坑](cesium-particle-pitfalls.md) — 粒子不显示三要素：时钟未动画、尺寸过小、地形深度剔除
+- [Cesium 光照体系](cesium-lighting.md) — 太阳方向=模拟时钟时间；DirectionalLight direction 传对跖点、intensity 默认 1.0；受光范围：地形/模型强、Appearance 仅高光、billboard 不受
 - [地形开挖（Globe 裁剪）](cesium-globe-clipping-excavation.md) — 多边形竖直平面围坑算法 + "切掉上半球"错误教训
 - [Cesium GeoJSON 多面要素映射](cesium-geojson-entity-mapping.md) — MultiPolygon 会拆分 Entity；按业务键分组高亮，并额外绘制贴地边界

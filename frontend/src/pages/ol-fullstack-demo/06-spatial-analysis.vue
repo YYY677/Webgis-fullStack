@@ -620,6 +620,20 @@ const inputStyle = new Style({
 
 <style scoped lang="scss">
 .spatial-analysis {
+  /* 该分析工作台始终使用浅色画布，避免随 Atlas 外壳的暗色主题降低表单对比度。 */
+  color-scheme: light;
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-fill-color-blank: #ffffff;
+  --el-fill-color-light: #f5f7fa;
+  --el-border-color: #dcdfe6;
+  --el-border-color-light: #e4e7ed;
+  --el-text-color-primary: #303133;
+  --el-text-color-regular: #606266;
+  --el-text-color-secondary: #909399;
+  background: #ffffff;
+  color: #303133;
   display: flex;
   flex-direction: column;
   height: calc(100vh - 100px);
