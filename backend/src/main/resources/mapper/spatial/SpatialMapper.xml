@@ -127,8 +127,10 @@
 
     <insert id="insertRow">
         INSERT INTO "${tableName}"
+        <!-- foreach 展开完字段列表后，手动又加了一个逗号，把几何列拼在最后。 -->
         (<foreach collection="fields" item="f" separator=",">"${f}"</foreach>, "${geomColumn}")
         VALUES
+        <!-- MyBatis 的 #{} 只能用于值，表名/列名必须用 ${} 字符串替换 -->
         (<foreach collection="fields" item="f" separator=",">#{row[${f}]}</foreach>, st_geomfromtext(#{wkt}, 4326))
     </insert>
 
