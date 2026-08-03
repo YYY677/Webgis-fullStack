@@ -1,3 +1,4 @@
+<!-- 本文件已废弃，不再使用，改用 AtlasLayout.vue -->
 <script lang="ts" setup>
 import { ref, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"

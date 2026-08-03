@@ -17,14 +17,14 @@ function createLessonRoutes(lessons: LearningCatalogLesson[]): RouteRecordRaw[] 
 }
 
 const routes: RouteRecordRaw[] = [
-  { path: "/login", component: () => import("@/pages/login/index.vue"), meta: { hidden: true } },
+  { path: "/login", component: () => import("@/pages/login/LoginAtlas.vue"), meta: { hidden: true } },
   { path: "/404", component: () => import("@/pages/error/404.vue"), meta: { hidden: true } },
   {
     path: "/",
-    component: () => import("@/layout/MainLayout.vue"),
+    component: () => import("@/layout/AtlasLayout.vue"),
     redirect: "/dashboard",
     children: [
-      { path: "dashboard", name: "Dashboard", component: () => import("@/pages/dashboard/index.vue"), meta: { title: "首页", icon: "HomeFilled", affix: true } },
+      { path: "dashboard", name: "Dashboard", component: () => import("@/pages/dashboard/DashboardAtlas.vue"), meta: { title: "首页", icon: "HomeFilled", affix: true } },
       {
         path: "ol-frontend-demo", name: "OlFrontendDemo", redirect: "/ol-frontend-demo", meta: { title: "静态 OL Demo", icon: "MapLocation" },
         children: [

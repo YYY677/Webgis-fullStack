@@ -27,6 +27,30 @@ body {
   @extend %scrollbar; /* 应用全局漂亮滚动条 */
 }
 
+/* 
+  媒体查询：针对用户偏好减少动画的场景
+  当用户在系统设置中选择了减少动画效果时，此样式将被应用
+  这有助于提高可访问性，特别是对前庭障碍用户或容易晕动症的用户
+*/
+@media (prefers-reduced-motion: reduce) {
+  /* 
+    选择所有元素及其伪元素（::before 和 ::after）
+    确保整个页面上的所有动画和过渡效果都被最小化
+  */
+  *,
+  *::before,
+  *::after {
+    /* 将所有动画持续时间设置为最小值（0.01毫秒），并使用 !important 确保优先级 */
+    animation-duration: 0.01ms !important;
+    /* 将动画迭代次数设置为1，使动画只播放一次 */
+    animation-iteration-count: 1 !important;
+    /* 将滚动行为设置为自动，禁用平滑滚动效果 */
+    scroll-behavior: auto !important;
+    /* 将所有过渡持续时间设置为最小值（0.01毫秒），并使用 !important 确保优先级 */
+    transition-duration: 0.01ms !important;
+  }
+}
+
 #app {
   height: 100%;
 }

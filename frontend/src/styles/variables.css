@@ -18,10 +18,86 @@
   --v3-body-text-color: #303133;
   --v3-header-height: 50px;
   --v3-tagsview-height: 34px;
+  --atlas-ink: #07111f;
+  --atlas-ink-soft: #0d1b2d;
+  --atlas-panel: rgba(15, 32, 52, 0.86);
+  --atlas-line: rgba(136, 191, 220, 0.2);
+  --atlas-text: #eaf5fb;
+  --atlas-muted: #8ea8bb;
+  --atlas-cyan: #55d6ff;
+  --atlas-amber: #f2b86b;
+  --atlas-green: #68e0ae;
+  --atlas-radius: 16px;
+  --atlas-shadow: 0 22px 64px rgba(0, 0, 0, 0.26);
+  /* 夜间主题的界面表面令牌：Atlas 默认以此套深海配色启动。 */
+  --atlas-sidebar-bg: rgba(5, 17, 30, 0.96);
+  --atlas-header-bg: rgba(7, 17, 31, 0.96);
+  --atlas-footer-bg: #07111f;
+  --atlas-overlay-bg: #0d1b2d;
+  --atlas-input-bg: rgba(3, 13, 24, 0.64);
+  --atlas-interactive-hover: rgba(85, 214, 255, 0.08);
+  --atlas-interactive-active: rgba(85, 214, 255, 0.13);
+  --atlas-panel-soft: rgba(85, 214, 255, 0.05);
+  --atlas-dashboard-bg: radial-gradient(circle at 86% 8%, rgba(85, 214, 255, 0.09), transparent 25%), #07111f;
+  --atlas-stage-bg: linear-gradient(135deg, rgba(28, 95, 123, 0.35), rgba(4, 18, 31, 0.82) 52%, rgba(8, 35, 53, 0.92));
+  --atlas-stage-grid: rgba(85, 214, 255, 0.17);
+  --atlas-stage-contour: rgba(85, 214, 255, 0.34);
+  --atlas-stage-route: rgba(85, 214, 255, 0.74);
+  --atlas-stage-legend: rgba(3, 16, 29, 0.56);
+  --atlas-module-bg: rgba(15, 32, 52, 0.72);
+  --atlas-module-hover: rgba(22, 52, 76, 0.92);
+  --atlas-module-detail: rgba(234, 245, 251, 0.66);
+  --atlas-module-order: rgba(234, 245, 251, 0.42);
+  --atlas-login-bg: radial-gradient(circle at 18% 12%, rgba(85, 214, 255, 0.14), transparent 31%), radial-gradient(circle at 84% 88%, rgba(242, 184, 107, 0.11), transparent 30%), #07111f;
+  --atlas-login-grid: rgba(85, 214, 255, 0.09);
+  --atlas-login-ring: rgba(85, 214, 255, 0.38);
+  --atlas-login-coordinate: rgba(234, 245, 251, 0.58);
+  --atlas-login-panel-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+  --atlas-accent-contrast: #03111b;
 }
 
-/* body 背景也会跟着暗黑模式切换 */
+/* Element Plus 的暗色变量：夜间主题同步启用；学习组内部页沿用自身样式。 */
 html.dark {
   --v3-body-bg-color: #0a0a0a;
   --v3-body-text-color: #e5eaf3;
+}
+
+/* 白日主题：以航海图纸的雾白底色、深海蓝文字和更深的青色强调色保持可读性。 */
+html.atlas-day {
+  --v3-body-bg-color: #edf4f7;
+  --v3-body-text-color: #153449;
+  --atlas-ink: #edf4f7;
+  --atlas-ink-soft: #ffffff;
+  --atlas-panel: rgba(255, 255, 255, 0.9);
+  --atlas-line: rgba(34, 88, 113, 0.18);
+  --atlas-text: #153449;
+  --atlas-muted: #607b8d;
+  --atlas-cyan: #007fa9;
+  --atlas-amber: #a66312;
+  --atlas-green: #16835b;
+  --atlas-shadow: 0 22px 64px rgba(34, 88, 113, 0.15);
+  --atlas-sidebar-bg: rgba(248, 252, 253, 0.96);
+  --atlas-header-bg: rgba(255, 255, 255, 0.94);
+  --atlas-footer-bg: #e7f0f3;
+  --atlas-overlay-bg: #ffffff;
+  --atlas-input-bg: #f4f8fa;
+  --atlas-interactive-hover: rgba(0, 127, 169, 0.08);
+  --atlas-interactive-active: rgba(0, 127, 169, 0.14);
+  --atlas-panel-soft: rgba(0, 127, 169, 0.05);
+  --atlas-dashboard-bg: radial-gradient(circle at 86% 8%, rgba(0, 147, 190, 0.13), transparent 25%), #edf4f7;
+  --atlas-stage-bg: linear-gradient(135deg, rgba(213, 239, 245, 0.98), rgba(255, 255, 255, 0.96) 52%, rgba(222, 242, 246, 0.94));
+  --atlas-stage-grid: rgba(0, 111, 149, 0.16);
+  --atlas-stage-contour: rgba(0, 127, 169, 0.3);
+  --atlas-stage-route: rgba(0, 127, 169, 0.62);
+  --atlas-stage-legend: rgba(255, 255, 255, 0.7);
+  --atlas-module-bg: rgba(255, 255, 255, 0.82);
+  --atlas-module-hover: rgba(244, 251, 253, 0.98);
+  --atlas-module-detail: rgba(21, 52, 73, 0.7);
+  --atlas-module-order: rgba(21, 52, 73, 0.45);
+  --atlas-login-bg: radial-gradient(circle at 18% 12%, rgba(0, 151, 194, 0.18), transparent 31%), radial-gradient(circle at 84% 88%, rgba(216, 167, 93, 0.16), transparent 30%), #eaf4f6;
+  --atlas-login-grid: rgba(0, 111, 149, 0.1);
+  --atlas-login-ring: rgba(0, 127, 169, 0.34);
+  --atlas-login-coordinate: rgba(21, 52, 73, 0.62);
+  --atlas-login-panel-shadow: 0 28px 80px rgba(34, 88, 113, 0.2);
+  --atlas-accent-contrast: #ffffff;
 }

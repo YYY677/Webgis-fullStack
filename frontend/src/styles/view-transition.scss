@@ -1,3 +1,4 @@
+/* AtlasLayout 在切换白日/夜间主题时写入圆心与半径，新的主题从按钮点击处扩散。 */
 /* 视图过渡旧元素的样式 */
 ::view-transition-old(root) {
   animation: none; // 立即消失。不做任何动画，瞬间隐去。
@@ -20,4 +21,27 @@
   to {
     clip-path: circle(var(--v3-theme-r) at var(--v3-theme-x) var(--v3-theme-y));
   }
+}
+
+/* 不支持 View Transition API 时的回退：同样从按钮坐标扩展圆形遮罩。 */
+.atlas-theme-ripple {
+  position: fixed;
+  z-index: 9999;
+  width: var(--atlas-ripple-size);
+  height: var(--atlas-ripple-size);
+  left: var(--atlas-ripple-x);
+  top: var(--atlas-ripple-y);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: atlas-theme-ripple 560ms cubic-bezier(.2, .75, .25, 1) forwards;
+}
+
+.atlas-theme-ripple.is-fading {
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+@keyframes atlas-theme-ripple {
+  to { transform: translate(-50%, -50%) scale(1); }
 }
