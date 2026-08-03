@@ -9,6 +9,7 @@ import App from "./App.vue"
 import router from "./router"
 // 注册了 Element Plus 的图标组件
 import { installElementPlusIcons } from "@/plugins/element-plus-icons"
+import { startBackendMonitoring } from "@/services/backend-status"
 
 // css
 /*
@@ -33,4 +34,5 @@ app.use(router)
 app.use(ElementPlus, { locale: zhCn })
 // 全局安装后，任意页面模板都可以使用 v-motion。
 app.use(MotionPlugin)
+startBackendMonitoring()
 app.mount("#app")

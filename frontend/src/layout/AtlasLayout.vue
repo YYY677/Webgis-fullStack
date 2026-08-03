@@ -13,11 +13,13 @@ import IconSun from "~icons/tabler/sun"
 import { routes } from "@/router"
 import { useAppStore } from "@/stores/app"
 import { useUserStore } from "@/stores/user"
+import { backendStatus, backendStatusInfo } from "@/services/backend-status"
 
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
+const backendInfo = computed(() => backendStatusInfo[backendStatus.value])
 const isCompactViewport = ref(window.matchMedia("(max-width: 680px)").matches)
 const sidebarWidth = computed(() => (isCompactViewport.value || !appStore.sidebarOpened ? "72px" : "244px"))
 const sidebarActivePath = computed(() => route.path)
@@ -125,8 +127,8 @@ function handleLogout() { userStore.logout(); router.push("/login") }
             </el-icon><template #title>{{ item.title }}</template></el-menu-item>
         </template>
       </el-menu>
-      <div class="atlas-sidebar__foot" v-show="appStore.sidebarOpened"><span />
-        <div><b>LOCAL SPACE</b><small>服务就绪</small></div>
+      <div class="atlas-sidebar__foot" :class="`is-${backendInfo.tone}`" v-show="appStore.sidebarOpened"><span />
+        <div><b>BACKEND</b><small>{{ backendInfo.label }}</small></div>
       </div>
     </el-aside>
 
@@ -280,9 +282,17 @@ function handleLogout() { userStore.logout(); router.push("/login") }
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: var(--atlas-cyan);
+  box-shadow: 0 0 12px var(--atlas-cyan);
+}
+
+.atlas-sidebar__foot.is-online>span {
   background: var(--atlas-green);
   box-shadow: 0 0 12px var(--atlas-green);
 }
+
+.atlas-sidebar__foot.is-offline>span { background: #ff8f8f; box-shadow: 0 0 12px #ff8f8f; }
+.atlas-sidebar__foot.is-unconfigured>span { background: var(--atlas-amber); box-shadow: 0 0 12px var(--atlas-amber); }
 
 .atlas-sidebar__foot b,
 .atlas-sidebar__foot small {

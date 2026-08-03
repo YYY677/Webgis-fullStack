@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { computed } from "vue"
 import { useRouter } from "vue-router"
 // 这些虚拟导入由 unplugin-icons 在构建时生成 Tabler SVG Vue 组件，不需要手动维护 SVG 文件。
 import IconActivity from "~icons/tabler/activity"
@@ -7,8 +8,10 @@ import IconCube from "~icons/tabler/cube"
 import IconLayers from "~icons/tabler/layers-linked"
 import IconMap from "~icons/tabler/map-2"
 import IconWorld from "~icons/tabler/world"
+import { backendStatus, backendStatusInfo } from "@/services/backend-status"
 
 const router = useRouter()
+const backendInfo = computed(() => backendStatusInfo[backendStatus.value])
 const learningModules = [
   { title: "OpenLayers 前端学习", subtitle: "二维地图与交互基础", description: "从底图、图层到查询与图表，建立稳定的二维地图能力。", path: "/ol-frontend-demo", icon: IconMap, color: "cyan" },
   { title: "OpenLayers 全栈学习", subtitle: "GeoServer 与空间数据服务", description: "连接 WMS、WFS、空间编辑与数据管理工作流。", path: "/ol-fullstack-demo", icon: IconLayers, color: "green" },
@@ -27,10 +30,10 @@ function enterModule(path: string) { router.push(path) }
         <h1>今天，从一个空间问题开始。</h1>
       </div>
       <!-- Motion：状态提示在标题出现后再轻微淡入，避免页面初始画面过于突兀。 -->
-      <div v-motion class="atlas-system-status" :initial="{ opacity: 0, x: 10 }" :enter="{ opacity: 1, x: 0 }"
+      <div v-motion class="atlas-system-status" :class="`is-${backendInfo.tone}`" :initial="{ opacity: 0, x: 10 }" :enter="{ opacity: 1, x: 0 }"
         :delay="180" :duration="420">
         <span class="atlas-system-status__pulse" aria-hidden="true" />
-        <IconActivity /><span>学习环境运行正常</span>
+        <IconActivity /><span>{{ backendInfo.label }}</span>
       </div>
     </header>
 
@@ -122,6 +125,10 @@ function enterModule(path: string) { router.push(path) }
   color: var(--atlas-green);
   font-size: 13px;
 }
+
+.atlas-system-status.is-online { color: var(--atlas-green); }
+.atlas-system-status.is-offline { color: #ff8f8f; }
+.atlas-system-status.is-unconfigured { color: var(--atlas-amber); }
 
 .atlas-system-status svg {
   width: 17px;

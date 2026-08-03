@@ -1,4 +1,6 @@
 import { request } from "./request"
+import { createMockLoginResult, createMockUserInfoResult, resolveAuthMode, resolveMockUsername } from "./auth-mode"
+import { getToken } from "@/utils/localStorage"
 
 interface LoginData {
   username: string
@@ -20,6 +22,10 @@ interface UserInfo {
 // 你调用时，T 变成了 { data: LoginResult }
 // 但 config 依然是 { url: '/login', method: 'post', data: ... }
 export function loginApi(data: LoginData) {
+  if (resolveAuthMode(import.meta.env) === "mock") {
+    return Promise.resolve(createMockLoginResult(data.username))
+  }
+
   return request<{ data: LoginResult }>({
     url: "/auth/login",
     method: "post",
@@ -28,6 +34,10 @@ export function loginApi(data: LoginData) {
 }
 
 export function getUserInfoApi() {
+  if (resolveAuthMode(import.meta.env) === "mock") {
+    return Promise.resolve(createMockUserInfoResult(resolveMockUsername(getToken() || "")))
+  }
+
   return request<{ data: UserInfo }>({
     url: "/auth/me",
     method: "get"

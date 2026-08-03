@@ -6,6 +6,8 @@ import { olFrontendLessons } from "@/pages/ol-frontend-demo/ol-learning-catalog"
 import { olFullstackLessons } from "@/pages/ol-fullstack-demo/ol-learning-catalog"
 import type { LearningCatalogLesson } from "@/types/learning-catalog"
 import { getToken } from "@/utils/localStorage"
+import { ElMessage } from "element-plus"
+import { backendUnavailableMessage, checkBackendNow, isFullstackRoute } from "@/services/backend-status"
 
 function createLessonRoutes(lessons: LearningCatalogLesson[]): RouteRecordRaw[] {
   return lessons.map((lesson) => ({
@@ -59,11 +61,28 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({ history: createWebHashHistory(), routes })
+let hasShownBackendUnavailableNotice = false
 
 router.beforeEach((to) => {
   const token = getToken()
   if (to.path === "/login") return token ? "/" : true
   return token ? true : "/login"
+})
+
+router.afterEach((to) => {
+  if (!isFullstackRoute(to.path)) return
+
+  void checkBackendNow().then((status) => {
+    if (status === "online") {
+      hasShownBackendUnavailableNotice = false
+      return
+    }
+
+    if (!hasShownBackendUnavailableNotice) {
+      ElMessage.warning(backendUnavailableMessage())
+      hasShownBackendUnavailableNotice = true
+    }
+  })
 })
 
 export default router
