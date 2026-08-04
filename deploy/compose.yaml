@@ -1,0 +1,127 @@
+# 单机/单虚拟机部署编排。
+#
+# 对外仅暴露 frontend 的 HTTP 端口；数据库、后端和 GeoServer 只在 Compose 网络中通信。
+# 第一次使用时，PostGIS 会自动导入 SQL，GeoServer 会自动解压完整 Data Directory 并同步目录配置。
+name: webgis
+
+services:
+  db:
+    # SQL 备份由 PostgreSQL 17 导出，因此固定主版本为 17。
+    # pgRouting 项目镜像在 PostGIS 3.5 基础上额外安装 pgRouting；SQL 会执行 CREATE EXTENSION pgrouting。
+    image: pgrouting/pgrouting:17-3.5-3.7.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # PostgreSQL 官方入口仅在此卷为空时执行 initdb 与下方 SQL 文件。
+      - postgres-data:/var/lib/postgresql/data
+      - ../data/webgistest-2026-08-03.sql:/docker-entrypoint-initdb.d/10-webgistest.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  geoserver-data-init:
+    # 只负责把完整 Data Directory ZIP 放进空卷；自身完成后退出。
+    build:
+      context: ..
+      dockerfile: deploy/geoserver/Dockerfile.init
+    restart: "no"
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+
+  geoserver:
+    # 完整 Data Directory 来自本机 GeoServer 2.26.1，首次容器必须保持同版本。
+    image: docker.osgeo.org/geoserver:2.26.1
+    restart: unless-stopped
+    environment:
+      # ZIP 已提供完整目录，因此不写入 GeoServer 自带的演示数据。
+      SKIP_DEMO_DATA: "true"
+      # 生成 GetCapabilities 中的外部地址；首次部署前将其改成虚拟机 IP。
+      PROXY_BASE_URL: ${GEOSERVER_PROXY_BASE_URL}
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+    depends_on:
+      db:
+        condition: service_healthy
+      geoserver-data-init:
+        condition: service_completed_successfully
+
+  catalog-sync:
+    # 启动后等待 GeoServer REST 可用，再调用现有 apply.ps1 修正 db 主机名并同步图层/SLD。
+    # 脚本会写入卷内标记，因此常规重启会立即跳过，不会覆盖运行中的样式修改。
+    build:
+      context: ..
+      dockerfile: deploy/geoserver/Dockerfile.sync
+    restart: "no"
+    environment:
+      GEOSERVER_URL: http://geoserver:8080/geoserver
+      GEOSERVER_DATA_DIR: /opt/geoserver_data
+      # apply.ps1 使用 Basic Auth 调用 GeoServer REST；凭据只在内部同步容器中使用。
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD}
+      GEOSERVER_DATASTORE_HOST: db
+      GEOSERVER_DATASTORE_PORT: "5432"
+      GEOSERVER_DATASTORE_DATABASE: ${POSTGRES_DB}
+      GEOSERVER_DATASTORE_USER: ${POSTGRES_USER}
+      GEOSERVER_DATASTORE_PASSWORD: ${POSTGRES_PASSWORD}
+      # 需要主动重放仓库 config 时，在命令前设置 FORCE_CATALOG_SYNC=true。
+      FORCE_CATALOG_SYNC: ${FORCE_CATALOG_SYNC:-false}
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+    depends_on:
+      db:
+        condition: service_healthy
+      geoserver:
+        condition: service_started
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # Spring Boot 的宽松绑定会把这些环境变量覆盖 application.yml 中的本地开发值。
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      GEOSERVER_URL: http://geoserver:8080/geoserver
+      GEOSERVER_USERNAME: ${GEOSERVER_ADMIN_USER}
+      GEOSERVER_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD}
+      GEOSERVER_WORKSPACE: webgistest
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+      catalog-sync:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # Docker 部署在站点根路径；未传该变量时仍保持 GitHub Pages 的原构建路径。
+        VITE_DEPLOY_BASE: ${VITE_DEPLOY_BASE:-/}
+        # 前端经同源 Nginx 请求后端，避免浏览器跨域与管理员密码暴露。
+        VITE_BASE_URL: /api
+        VITE_API_BASE_URL: /api
+        VITE_AUTH_MODE: remote
+        VITE_TIANDITU_KEY: ${VITE_TIANDITU_KEY:-}
+        VITE_CESIUM_TOKEN: ${VITE_CESIUM_TOKEN:-}
+    restart: unless-stopped
+    ports:
+      # 学习用虚拟机默认 80；无 root 权限时可在 .env 改为 8088 等端口。
+      - "${WEBGIS_HTTP_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  # 命名卷由 Docker 管理，不因容器重建而丢失。
+  postgres-data:
+  geoserver-data:

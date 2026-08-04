@@ -11,8 +11,9 @@ import Icons from "unplugin-icons/vite"
 // 自定义 Vite 插件返回对象的 TypeScript 类型。
 export default defineConfig(({ command }) => ({
   // command 是 Vite 的运行模式，值为 "serve" 或 "build"。
-  // GitHub Pages 部署时，Vite 的 base 配置必须是仓库名，否则资源路径会出错。
-  base: command === "build" ? "/Webgis-fullStack/" : "/",
+  // 默认保留 GitHub Pages 的仓库子路径；Docker 部署可在构建时传 VITE_DEPLOY_BASE=/，
+  // 使 Nginx 从站点根路径提供所有静态资源。
+  base: command === "build" ? process.env.VITE_DEPLOY_BASE || "/Webgis-fullStack/" : "/",
   
   // 模块解析规则：@/pages/... 等同于 src/pages/...
   resolve: {

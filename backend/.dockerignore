@@ -1,0 +1,6 @@
+# 宿主机生成物与 IDE 文件不进入 Docker 构建上下文。
+target/
+.git/
+.idea/
+*.iml
+*.log

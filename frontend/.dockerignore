@@ -1,0 +1,6 @@
+# Dockerfile 会在镜像内重新安装依赖并生成 dist，因此不上传宿主机生成物。
+node_modules/
+dist/
+.git/
+.idea/
+*.log

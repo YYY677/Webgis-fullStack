@@ -1,0 +1,11 @@
+# 使用 PowerShell 7 复用仓库已经验证过的 apply.ps1，不重新实现 GeoServer REST 同步逻辑。
+FROM mcr.microsoft.com/powershell:7.4-ubuntu-22.04
+
+WORKDIR /workspace
+
+COPY geoserver/apply.ps1 /workspace/geoserver/apply.ps1
+COPY geoserver/lib /workspace/geoserver/lib
+COPY geoserver/config /workspace/geoserver/config
+COPY deploy/geoserver/sync-catalog.ps1 /workspace/deploy/geoserver/sync-catalog.ps1
+
+ENTRYPOINT ["pwsh", "-NoLogo", "-NoProfile", "-File", "/workspace/deploy/geoserver/sync-catalog.ps1"]

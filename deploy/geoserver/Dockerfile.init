@@ -1,0 +1,11 @@
+# 这个小镜像只在首次启动时使用，用于把已备份的完整 GeoServer Data Directory 解压到命名卷。
+FROM alpine:3.20
+
+RUN apk add --no-cache unzip
+
+COPY geoserver/GeoServer.zip /bootstrap/GeoServer.zip
+COPY deploy/geoserver/init-data-dir.sh /usr/local/bin/init-data-dir.sh
+
+RUN chmod +x /usr/local/bin/init-data-dir.sh
+
+ENTRYPOINT ["/usr/local/bin/init-data-dir.sh"]
