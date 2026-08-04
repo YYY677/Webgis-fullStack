@@ -39,12 +39,20 @@ flowchart LR
 
 ```text
 Webgis-fullStack/
-├── frontend/       Vue 3 + Vite + OpenLayers + Cesium
-├── backend/        Spring Boot + MyBatis-Plus + GeoTools
-├── geoserver/      GeoServer 配置同步脚本、配置包和本机完整备份
-├── data/           PostgreSQL SQL 备份
-├── docs/           项目经验、设计和计划文档
-└── AGENTS.md       面向开发协作工具的项目上下文
+├── .agents/                 项目级 Agent skills
+├── .claude/                 Claude Code 配置、skills 和 plans
+├── .codex/                  Codex 项目级 hooks 配置
+├── .github/                 GitHub 自动化配置
+├── frontend/                Vue 3 + Vite + OpenLayers + Cesium
+├── backend/                 Spring Boot + MyBatis-Plus + GeoTools
+├── geoserver/               GeoServer 配置同步包与 Data Directory 备份
+├── data/                    PostgreSQL SQL 备份
+├── deploy/                  Docker Compose 部署文件和初始化脚本
+├── docs/                    项目经验、设计和计划文档
+├── .claudeignore            Claude 无需读取的文件清单
+├── .gitignore               Git 忽略规则
+├── .gitattributes           Git 文件属性规则
+└── AGENTS.md                项目整体上下文和协作约定
 ```
 
 ## 前置软件
@@ -154,3 +162,17 @@ npm run test
 - [后端工程说明](backend/CLAUDE.md)
 - [GeoServer 配置同步与备份说明](geoserver/README.md)
 - [项目经验索引](docs/memory/MEMORY.md)
+
+## Docker 部署（可选）
+
+项目提供 Docker Compose 部署文件，主要用于 Linux 虚拟机或服务器；本地开发仍建议按上面的前后端、PostgreSQL 和 GeoServer 流程分别启动。
+
+首次部署时，在项目根目录执行：
+
+```bash
+cp deploy/.env.example deploy/.env
+# 编辑 deploy/.env，填写数据库密码、JWT 密钥和 GeoServer 管理员密码
+docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --build
+```
+
+Compose 会自动构建项目镜像、启动数据库和 GeoServer，并在空数据卷中导入 SQL 与恢复 `GeoServer.zip`。详细部署说明见 [`deploy/README.md`](deploy/README.md)。
