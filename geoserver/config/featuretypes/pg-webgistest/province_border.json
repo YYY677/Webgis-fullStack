@@ -1,0 +1,39 @@
+﻿{
+    "featureType":  {
+                        "name":  "province_border",
+                        "nativeName":  "province_border",
+                        "title":  "province_border",
+                        "keywords":  {
+                                         "string":  [
+                                                        "features",
+                                                        "province_border"
+                                                    ]
+                                     },
+                        "srs":  "EPSG:4326",
+                        "projectionPolicy":  "FORCE_DECLARED",
+                        "enabled":  true,
+                        "nativeBoundingBox":  {
+                                                  "minx":  73.5011421000001,
+                                                  "maxx":  135.08851147999997,
+                                                  "miny":  6.326726230000093,
+                                                  "maxy":  53.560901050000105,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "latLonBoundingBox":  {
+                                                  "minx":  -180,
+                                                  "maxx":  180,
+                                                  "miny":  -90,
+                                                  "maxy":  90,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "overridingServiceSRS":  false,
+                        "skipNumberMatched":  false,
+                        "circularArcPresent":  false,
+                        "serviceConfiguration":  false,
+                        "simpleConversionEnabled":  false,
+                        "maxFeatures":  0,
+                        "numDecimals":  0,
+                        "padWithZeros":  false,
+                        "forcedDecimal":  false
+                    }
+}

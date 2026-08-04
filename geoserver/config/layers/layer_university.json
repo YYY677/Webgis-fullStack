@@ -1,0 +1,12 @@
+﻿{
+    "layer":  {
+                  "name":  "layer_university",
+                  "attribution":  {
+                                      "logoWidth":  0,
+                                      "logoHeight":  0
+                                  },
+                  "defaultStyle":  {
+                                       "name":  "webgistest"
+                                   }
+              }
+}

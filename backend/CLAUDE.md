@@ -107,6 +107,18 @@ GeoServer 管理 (当前公开, /api/geoserver/*):
 4. SecurityConfig 基于角色控制 URL 权限
 ```
 
+## Cesium 全栈课程如何使用后端
+
+后端没有单独的 `cesium/` 模块。Cesium 只是另一种前端地图引擎，和 OpenLayers 全栈课程共用下面三类能力：
+
+| Cesium 课程 | 前端调用 | 后端或服务职责 |
+| --- | --- | --- |
+| `01-geoserver-services` | `/geoserver/wms`、`/geoserver/wfs`、`/geoserver/gwc/service/wmts` | Vite 代理直达 GeoServer；GeoServer 从 PostGIS 已发布表读取数据。 |
+| `02-spatial-crud` | `/api/spatial/**` | `SpatialDataController` 通过 `SpatialDataService` 对白名单空间表进行字段查询和行级 CRUD。 |
+| `03-server-analysis` | `/api/spatial/analysis/**` | `SpatialAnalysisController` 使用 JTS 做几何运算，并通过 pgRouting 计算最短路径。 |
+
+GeoServer 的目录管理、数据存储、要素发布和样式管理仍由 `/api/geoserver/**` 提供；该模块是后端对 GeoServer REST API 的代理层，避免把 GeoServer 管理员凭据暴露给前端。
+
 ## 数据库
 
 - PostgreSQL :5432, 数据库名 `webgistest`
@@ -134,15 +146,3 @@ GeoTools 发布在 OSGeo 仓库（非 Maven Central），pom.xml 已配置:
     <url>https://repo.osgeo.org/repository/release/</url>
 </repository>
 ```
-
-## 关键坑点
-
-1. **GeoTools 版本**: 必须 35.x (`jakarta.*`)，34.x 用 `javax.*` 与 SB 3.5 冲突
-2. **MyBatis-Plus**: 用 `mybatis-plus-spring-boot3-starter`，不能用普通版本（javax）
-3. **PostGIS 空间字段**: MyBatis-Plus 无 Hibernate Spatial 支持，需手写 TypeHandler 处理 Geometry 类型
-4. **SQL 别名引号**: PG 无引号别名转小写，`SELECT col AS camelCase` 在 Java Map get("camelCase") 拿不到 → 加双引号 `AS "camelCase"`
-5. **SERIAL PK 排除**: INSERT 时不能列出自增主键，`INSERT INTO t (gid, name) VALUES (null, 'x')` 违反 NOT NULL → 字段列表排除 `gid`
-6. **Flyway checksum**: 已执行的迁移文件不可修改内容，否则启动报 checksum mismatch → 追加新版本 V3，不改 V1/V2
-7. **GeoServer 中文 SLD**: 发中文 XML body 用 `xmlBody.getBytes(StandardCharsets.UTF_8)` + `MediaType.APPLICATION_XML.withCharset("UTF-8")`，String 默认 ISO-8859-1 会乱码
-8. **GeoServer Content-Type**: Style 端点极敏感，SLD 创建/更新用 `application/vnd.ogc.sld+xml`，别用 `application/xml`（报 No such style handler）
-9. **pgRouting 列映射**: `pgr_dijkstra` 需 `id, source, target, cost` 四列；pgr 结果和路网表同名列需别名区分；路径拼接用 PostGIS `ST_LineMerge(ST_Collect(...))`，不要 Java 手拼 WKT

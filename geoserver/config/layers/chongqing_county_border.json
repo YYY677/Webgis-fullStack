@@ -1,0 +1,14 @@
+﻿{
+    "layer":  {
+                  "name":  "chongqing_county_border",
+                  "queryable":  true,
+                  "opaque":  false,
+                  "attribution":  {
+                                      "logoWidth":  0,
+                                      "logoHeight":  0
+                                  },
+                  "defaultStyle":  {
+                                       "name":  "polygon"
+                                   }
+              }
+}

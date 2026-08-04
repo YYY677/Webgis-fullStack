@@ -1,0 +1,84 @@
+﻿{
+    "schemaVersion":  1,
+    "exportedAt":  "2026-08-03T14:26:00.9475683Z",
+    "workspace":  "webgistest",
+    "workspaceFile":  "workspace.json",
+    "namespaceFile":  "namespace.json",
+    "dataStores":  [
+                       {
+                           "name":  "asdad",
+                           "dataStoreFile":  "datastores/asdad.json",
+                           "featureTypes":  [
+
+                                            ]
+                       },
+                       {
+                           "name":  "pg-webgistest",
+                           "dataStoreFile":  "datastores/pg-webgistest.json",
+                           "featureTypes":  [
+                                                {
+                                                    "name":  "Borough_London",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/Borough_London.json",
+                                                    "layerFile":  "layers/Borough_London.json"
+                                                },
+                                                {
+                                                    "name":  "capital",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/capital.json",
+                                                    "layerFile":  "layers/capital.json"
+                                                },
+                                                {
+                                                    "name":  "chongqing_county_border",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/chongqing_county_border.json",
+                                                    "layerFile":  "layers/chongqing_county_border.json"
+                                                },
+                                                {
+                                                    "name":  "layer_university",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/layer_university.json",
+                                                    "layerFile":  "layers/layer_university.json"
+                                                },
+                                                {
+                                                    "name":  "port",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/port.json",
+                                                    "layerFile":  "layers/port.json"
+                                                },
+                                                {
+                                                    "name":  "province_border",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/province_border.json",
+                                                    "layerFile":  "layers/province_border.json"
+                                                },
+                                                {
+                                                    "name":  "shenzhen_roads",
+                                                    "featureTypeFile":  "featuretypes/pg-webgistest/shenzhen_roads.json",
+                                                    "layerFile":  "layers/shenzhen_roads.json"
+                                                }
+                                            ]
+                       }
+                   ],
+    "styles":  [
+                   {
+                       "name":  "generic",
+                       "scope":  "global",
+                       "file":  "styles/global/generic.sld"
+                   },
+                   {
+                       "name":  "point",
+                       "scope":  "global",
+                       "file":  "styles/global/point.sld"
+                   },
+                   {
+                       "name":  "polygon",
+                       "scope":  "global",
+                       "file":  "styles/global/polygon.sld"
+                   },
+                   {
+                       "name":  "shenzhen_roads",
+                       "scope":  "workspace",
+                       "file":  "styles/workspace/shenzhen_roads.sld"
+                   },
+                   {
+                       "name":  "webgistest",
+                       "scope":  "global",
+                       "file":  "styles/global/webgistest.sld"
+                   }
+               ]
+}

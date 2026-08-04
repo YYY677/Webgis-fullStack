@@ -1,0 +1,38 @@
+﻿{
+    "featureType":  {
+                        "name":  "Borough_London",
+                        "nativeName":  "Borough_London",
+                        "title":  "Borough_London",
+                        "keywords":  {
+                                         "string":  [
+                                                        "features",
+                                                        "Borough_London"
+                                                    ]
+                                     },
+                        "srs":  "EPSG:4326",
+                        "projectionPolicy":  "FORCE_DECLARED",
+                        "enabled":  true,
+                        "nativeBoundingBox":  {
+                                                  "minx":  -0.510356065513721,
+                                                  "maxx":  0.334043928114901,
+                                                  "miny":  51.28675864988387,
+                                                  "maxy":  51.69187696883512,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "latLonBoundingBox":  {
+                                                  "minx":  -0.510356065513721,
+                                                  "maxx":  0.334043928114901,
+                                                  "miny":  51.28675864988387,
+                                                  "maxy":  51.69187696883512,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "overridingServiceSRS":  false,
+                        "skipNumberMatched":  false,
+                        "circularArcPresent":  false,
+                        "serviceConfiguration":  false,
+                        "maxFeatures":  0,
+                        "numDecimals":  0,
+                        "padWithZeros":  false,
+                        "forcedDecimal":  false
+                    }
+}

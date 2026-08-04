@@ -1,0 +1,38 @@
+﻿{
+    "featureType":  {
+                        "name":  "chongqing_county_border",
+                        "nativeName":  "chongqing_county_border",
+                        "title":  "chongqing_county_border",
+                        "keywords":  {
+                                         "string":  [
+                                                        "features",
+                                                        "chongqing_county_border"
+                                                    ]
+                                     },
+                        "srs":  "EPSG:4326",
+                        "projectionPolicy":  "FORCE_DECLARED",
+                        "enabled":  true,
+                        "nativeBoundingBox":  {
+                                                  "minx":  105.28983805000013,
+                                                  "maxx":  110.19563242500016,
+                                                  "miny":  28.16471331000008,
+                                                  "maxy":  32.20417072500004,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "latLonBoundingBox":  {
+                                                  "minx":  105.28983805000013,
+                                                  "maxx":  110.19563242500016,
+                                                  "miny":  28.16471331000008,
+                                                  "maxy":  32.20417072500004,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "overridingServiceSRS":  false,
+                        "skipNumberMatched":  false,
+                        "circularArcPresent":  false,
+                        "serviceConfiguration":  false,
+                        "maxFeatures":  0,
+                        "numDecimals":  0,
+                        "padWithZeros":  false,
+                        "forcedDecimal":  false
+                    }
+}

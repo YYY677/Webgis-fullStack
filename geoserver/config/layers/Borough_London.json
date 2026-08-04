@@ -1,0 +1,12 @@
+﻿{
+    "layer":  {
+                  "name":  "Borough_London",
+                  "attribution":  {
+                                      "logoWidth":  0,
+                                      "logoHeight":  0
+                                  },
+                  "defaultStyle":  {
+                                       "name":  "polygon"
+                                   }
+              }
+}

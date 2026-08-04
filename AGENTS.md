@@ -10,36 +10,46 @@
 
 ```
 Webgis-fullStack/
+├── .agents/                 # Codex 项目级 skills；与仓库规则一起维护
+├── .claude/                 # Claude Code 的 settings、skills 与历史 plans
+├── .codex/                  # Codex 项目级 hooks 配置
+├── .github/                 # GitHub 自动化配置（当前含 deploy workflow）
+├── .git/                    # 本地 Git 元数据；不手动编辑、不提交
+├── .claudeignore            # Claude 的无需读取文件清单
+├── .gitignore               # Git 忽略规则
+├── .gitattributes           # Git 文件属性规则
 ├── frontend/                # Vue 3 + Vite 前端 → 详见 frontend/AGENTS.md
-├── backend/                 # Spring Boot 3.5 后端 → 详见 backend/AGENTS.md
-├── .agents/                # 项目级 agent skills 配置
-├── .env                     # 环境变量（待创建）
-└── AGENTS.md               # 本文件 — 项目整体级上下文
+├── backend/                 # Spring Boot 3.5 后端 → 详见 backend/CLAUDE.md
+├── geoserver/               # GeoServer 配置同步包与 Data Directory 备份
+├── data/                    # PostgreSQL SQL 备份
+├── docs/                    # 项目经验、设计和计划文档
+└── AGENTS.md                # 本文件 — 项目整体级上下文
 ```
 
 ## 技术栈速览
 
 | 层       | 技术                      | 版本                   |
 |----------|---------------------------|------------------------|
-| 前端框架 | Vue 3 + TypeScript + Vite | 3.5.32 / \~6.0 / 8.0.8 |
+| 前端框架 | Vue 3 + TypeScript + Vite | 3.5.32 / ~5.9 / 7.3.1 |
 | 地图 2D  | OpenLayers                | 10.9.0                 |
 | 地图 3D  | CesiumJS (自托管)         | 1.142.0                |
-| UI 组件  | Element Plus              | 后续安装               |
+| UI 组件  | Element Plus              | 2.13.1                 |
 | 状态管理 | Pinia                     | 3.0.4                  |
 | 后端框架 | Spring Boot               | 3.5.15                 |
 | ORM      | MyBatis-Plus              | 3.5.12                 |
 | 空间库   | GeoTools                  | 35.0 (Jakarta EE)      |
-| 数据库   | PostgreSQL + PostGIS      | 16 / 3.4               |
-| 地图服务 | GeoServer                 | 2.28.3                 |
+| 数据库   | PostgreSQL + PostGIS      | PostgreSQL 17（本机）/ PostGIS（以实例为准） |
+| 地图服务 | GeoServer                 | 2.26.1（本机）         |
 
 ## 关键架构约定
 
 - **后端分层**: 模块化 + 内部三层（详见 backend/CLAUDE.md）
-- **前端分层**: 标准 Vue 项目结构，composables/componets/views/stores/api（详见 frontend/AGENTS.md）
+- **前端分层**: 标准 Vue 项目结构，`pages`、`api`、`services`、`stores`、`composables`、`utils`（详见 frontend/AGENTS.md）
 - **API 规范**: RESTful，统一响应体 `{code, message, data}`
 - **认证**: JWT 无状态，前端 Header `Authorization: Bearer <token>`
-- **空间数据**: PostGIS 存储 → GeoServer 发布 WMS/WFS → 前端 OpenLayers 加载
-- **版本兼容关键**: GeoTools 35.0 已迁移 Jakarta EE，与 SB 3.5.x 兼容；**禁止使用 GeoTools ≤34.x**
+- **空间数据**: PostGIS 存储 → GeoServer 发布 WMS/WFS/WMTS → OpenLayers 与 Cesium 通过前端代理加载；后端负责空间 CRUD、JTS/pgRouting 分析及 GeoServer 管理代理
+- **后端空间依赖约束**: GeoTools 固定 35.0（Jakarta EE），**禁止使用 GeoTools ≤34.x**；MyBatis-Plus 固定 `mybatis-plus-spring-boot3-starter`，不得换用旧版 starter。
+- **PostGIS Geometry 映射**: 不假设 ORM 会自动处理 Geometry；当前项目通过 WKT/SQL 转换读写空间几何，新增映射时沿用该模式或明确实现转换逻辑。
 
 ## 本地开发端口
 
@@ -56,15 +66,13 @@ Webgis-fullStack/
 # 前端
 cd frontend && npm run dev       # 启动开发服务器
 cd frontend && npm run build     # 生产构建
-cd frontend && npm run lint      # 代码检查
+cd frontend && npm run test      # Vitest 测试
 
 # 后端
 cd backend && mvn spring-boot:run         # 启动
 cd backend && mvn compile                 # 编译
 cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=dev  # 开发模式
 
-# Docker (后续)
-docker-compose up -d
 ```
 
 ## Agent 工作方式
@@ -78,10 +86,11 @@ docker-compose up -d
 
 ## 项目经验记忆
 
-- 涉及 Cesium、OpenLayers、GeoServer、PostGIS、pgRouting、Flyway 或相关排障时，先阅读 `docs/memory/MEMORY.md`，再按索引打开相关经验记录。
-- 仅将已验证、可复用且与本项目相关的经验补充到 `docs/memory/`；保持 `MEMORY.md` 索引与文件同步。
-- 当用户说“记录到 memory / 记忆 / 经验”时，均指项目目录 `docs/memory/`：新增或更新对应专题文件，并同步更新 `docs/memory/MEMORY.md` 索引。
-- `docs/memory/` 是项目的持久经验库；不得用 Agent 会话临时缓存、工具状态或口头承诺代替写入。
+- `docs/memory/` 是本项目**唯一的详细经验库**；`docs/memory/MEMORY.md` 是它的总索引。
+- 涉及 Cesium、OpenLayers、GeoServer、PostGIS、pgRouting、Flyway 或相关排障时，先阅读 `docs/memory/MEMORY.md`，再按索引打开对应专题。
+- `frontend/AGENTS.md` 与 `backend/CLAUDE.md` 只说明各自工程的结构、命令、接口和硬性依赖，**不再重复维护**“技术笔记”或“关键坑点”。
+- 新出现且已验证、可复用、与项目有关的经验：在 `docs/memory/` 新建或更新专题文件，并同步更新 `docs/memory/MEMORY.md`；不要把同一条经验再复制到子工程上下文。
+- 当用户说“记录到 memory / 记忆 / 经验”时，均指项目目录 `docs/memory/`，不得用 Agent 会话临时缓存、工具状态或口头承诺代替写入。
 
 ## 测试与界面验证策略
 

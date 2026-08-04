@@ -3,6 +3,7 @@
 ``` bash
 npm run dev      # 启动开发服务器 :5173
 npm run build    # 类型检查 + 生产构建
+npm run test     # 运行 Vitest
 npm run preview  # 预览构建产物
 ```
 
@@ -27,7 +28,7 @@ src/
 ├── api/          # HTTP 请求
 ├── router/       # 路由表 + 守卫（hash 模式）
 ├── stores/       # Pinia（app/user）
-├── layout/       # MainLayout 含侧边栏菜单
+├── layout/       # AtlasLayout：侧边栏、标签页和主内容区域
 ├── components/   # 可复用组件
 ├── composables/  # 组合式函数
 ├── utils/        # 底图配置、localStorage 等
@@ -49,15 +50,15 @@ Hash 路由，守卫检查 localStorage token 控制登录态。
 | `/demo/element-plus` | 组件示例 |  |
 | `/ol-frontend-demo/*` | 6 个页面 | 底图切换、基础工具、加载数据、图层控制、地图设置、echart图表使用 |
 | `/ol-fullstack-demo/*` | 6 个页面 | GeoServer 加载、WFS CRUD、空间编辑器、数据管理、样式管理、空间分析 |
-| `/cesium-frontend-demo/*` | 8 个页面 | 初识Cesium、坐标与方位角、事件监听、Entity、Primitive、数据加载、3D Tiles深入、时间动态轨迹 |
+| `/cesium-demo/*` | 19 个页面 | Cesium 基础、实体与 Primitive、数据加载、3D Tiles、动态轨迹、标注编辑、图层管理、性能、粒子、裁剪与淹没等 |
+| `/cesium-fullstack-demo/*` | 3 个页面 | GeoServer WMS/WMTS/WFS 接入、PostGIS 空间要素 CRUD、服务端空间分析与 pgRouting 路径 |
 | `/:pathMatch(.*)` | 404 |  |
 
-**项目特色**：mock 插件拦截 `/api/auth/*` 离线登录；7 种 OL 底图（`utils/basemaps.ts`）；14 种 Cesium 底图（`utils/cesium-basemaps.ts`）；侧边栏菜单在 `MainLayout.vue` 的 `menuList` 中定义。
+**项目特色**：Hash 路由由 `router/index.ts` 集中定义，壳组件是 `layout/AtlasLayout.vue`；Vite 将 `/api` 转发到 Spring Boot `:8080`，将 `/geoserver` 转发到 GeoServer `:8081`。课程目录由各自的 `*-learning-catalog.ts` 维护。
 
-# 技术笔记
+## 全栈边界
 
-- **OL 对象**：禁止 `ref()`，用 `shallowRef`（跨函数共享）或 `let`（局部/频繁创建）
-- **Cesium 底图**：`ImageryLayer.fromWorldImagery()`，不用 `createWorldImageryAsync()`
-- **Cesium 地形**：1.142 用 `CesiumTerrainProvider.fromUrl()`，构造函数已不支持 `url` 参数
-- **图层清理**：`layer.set("_tag", "xxx")` 打标签，删除时遍历 `map.getLayers()` 按标签过滤，不用 `===` 引用比对
-- **单页小逻辑**：只被一个 Vue 页面使用的少量纯逻辑不要单独拆 TS 工具文件；若需 Vitest 回归测试，可在同一 SFC 的普通 `<script lang="ts">` 导出，并由 `<script setup>` 直接使用。
+- OpenLayers 与 Cesium 的纯前端课程不依赖后端业务 API。
+- GeoServer 服务课程直接经 Vite 代理访问 `/geoserver/wms`、`/geoserver/wfs`、`/geoserver/gwc/service/wmts`，因此依赖 GeoServer 与 PostGIS。
+- Cesium 全栈 CRUD 复用 `api/spatial-data.ts` 的 `/api/spatial/**`；服务端分析复用 `api/spatial-analysis.ts` 的 `/api/spatial/analysis/**`；它们不是单独的“Cesium 后端”。
+- 需要管理工作空间、数据存储、图层或样式时，调用 `api/geoserver.ts` 的 `/api/geoserver/**` 后端代理，而不是把 GeoServer 管理员凭据写进浏览器。

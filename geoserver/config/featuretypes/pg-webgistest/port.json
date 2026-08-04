@@ -1,0 +1,59 @@
+﻿{
+    "featureType":  {
+                        "name":  "port",
+                        "nativeName":  "port",
+                        "title":  "port",
+                        "keywords":  {
+                                         "string":  [
+                                                        "features",
+                                                        "port"
+                                                    ]
+                                     },
+                        "srs":  "EPSG:4326",
+                        "projectionPolicy":  "NONE",
+                        "enabled":  true,
+                        "metadata":  {
+                                         "entry":  [
+                                                       {
+                                                           "@key":  "elevation",
+                                                           "dimensionInfo":  {
+                                                                                 "enabled":  false
+                                                                             }
+                                                       },
+                                                       {
+                                                           "@key":  "time",
+                                                           "dimensionInfo":  {
+                                                                                 "enabled":  false
+                                                                             }
+                                                       },
+                                                       {
+                                                           "@key":  "cachingEnabled",
+                                                           "$":  "false"
+                                                       }
+                                                   ]
+                                     },
+                        "nativeBoundingBox":  {
+                                                  "minx":  92.94432830810547,
+                                                  "maxx":  13586606,
+                                                  "miny":  22.223194122314453,
+                                                  "maxy":  4940074.5,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "latLonBoundingBox":  {
+                                                  "minx":  92.94432830810547,
+                                                  "maxx":  13586606,
+                                                  "miny":  22.223194122314453,
+                                                  "maxy":  4940074.5,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "overridingServiceSRS":  false,
+                        "skipNumberMatched":  false,
+                        "circularArcPresent":  false,
+                        "serviceConfiguration":  false,
+                        "simpleConversionEnabled":  false,
+                        "maxFeatures":  0,
+                        "numDecimals":  0,
+                        "padWithZeros":  false,
+                        "forcedDecimal":  false
+                    }
+}

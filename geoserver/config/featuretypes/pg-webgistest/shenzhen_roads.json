@@ -1,0 +1,45 @@
+﻿{
+    "featureType":  {
+                        "name":  "shenzhen_roads",
+                        "nativeName":  "shenzhen_roads",
+                        "title":  "shenzhen_roads",
+                        "keywords":  {
+                                         "string":  [
+                                                        "features",
+                                                        "shenzhen_roads"
+                                                    ]
+                                     },
+                        "srs":  "EPSG:4326",
+                        "projectionPolicy":  "NONE",
+                        "enabled":  true,
+                        "metadata":  {
+                                         "entry":  {
+                                                       "@key":  "cachingEnabled",
+                                                       "$":  "false"
+                                                   }
+                                     },
+                        "nativeBoundingBox":  {
+                                                  "minx":  113.69544982910156,
+                                                  "maxx":  114.60415649414062,
+                                                  "miny":  22.447689056396484,
+                                                  "maxy":  22.875381469726562,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "latLonBoundingBox":  {
+                                                  "minx":  113.69544982910156,
+                                                  "maxx":  114.60415649414062,
+                                                  "miny":  22.447689056396484,
+                                                  "maxy":  22.875381469726562,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "overridingServiceSRS":  false,
+                        "skipNumberMatched":  false,
+                        "circularArcPresent":  false,
+                        "serviceConfiguration":  false,
+                        "simpleConversionEnabled":  false,
+                        "maxFeatures":  0,
+                        "numDecimals":  0,
+                        "padWithZeros":  false,
+                        "forcedDecimal":  false
+                    }
+}

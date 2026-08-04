@@ -1,0 +1,45 @@
+﻿{
+    "featureType":  {
+                        "name":  "layer_university",
+                        "nativeName":  "layer_university",
+                        "title":  "layer_university",
+                        "keywords":  {
+                                         "string":  [
+                                                        "features",
+                                                        "layer_university"
+                                                    ]
+                                     },
+                        "srs":  "EPSG:4326",
+                        "projectionPolicy":  "FORCE_DECLARED",
+                        "enabled":  true,
+                        "metadata":  {
+                                         "entry":  {
+                                                       "@key":  "cachingEnabled",
+                                                       "$":  "false"
+                                                   }
+                                     },
+                        "nativeBoundingBox":  {
+                                                  "minx":  -180,
+                                                  "maxx":  180,
+                                                  "miny":  -90,
+                                                  "maxy":  90,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "latLonBoundingBox":  {
+                                                  "minx":  -180,
+                                                  "maxx":  180,
+                                                  "miny":  -90,
+                                                  "maxy":  90,
+                                                  "crs":  "EPSG:4326"
+                                              },
+                        "overridingServiceSRS":  false,
+                        "skipNumberMatched":  false,
+                        "circularArcPresent":  false,
+                        "serviceConfiguration":  false,
+                        "simpleConversionEnabled":  false,
+                        "maxFeatures":  0,
+                        "numDecimals":  0,
+                        "padWithZeros":  false,
+                        "forcedDecimal":  false
+                    }
+}

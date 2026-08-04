@@ -1,0 +1,14 @@
+﻿{
+    "layer":  {
+                  "name":  "shenzhen_roads",
+                  "queryable":  true,
+                  "opaque":  false,
+                  "attribution":  {
+                                      "logoWidth":  0,
+                                      "logoHeight":  0
+                                  },
+                  "defaultStyle":  {
+                                       "name":  "generic"
+                                   }
+              }
+}

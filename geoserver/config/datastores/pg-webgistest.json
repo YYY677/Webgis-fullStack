@@ -1,0 +1,132 @@
+﻿{
+    "dataStore":  {
+                      "name":  "pg-webgistest",
+                      "type":  "PostGIS",
+                      "enabled":  true,
+                      "_default":  false,
+                      "disableOnConnFailure":  false,
+                      "workspace":  {
+                                        "name":  "webgistest"
+                                    },
+                      "connectionParameters":  {
+                                                   "entry":  [
+                                                                 {
+                                                                     "@key":  "schema",
+                                                                     "$":  "public"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Evictor run periodicity",
+                                                                     "$":  "300"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Max open prepared statements",
+                                                                     "$":  "50"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "encode functions",
+                                                                     "$":  "true"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Batch insert size",
+                                                                     "$":  "1"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "preparedStatements",
+                                                                     "$":  "false"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "database",
+                                                                     "$":  "${GEOSERVER_DATASTORE_DATABASE}"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "reWriteBatchedInserts",
+                                                                     "$":  "false"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "host",
+                                                                     "$":  "${GEOSERVER_DATASTORE_HOST}"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Loose bbox",
+                                                                     "$":  "true"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "SSL mode",
+                                                                     "$":  "DISABLE"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Estimated extends",
+                                                                     "$":  "true"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "fetch size",
+                                                                     "$":  "1000"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Expose primary keys",
+                                                                     "$":  "false"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "validate connections",
+                                                                     "$":  "true"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Support on the fly geometry simplification",
+                                                                     "$":  "true"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Connection timeout",
+                                                                     "$":  "20"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "create database",
+                                                                     "$":  "false"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Method used to simplify geometries",
+                                                                     "$":  "FAST"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "port",
+                                                                     "$":  "${GEOSERVER_DATASTORE_PORT}"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "passwd",
+                                                                     "$":  "${GEOSERVER_DATASTORE_PASSWORD}"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "min connections",
+                                                                     "$":  "1"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "dbtype",
+                                                                     "$":  "postgis"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "namespace",
+                                                                     "$":  "${GEOSERVER_WORKSPACE_URI}"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "max connections",
+                                                                     "$":  "10"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Evictor tests per run",
+                                                                     "$":  "3"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Test while idle",
+                                                                     "$":  "true"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "user",
+                                                                     "$":  "${GEOSERVER_DATASTORE_USER}"
+                                                                 },
+                                                                 {
+                                                                     "@key":  "Max connection idle time",
+                                                                     "$":  "300"
+                                                                 }
+                                                             ]
+                                               }
+                  }
+}
