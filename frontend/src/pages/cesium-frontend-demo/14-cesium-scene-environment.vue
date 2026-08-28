@@ -201,8 +201,11 @@ function applyEnvironment() {
     : Color.fromCssColorString(backgroundColor.value)
 }
 
+// applySingleImageBackground 做的只是让 canvas 背后的图片可见的三件事：
+// applySkyBox() → 移除 SkyBox（否则六面天空盒会把背景盖住）
+// applyEnvironment() → 隐藏天空大气并让 canvas 透明（否则天空大气会把背景盖住）
+// 图片完全由 CSS 挂在 canvas 下层，
 function applySingleImageBackground() {
-  // 用同一套状态推导场景：开启时清空 SkyBox、隐藏大气并透明；关闭时恢复用户原本选中的主题和大气开关。
   applySkyBox()
   applyEnvironment()
 }

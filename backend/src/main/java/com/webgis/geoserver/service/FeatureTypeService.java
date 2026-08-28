@@ -80,11 +80,11 @@ public class FeatureTypeService {
     public String publish(String workspace, String datastore, String nativeName, String srs) {
         String path = "/workspaces/" + workspace + "/datastores/" + datastore + "/featuretypes.json";
         Map<String, Object> body = Map.of("featureType",
-                Map.of("name", nativeName,
-                        "nativeName", nativeName,
-                        "title", nativeName,
+                Map.of("name", nativeName, // GeoServer 内部名称，即webgistest:port中的port
+                        "nativeName", nativeName, // 数据库表名，GeoServer名字不一定是数据库真实名字
+                        "title", nativeName, // 人类可读标题，即geoserver图层列表中显示的“标题”
                         "srs", srs != null ? srs : "EPSG:4326",
-                        "enabled", true));
+                        "enabled", true)); // 启用这个 FeatureType / Layer，使其参与 GeoServer 服务。
         return client.post(path, body, String.class);
     }
 

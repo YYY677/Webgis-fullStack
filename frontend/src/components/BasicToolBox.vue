@@ -112,7 +112,9 @@ onMounted(() => {
     }
   }, { capture: true })
 
+  // 为地图视口添加右键菜单事件监听
   props.map.getViewport().addEventListener("contextmenu", (e) => {
+    // 阻止了浏览器默认的右键菜单弹出
     e.preventDefault()
   })
 })
@@ -253,6 +255,8 @@ const measureTool = (type) => {
 
   draw = new Draw({
     source: vectorSource,
+    // type: "LineString", // 测距
+    // type: "Polygon", // 测面积
     type: type,
     style: new Style({
       fill: new Fill({ color: "rgba(255, 255, 255, 0.2)" }),
@@ -272,6 +276,9 @@ const measureTool = (type) => {
       let output;
       if (geom instanceof Polygon) {
         output = formatArea(geom);
+        // 获取几何图形的内部点坐标
+        // getInteriorPoint()方法用于获取几何图形的内部点
+        // getCoordinates()方法用于获取该点的坐标值
         tooltipCoord = geom.getInteriorPoint().getCoordinates();
       } else if (geom instanceof LineString) {
         output = formatLength(geom);

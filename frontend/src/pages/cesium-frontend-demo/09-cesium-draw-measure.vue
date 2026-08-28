@@ -260,8 +260,8 @@ function addPointMeasurement(position: Cartesian3) {
     label: {
       text: `${point.longitude.toFixed(5)}°, ${point.latitude.toFixed(5)}°`,
       font: "12px sans-serif",
-      fillColor: Color.WHITE,
-      outlineColor: Color.BLACK,
+      fillColor: Color.YELLOW,
+      outlineColor: Color.WHITE,
       outlineWidth: 3,
       style: LabelStyle.FILL_AND_OUTLINE,
       pixelOffset: new Cartesian2(0, -24),

@@ -251,6 +251,8 @@ public class SpatialDataService {
         for (Map.Entry<String, Object> entry : row.entrySet()) {
             Object val = entry.getValue();
             if (val instanceof String s) {
+                // 如果是几何 WKT（以 POINT、LINESTRING 等开头）→ 跳过，保持字符串原样，
+                // 留给 GIS 库（如 GeoTools 或前端）去解析。
                 if (s.startsWith("POINT") || s.startsWith("LINESTRING")
                         || s.startsWith("POLYGON") || s.startsWith("MULTI")
                         || s.startsWith("GEOMETRY")) {

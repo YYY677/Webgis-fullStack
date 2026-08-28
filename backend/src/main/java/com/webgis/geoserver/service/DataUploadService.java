@@ -116,9 +116,9 @@ public class DataUploadService {
             }
 
             // 校验必需文件
-            boolean hasShp = hasFile(tmp.toFile(), ".shp");
-            boolean hasShx = hasFile(tmp.toFile(), ".shx");
-            boolean hasDbf = hasFile(tmp.toFile(), ".dbf");
+            boolean hasShp = hasFile(tmp.toFile(), ".shp"); // 存储要素的几何实体信息
+            boolean hasShx = hasFile(tmp.toFile(), ".shx"); // 存储几何索引信息，
+            boolean hasDbf = hasFile(tmp.toFile(), ".dbf"); // 存储属性数据
             if (!hasShp || !hasShx || !hasDbf) {
                 throw new IllegalArgumentException("缺少必需文件: .shp / .shx / .dbf");
             }
@@ -133,6 +133,7 @@ public class DataUploadService {
             // 用 GeoTools 标准 API 打开（比直接 new ShapefileDataStore 更稳健）
             java.util.HashMap<String, Object> params = new java.util.HashMap<>();
             params.put("url", shpFile.toURI().toURL());
+            // DataStoreFinder 简单理解成：你给我一个数据源，我帮你找到合适的 GeoTools 读取器。”
             org.geotools.api.data.DataStore store = org.geotools.api.data.DataStoreFinder.getDataStore(params);
             if (store == null) {
                 throw new IllegalArgumentException("无法识别 Shapefile 格式，确认 .shp/.shx/.dbf 文件齐全");
@@ -255,6 +256,7 @@ public class DataUploadService {
         // 后面拼 INSERT 时几何列用 ST_GeomFromText，普通列用 ?
         GeometryDescriptor geomDesc = schema.getGeometryDescriptor();             // 几何列的描述信息
         List<AttributeDescriptor> attrs = new ArrayList<>();                       // 非几何的属性列
+        // 遍历 schema 的所有列，挑出非几何列
         for (AttributeDescriptor ad : schema.getAttributeDescriptors())
             if (!ad.equals(geomDesc))
                 attrs.add(ad);
@@ -267,6 +269,8 @@ public class DataUploadService {
         //     "geom" geometry(MULTIPOLYGON, 4326)
         //   )
         // 其中 geometry(MULTIPOLYGON, 4326) 是 PostGIS 的类型声明，限制只能存 MULTIPOLYGON + SRID 4326
+
+        // getType() 返回 AttributeType，getBinding() 返回 Java 类型（Class），getSimpleName() 返回类名（不含包名）
         String geomType = geomDesc.getType().getBinding().getSimpleName().toUpperCase();  // POLYGON / MULTIPOLYGON / POINT ...
         String ddl = "CREATE TABLE public.\"" + table + "\" (\"fid\" SERIAL PRIMARY KEY";
         for (AttributeDescriptor ad : attrs)
@@ -275,7 +279,7 @@ public class DataUploadService {
 
         // ── 3. 建表 + 写入（同一事务） ────────────────────────
         try (Connection c = dataSource.getConnection()) {
-            c.setAutoCommit(false);                           // 开启手动事务：DDL 和 INSERT 要么全成功，要么全回滚
+            c.setAutoCommit(false); // 开启手动事务：DDL 和 INSERT 要么全成功，要么全回滚
             try (Statement s = c.createStatement()) {
                 s.execute(ddl);                               // 执行建表 DDL
             }
@@ -348,6 +352,7 @@ public class DataUploadService {
     // 工具
     // ═══════════════════════════════════════════════════════════════
 
+    // Java 类型 → PostgreSQL 类型。
     private String toSqlType(Class<?> b) {
         if (b == null || b == String.class)
             return "TEXT";

@@ -152,7 +152,7 @@ const wmtsLayer = () => {
 const wfsLayer = () => {
   const source = new VectorSource({
     format: new GeoJSON({
-      dataProjection: 'EPSG:4326',     // 声明数据源头是经纬度（WFS 默认存储）
+      dataProjection: 'EPSG:3857', // 声明当前 WFS 返回的 GeoJSON 坐标系
       featureProjection: 'EPSG:3857'   // 声明要让 OL 重投影到当前视图坐标系
     }),
     // url 为函数时配合 bbox 策略：每次地图移动/缩放，OL 自动传入当前视野范围

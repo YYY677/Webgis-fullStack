@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<style>
+  .box {
+    width: 200px;
+    padding: 20px;
+    border: 10px solid black;
+    background: skyblue;
+    margin-bottom: 20px;
+  }
+  .content-box {
+    box-sizing: content-box; /* 默认，其实不写也是它 */
+  }
+  .border-box {
+    box-sizing: border-box;  /* 神级属性 */
+  }
+</style>
+
+<!-- 情况1：默认 content-box —— 盒子实际宽 260px，会超出父级 -->
+<div class="box content-box">我是 content-box，我有 260px 宽</div>
+
+<!-- 情况2：border-box —— 盒子稳稳 200px，内容区被压缩 -->
+<div class="box border-box">我是 border-box，我只有 200px 宽</div>

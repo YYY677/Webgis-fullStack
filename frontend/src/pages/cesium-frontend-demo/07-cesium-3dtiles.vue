@@ -237,7 +237,7 @@ const propsAvailable = ref("")
 // |      `16` | 默认常用  | 大多数场景      |
 // | `24 ~ 32` | 更快但粗糙 | 城市级浏览、移动端  |
 // |     `64+` | 很粗    | 大范围概览、性能优先 |
-const maximumScreenSpaceError = ref(16)
+const maximumScreenSpaceError = ref()
 // 跳过中间 LOD 层级，直接加载高细节瓦片
 const skipLevelOfDetail = ref(false)
 // 动态 SSE，远处放宽误差减少加载
@@ -532,6 +532,7 @@ function applyTransform() {
   // [ 0   0   1    20 ]
   // [ 0   0   0     1 ]
   const t = Matrix4.fromTranslation(new Cartesian3(editTx.value, editTy.value, editTz.value))
+  
   // 创建旋转矩阵，绕ENU的Z轴旋转，所以就是就是水平旋转。
   // 假设绕Z轴旋转 θ 角度
   // [ cos  -sin   0 ]
@@ -544,6 +545,7 @@ function applyTransform() {
   // [  0     0    1   0 ]
   // [  0     0    0   1 ]
   const r = Matrix4.fromRotation(rMat3, new Matrix4()) 
+
   // 创建缩放矩阵，X、Y、Z一起变化：均匀缩放。
   // 假设：X方向缩放 2倍、Y方向缩放 3倍、Z方向缩放 0.5倍
   // [ 2   0   0   0 ]
@@ -563,6 +565,7 @@ function applyTransform() {
   // 局部ENU坐标系应用变换矩阵
   const temp = new Matrix4()
   Matrix4.multiply(enu, trs, temp) // 得到 enu * trs
+  
   // 将局部ENU坐标系的变换转换回世界坐标系
   const worldEdit = new Matrix4()
   Matrix4.multiply(temp, invEnu, worldEdit) // 得到 enu * trs * invEnu
@@ -597,7 +600,15 @@ function resetTransform() {
 }
 
 // ──────────────────── 性能补充 ────────────────────
+// 参数	                          作用
+// maximumScreenSpaceError	      控制 LOD 精细程度，越小越清晰但更耗性能
+// skipLevelOfDetail	            是否允许跳过中间 LOD，直接加载更合适层级
+// dynamicScreenSpaceError	      根据距离动态放宽 SSE，远处降低精度换性能
+// debugShowRenderingStatistics	  显示 Tileset 渲染统计
+// debugShowMemoryUsage	          显示 Tileset 内存占用
+// scene.debugShowFramesPerSecond	显示整个 Scene 的 FPS
 
+// 作用：把当前 tileset 的真实配置读出来，填到 Vue 响应式变量里。
 function syncPerformanceSettings() {
   if (!currentTileset) return
   maximumScreenSpaceError.value = currentTileset.maximumScreenSpaceError
@@ -608,6 +619,7 @@ function syncPerformanceSettings() {
   if (viewer) viewer.scene.debugShowFramesPerSecond = showRenderingStats.value
 }
 
+// 把 UI 中用户修改后的值，写回 tileset / scene。
 function applyPerformanceSettings() {
   if (!currentTileset || !viewer) return
   currentTileset.maximumScreenSpaceError = maximumScreenSpaceError.value

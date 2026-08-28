@@ -31,6 +31,7 @@ public class GeoServerClient {
     /**
      * 初始化 RestClient — 设 baseUrl、BasicAuth、默认 JSON Accept
      * <p>
+     * props.getUrl() 返回：http://localhost:8081/geoserver
      * baseUrl 示例：http://localhost:8081/geoserver/rest
      */
     @PostConstruct
@@ -38,8 +39,8 @@ public class GeoServerClient {
         this.client = RestClient.builder()
                 .baseUrl(props.getUrl() + "/rest")
                 .defaultHeaders(headers -> {
-                    headers.setBasicAuth(props.getUsername(), props.getPassword());
-                    headers.set(ACCEPT, APPLICATION_JSON_VALUE);
+                    headers.setBasicAuth(props.getUsername(), props.getPassword()); // 自动塞入账号密码（Basic Auth）
+                    headers.set(ACCEPT, APPLICATION_JSON_VALUE); // 默认要求返回 JSON
                 })
                 // 统一错误处理：4xx / 5xx 直接抛 RuntimeException，由 GlobalExceptionHandler 兜底
                 .defaultStatusHandler(HttpStatusCode::isError, (req, res) -> {
@@ -135,6 +136,12 @@ public class GeoServerClient {
 
     private static final org.springframework.http.MediaType SLD_XML =
         // 请求体是一个 OGC SLD XML 文档，XML采用UTF-8编码
+        // application/vnd.ogc.sld+xml;charset=UTF-8 是一个标准的 MIME 类型（媒体类型），专门用于 GIS 领域。
+        // vnd = Vendor Specific（供应商特定）
+        // ogc = Open Geospatial Consortium（开放地理空间联盟，GIS 界的 ISO 标准组织）
+        // sld+xml = 表示内容是 Styled Layer Descriptor（样式图层描述符），底层格式是 XML。
+        // 作用：告诉 GeoServer 服务器：“我发的这串 XML 不是普通 XML，是一个 SLD 样式配置文件”。
+        // 如果写 application/xml，GeoServer 也能勉强接受，但写这个专用类型更规范、语义更明确。
         org.springframework.http.MediaType.parseMediaType("application/vnd.ogc.sld+xml;charset=UTF-8");
 
     /**
@@ -149,6 +156,7 @@ public class GeoServerClient {
                 .contentType(SLD_XML)
                 .body(xmlBody.getBytes(java.nio.charset.StandardCharsets.UTF_8))
                 .retrieve()
+                // .toBodilessEntity()	忽略响应体，只确保请求发送成功，不关心返回内容
                 .toBodilessEntity();
     }
 

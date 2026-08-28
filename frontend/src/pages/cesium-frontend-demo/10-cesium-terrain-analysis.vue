@@ -261,7 +261,7 @@ async function sampleElevation(position: Cartesian3) {
   }
 }
 
-/** 将中心点周围 30 m 的 3×3 网格转换为经纬度，顺序与 Horn 算法的输入一致。
+/** 将中心点周围 30 m 的 3×3 网格转换为弧度，顺序与 Horn 算法的输入一致。
  * 函数做的事很简单：以 C 为中心，向北、中、南各取一行；每一行再向西、中、东各取一个点，组成 3×3：
 */
 function createSlopeSamplePositions(center: Cartographic) {

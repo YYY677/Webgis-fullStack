@@ -194,7 +194,9 @@ function syncCameraToUI() {
   roll.value = toSignedRollDegrees(camera.roll)
 
   // ── 三种坐标系（同一空间点的三种数学表达） ──
-  const carto = camera.positionCartographic // 拿到的是 Cartographic 弧度坐标系
+  // 拿到的是相机的 Cartographic 弧度坐标系
+  // 相机在哪个经纬度上空？高度是多少？
+  const carto = camera.positionCartographic 
 
   // 【坐标系 1】经纬度（度）— 人类最直观的表达
   //   日常说的"东经116°，北纬40°"。lon ∈ [-180, 180]，lat ∈ [-90, 90]
@@ -218,7 +220,7 @@ function syncCameraToUI() {
   //   Cesium 所有空间运算（距离 / 碰撞 / 插值）都在此坐标系中完成
   //   Cartesian3 负责三维空间计算
   //     模型顶点移动；矩阵变换；相机位置；光照；GPU渲染
-  const wc = camera.positionWC
+  const wc = camera.positionWC // WC = World Coordinates，即世界坐标。
   cartesianStr.value = `(${wc.x.toFixed(2)}, ${wc.y.toFixed(2)}, ${wc.z.toFixed(2)})`
 
 }

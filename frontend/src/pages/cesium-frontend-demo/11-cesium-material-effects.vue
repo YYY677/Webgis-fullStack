@@ -244,6 +244,7 @@ function addEffects() {
       material: lineMaterial,
     },
   });
+  
   viewer.entities.add({
     wall: {
       // fromDegreesArray 按 [经度, 纬度, ...] 两个一组读取；首尾重复，令墙体轮廓闭合。
@@ -254,6 +255,7 @@ function addEffects() {
       material: wallMaterial,
     },
   });
+
   // 椭圆的半长轴和半短轴始终返回相同值，因此实际显示为圆。
   const ringCenter = Cartesian3.fromDegrees(116.43, 39.93);
   // 扩散圆自己的起始时间；与流动材质各自计时，互不依赖。
@@ -323,7 +325,7 @@ function addBuiltinMaterialExamples() {
       material: new PolylineGlowMaterialProperty({
         color: Color.fromCssColorString("#ff7a45"),
         // glowPower 控制光晕相对线宽的比例；数值越大，边缘发光范围越宽。
-        glowPower: 0.2,
+        glowPower: 0.5,
         // 锥形衰减参数，用于控制模型边缘的锥形衰减程度，值越大衰减越明显
         taperPower: 1, 
       }),

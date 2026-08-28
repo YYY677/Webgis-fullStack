@@ -140,6 +140,7 @@ export function createExcavationPlanes(corners: [number, number][]): ClippingPla
   for (let i = 0; i < points.length; i++) {
     // 最后一条边（i=3）直接 i+1 会访问 points[4]——不存在。取模让索引在末尾回绕到 0，生成闭合边。
     const next = points[(i + 1) % points.length]
+
     // 计算当前点与下一个点的中点
     const midpoint = Cartesian3.add(points[i], next, new Cartesian3())
     // 将中点坐标乘以0.5，确保中点位于两点的中间位置
@@ -174,7 +175,7 @@ export function createExcavationPlanes(corners: [number, number][]): ClippingPla
 export function createWaterMaterial(): Material {
   return new Material({
     fabric: {
-      type: "Water",
+      type: "Water", // CesiumJS 内置的水面材质类型，对应了下面 uniforms 的参数
       uniforms: {
         // waterNormals.jpg 是 CesiumJS npm 包自带的资源，不是项目文件
         normalMap: buildModuleUrl("Assets/Textures/waterNormals.jpg"),
@@ -279,7 +280,7 @@ function rebuildExcavationFloor() {
   excavateFloor = viewer.entities.add({
     polygon: {
       hierarchy: Cartesian3.fromDegreesArray(
-        EXCAVATE_CORNERS.map(([lon, lat]) => [lon, lat]).flat(),
+        EXCAVATE_CORNERS.flat(),
       ),
       height: floorHeight,
       material: Color.fromCssColorString("#cbc6c2").withAlpha(0.9),
@@ -290,7 +291,7 @@ function rebuildExcavationFloor() {
   // 不做逐点采样保持简单）；下沿为坑底
   // WallGeometry 只连接相邻两个点、不会自动闭合首尾，末尾重复第一个角点才能把
   // 最后一条边（西北 → 西南，即西侧墙）补上，否则西侧会露出裁切后的黑色空洞
-  const corners = EXCAVATE_CORNERS.map(([lon, lat]) => [lon, lat]).flat()
+  const corners = EXCAVATE_CORNERS.flat()
   const wallPositions = Cartesian3.fromDegreesArray([...corners, corners[0], corners[1]])
   excavateWalls = viewer.entities.add({
     wall: {
@@ -403,9 +404,9 @@ function toggleTilesClip() {
   tilesClipCollection = new ClippingPlaneCollection({
     planes: [
       // new Cartesian3(0.0, -1.0, 0.0)
-      //  │       │     └─ z 分量：0，不朝上下
-      //  │       └─ y 分量：-1，朝 Y 负方向（南）
-      //  └─ x 分量：0，不朝东西
+      //                │       │     └─ z 分量：0，不朝上下
+      //                │       └─ y 分量：-1，朝 Y 负方向（南）
+      //                └─ x 分量：0，不朝东西
       // (0,-1,0) 就是"朝南"。同理 (-1,0,0) 是"朝西"、(0,0,1) 是"朝上"。
       // 保留规则（GLSL n·p + d > 0 保留）：法线指向的一侧保留
       // (0.0, -1.0, 0.0), 15.0)——墙以南的片元保留，以北（y ≥ 15）的片元裁剪。
@@ -489,7 +490,7 @@ async function startFlood() {
     appearance: new EllipsoidSurfaceAppearance({
       material: createWaterMaterial(),
     }),
-    modelMatrix: Matrix4.IDENTITY,
+    // modelMatrix: Matrix4.IDENTITY,
   })
   viewer.scene.primitives.add(floodPrimitive)
 
@@ -599,18 +600,52 @@ onMounted(() => {
     destination: Cartesian3.fromDegrees(116.39, 39.91, 10000),
   })
 
-  // 换掉整个光源,光源影响到地形和建筑的渲染效果，默认光源是随时间变化的太阳光，
-  // 设置固定方向的光源可以让场景在不同时间下保持一致的照明效果
-  viewer.scene.light = new DirectionalLight({
-  // hader 里用的光照方向（朝向光源）= -direction。所以 DirectionalLight.direction 
-  // 的语义是光线的行进方向（从光源射向场景），不是"光源所在方向"。 
-  // 顺带说下对跖点怎么算：经度 ± 180°，纬度取反。
-  // 以北京(116.39, 23.44)为例: 116.39 + 180 = 296.39（等价 -63.61），23.44 → -23.44。
-  direction: Cartesian3.fromDegrees(-63.61, -23.44), 
-  color: Color.WHITE,
-  intensity: 2.0, // 对齐 SunLight 默认强度；不够亮就再往上调
-})
+  // 设置一个固定方向光源
+  // Cesium 默认使用 SunLight，光照方向会随着 viewer.clock.currentTime 改变。
+  // 替换为 DirectionalLight 后，可以让模型保持固定光照效果。
 
+  // 模型所在位置（例如北京附近建筑）
+  const modelPosition = Cartesian3.fromDegrees(
+      116.39,
+      39.90
+  );
+  // 假设光源位置
+  // 这里模拟太阳在模型东北上方的位置：
+  // 经度120°，纬度50°，高度10000km
+  const lightPosition = Cartesian3.fromDegrees(
+      120,
+      50,
+      10000000
+  );
+  // 计算光线方向
+  // DirectionalLight.direction 表示：
+  // 光线传播方向（从光源射向场景）
+  //
+  // 所以方向应该是：
+  // 模型位置 - 光源位置
+  //
+  // 即：lightPosition → modelPosition
+  const direction = Cartesian3.normalize(
+      Cartesian3.subtract(
+          modelPosition,
+          lightPosition,
+          new Cartesian3()
+      ),
+      new Cartesian3()
+  );
+
+  // 替换默认太阳光
+  // 使用固定方向光后：
+  // 1. 不再受 viewer.clock.currentTime 影响
+  // 2. 不会因为时间变成夜晚导致建筑变暗
+  // 3. 可以通过 intensity 调整整体亮度
+  viewer.scene.light = new DirectionalLight({
+      direction: direction,
+      // 光颜色
+      color: Color.WHITE,
+      // 光照强度
+      intensity: 2.0
+  });
 })
 
 onUnmounted(() => {
