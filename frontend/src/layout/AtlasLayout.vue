@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 // 这些虚拟导入由 unplugin-icons 在构建时生成 Tabler SVG Vue 组件，供应用外壳的操作按钮使用。
 import IconArrowRight from "~icons/tabler/arrow-right"
+import IconBrandGithub from "~icons/tabler/brand-github"
 import IconCommand from "~icons/tabler/command"
 import IconFullscreen from "~icons/tabler/maximize"
 import IconLogout from "~icons/tabler/logout"
@@ -141,7 +142,8 @@ function handleLogout() { userStore.logout(); router.push("/login") }
               v-for="item in route.matched.filter((record) => record.meta?.title)"
               :key="String(item.name || item.path)">{{
                 item.meta?.title }}</el-breadcrumb-item></el-breadcrumb></div>
-        <div class="atlas-header__right"><button class="atlas-icon-button" type="button" aria-label="搜索菜单"
+        <div class="atlas-header__right"><a class="atlas-icon-button" href="https://github.com/YYY677/Webgis-fullStack"
+            target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 项目"><IconBrandGithub /></a><button class="atlas-icon-button" type="button" aria-label="搜索菜单"
             @click="searchVisible = true">
             <IconSearch />
           </button><button class="atlas-icon-button" type="button" :aria-label="isDayTheme ? '切换为夜间主题' : '切换为白日主题'"
